@@ -143,6 +143,14 @@
         .banner-meta { padding: 14px 16px; }
         .banner-actions { display: flex; gap: 8px; padding: 0 16px 14px; }
         .banner-action-btn { flex: 1; padding: 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 500; transition: all 0.15s; }
+        .thai-safe-tracking {
+            letter-spacing: 0.2em; /* หรือค่าที่คุณต้องการ */
+            /* บังคับการแสดงผลฟอนต์ให้คงที่ */
+            font-variant-ligatures: none;
+            -webkit-font-feature-settings: "kern" 0;
+            font-feature-settings: "kern" 0;
+            text-rendering: optimizeSpeed; /* iPad จะคำนวณตำแหน่งสระแม่นยำขึ้นในโหมดนี้ */
+        }
     </style>
 </head>
 <!-- 1. ปรับ Body ให้ล็อคความสูงไว้ที่ viewport เสมอ -->
@@ -509,7 +517,7 @@
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 id="tableModalTitle" class="text-2xl font-bold text-blue-400">แก้ไขโต๊ะ</h2>
-                    <p class="text-xs text-slate-500 mt-1">รหัสโต๊ะแก้ไม่ได้ — แก้ qr_id ได้</p>
+                    <p class="text-xs text-slate-500 mt-1">ไม่สามารถแก้รหัสโต๊ะได้</p>
                 </div>
                 <button onclick="closeModal('tableModal')" class="text-slate-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
             </div>
@@ -523,18 +531,18 @@
                 </div>
 
                 <div>
-                    <label class="text-xs text-slate-400 mb-1 block">QR Suffix (2 ตัวอักษร) *</label>
+                    <label class="text-xs text-slate-400 mb-1 block">QR ID (2 ตัวอักษร)</label>
                     <div class="flex items-center gap-2">
                         <span id="tableFormQrPrefix" class="text-slate-400 font-mono text-lg"></span>
                         <span class="text-slate-500">-</span>
                         <input type="text" id="tableFormQrSuffix" maxlength="2" required pattern="[A-Za-z0-9]{2}" class="flex-1 p-3 rounded-xl text-center text-lg font-mono uppercase tracking-wider" placeholder="AA" oninput="this.value=this.value.toUpperCase()">
                     </div>
-                    <p class="text-xs text-slate-500 mt-2"><i class="fas fa-info-circle mr-1"></i> ใช้สำหรับ deactivate QR เก่าเมื่อรูป QR หลุดไป — เปลี่ยนค่าใหม่ + print QR ใหม่</p>
+                    <p class="text-xs text-slate-500 mt-2"><i class="fas fa-info-circle mr-1"></i> สำหรับ deactivate QR เก่าเมื่อรูป QR หลุด</p>
                 </div>
 
                 <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300 leading-relaxed">
                     <i class="fas fa-exclamation-triangle mr-1"></i>
-                    <strong>ข้อควรระวัง:</strong> เมื่อเปลี่ยน QR Suffix — รูป QR เดิมที่ติดบนโต๊ะจะใช้งานไม่ได้ทันที กรุณาพิมพ์ QR ใหม่ไปติด
+                    <strong>Note:</strong> เมื่อเปลี่ยน QR ID — รูป QR ต้องพิมพ์ QR ใหม่ไปติดแทนอันเก่า
                 </div>
 
                 <div class="flex gap-3 pt-2">
@@ -570,17 +578,16 @@
                 </div>
 
                 <div>
-                    <label class="text-xs text-slate-400 mb-1 block">เมื่อกด Banner ให้ไปที่ซุ้ม (ถ้ามี)</label>
+                    <label class="text-xs text-slate-400 mb-1 block">เมื่อกด Banner ให้ไปที่ซุ้ม</label>
                     <select id="bannerFormAction" class="w-full p-3 rounded-xl">
                         <option value="">-- ไม่ทำอะไร --</option>
                         <!-- populated by populateBannerStations() -->
                     </select>
-                    <p class="text-xs text-slate-500 mt-2"><i class="fas fa-info-circle mr-1"></i> เมื่อลูกค้ากด banner จะ scroll ไปยังซุ้มที่เลือก (ถ้าเว้นว่าง = banner เป็น decorative)</p>
                 </div>
 
                 <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
                     <input type="checkbox" id="bannerFormActive" checked class="w-5 h-5 accent-blue-500 cursor-pointer">
-                    <label for="bannerFormActive" class="text-sm cursor-pointer flex-1">แสดง banner นี้ในหน้าลูกค้า (Active)</label>
+                    <label for="bannerFormActive" class="text-sm cursor-pointer flex-1">Active</label>
                 </div>
 
                 <div class="flex gap-3 pt-2">
