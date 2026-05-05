@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VETRES | Dashboard</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #050505; color: white; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .glass-card { 
+            background: rgba(255, 255, 255, 0.03); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(255, 255, 255, 0.08); 
+            border-radius: 24px;
+        }
+
+        .sticky-top-nav {
+            position: sticky; top: 0; z-index: 50;
+            background: rgba(5, 5, 5, 0.85);
+            backdrop-filter: blur(24px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .nav-container { display: flex; position: relative; padding: 0 1rem; gap: 0.5rem; }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 1rem 0; cursor: pointer; transition: all 0.3s ease;
+            color: rgba(255, 255, 255, 0.4); position: relative; z-index: 2;
+        }
+        .nav-item.active { color: #fff; }
+        .nav-indicator {
+            position: absolute; bottom: 0; height: 3px; background: #a855f7; 
+            border-radius: 3px 3px 0 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1;
+        }
+
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            opacity: 0;
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .stat-value { font-size: 2.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
+        .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- TOP HEADER -->
+    <div class="sticky-top-nav">
+        <header class="flex justify-between items-center p-6 pb-2">
+            <!-- ซ้าย: กลับหน้า Login & Title -->
+            <div class="flex items-center gap-5">
+                <button onclick="window.location.href='index.html'" class="bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center border border-white/5 text-white/40 hover:text-white transition-all hover:bg-white/10 shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                    <path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 0 1 0 10.75H10.75a.75.75 0 0 1 0-1.5h2.875a3.875 3.875 0 0 0 0-7.75H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.085l-5.5-5.25a.75.75 0 0 1 0-1.085l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <!-- ส่วน Title พร้อมไอคอนใหม่ -->
+                <div class="flex items-center gap-4">
+                    <!-- ไอคอน SVG ที่คุณต้องการ -->
+                    <div class="text-purple-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-9 h-9">
+                            <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    
+                    <div>
+                        <h1 class="text-2xl font-black tracking-widest text-white uppercase leading-none">VET <span class="text-purple-500">RESTAURANT</span></h1>
+                        <p class="text-[10px] text-white/40 uppercase tracking-[0.3em] font-bold mt-1">Dashboard</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ขวา: Date Picker & Export -->
+            <div class="flex items-center gap-3">
+                <div onclick="document.getElementById('datePicker').showPicker?.(); document.getElementById('datePicker').focus();" class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all cursor-pointer relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-purple-400">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+                    </svg>
+                    <input type="date" id="datePicker" onchange="fetchDashboardData()" class="bg-transparent border-none outline-none text-white text-sm font-medium cursor-pointer w-[85px] appearance-none">
+                </div>
+                <button onclick="exportToPDF()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all">
+                    <i class="fas fa-file-pdf"></i> <span class="hidden md:inline">Export PDF</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 3 TABS NAVBAR -->
+        <nav class="nav-container max-w-3xl mx-auto mt-2">
+            <div class="nav-item active" id="tab-overview" onclick="switchView('overview')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625ZM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75Z" />
+                </svg>
+                <span class="text-[10px] font-black uppercase tracking-widest">ภาพรวม</span>
+            </div>
+            <div class="nav-item" id="tab-stations" onclick="switchView('stations')">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
+                <path d="M2.879 7.121A3 3 0 0 0 7.5 6.66a2.997 2.997 0 0 0 2.5 1.34 2.997 2.997 0 0 0 2.5-1.34 3 3 0 1 0 4.622-3.78l-.293-.293A2 2 0 0 0 15.415 2H4.585a2 2 0 0 0-1.414.586l-.292.292a3 3 0 0 0 0 4.243ZM3 9.032a4.507 4.507 0 0 0 4.5-.29A4.48 4.48 0 0 0 10 9.5a4.48 4.48 0 0 0 2.5-.758 4.507 4.507 0 0 0 4.5.29V16.5h.25a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-3.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1 0-1.5H3V9.032Z" />
+                </svg>
+                <span class="text-[10px] font-black uppercase tracking-widest">ซุ้ม</span>
+            </div>
+            <div class="nav-item" id="tab-analytics" onclick="switchView('analytics')">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                </svg>
+                <span class="text-[10px] font-black uppercase tracking-widest">วิเคราะห์</span>
+            </div>
+            <div class="nav-indicator" id="navIndicator"></div>
+        </nav>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+        
+        <!-- ==============================================
+             TAB 1: OVERVIEW (ภาพรวม)
+             ============================================== -->
+        <div id="view-overview" class="dashboard-view animate-slide-up space-y-6">
+            
+            <!-- 🌟 THE EXECUTIVE TOP ROW 🌟 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- 👑 HERO SECTION: FINANCIAL HEALTH (กว้าง 66%) -->
+                <div class="glass-card p-6 lg:col-span-2 relative overflow-hidden border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent shadow-[0_0_30px_rgba(168,85,247,0.05)]">
+                    <div class="absolute -right-10 -top-10 text-purple-500/5 text-[250px] pointer-events-none"><i class="fas fa-money-bill-wave"></i></div>
+                    
+                    <div class="flex flex-col h-full">
+                        <!-- รายได้สุทธิ (Net Sales) -->
+                        <div class="relative z-10 flex-1 flex flex-col justify-center mb-2">
+                            <div>
+                                <h2 class="text-sm font-bold text-purple-300 tracking-widest uppercase mb-2 flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div> 
+                                    รายได้สุทธิ
+                                </h2>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-5xl md:text-6xl font-black text-white tracking-wider drop-shadow-lg" id="statNet">฿0.00</div>
+                                    <div id="trendNet" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 backdrop-blur-md">...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 4 ข้อมูลการเงินรอง (Sub-metrics) -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10 pt-5 border-t border-purple-500/20">
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">ยอดก่อนหักส่วนลด</div>
+                                <div class="text-xl font-bold text-slate-200" id="statGross">฿0</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">ยอดส่วนลด</div>
+                                <div class="text-xl font-bold text-red-400" id="statDiscount">-฿0</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">ยอดเฉลี่ยต่อหัว</div>
+                                <div class="text-xl font-bold text-emerald-400" id="statOverviewAvgSpend">฿0</div>
+                            </div>
+                            <div>
+                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">จำนวนบิล</div>
+                                <div class="text-xl font-bold text-slate-200"><span id="statOverviewTotalBills">0</span> <span class="text-xs font-medium text-slate-500">บิล</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 🚨 ALERT SECTION: OPERATIONS (กว้าง 33%) -->
+                <div class="glass-card p-6 lg:col-span-1 border-orange-500/30 bg-gradient-to-b from-orange-500/5 to-transparent flex flex-col relative overflow-hidden">
+                    
+                    <!-- หัวข้อออเดอร์ค้าง -->
+                    <div class="relative z-10 flex-shrink-0 mb-4 flex justify-between items-start border-b border-orange-500/20 pb-4">
+                        <div>
+                            <h2 class="text-[11px] font-bold text-orange-400/80 tracking-widest uppercase mb-1 flex items-center gap-2">
+                                ออเดอร์กำลังปรุง
+                            </h2>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-4xl font-black text-orange-400" id="statPending">0</span>
+                                <span class="text-sm font-medium text-orange-400/60">รายการ</span>
+                            </div>
+                        </div>
+                        <div class="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.2)]">
+                            <!-- เปลี่ยนกระดิ่งเป็นรูปไฟตามที่คุณต้องการ -->
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+                              <path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248ZM15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.718Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- กราฟวงกลมแจกแจงคิวแต่ละซุ้ม -->
+                    <div class="relative w-full z-10 h-[160px] flex items-center justify-center">
+                        <canvas id="pendingChart"></canvas>
+                        <!-- ข้อความที่จะโชว์เมื่อครัวโล่ง -->
+                        <div id="noPendingMsg" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 hidden">
+                            <i class="fas fa-check-circle text-3xl mb-2 text-emerald-500/30"></i>
+                            <span class="text-xs tracking-widest uppercase">ไม่มีออเดอร์ค้าง</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- กราฟ Peak Time และ เมนู -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="glass-card p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-clock text-purple-400"></i> ช่วงเวลาที่คนเยอะสุด</h3>
+                    <div class="h-64 relative"><canvas id="peakChart"></canvas></div>
+                </div>
+                <div class="glass-card p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-trophy text-yellow-400"></i> 5 เมนูทำเงินสูงสุด</h3>
+                    <div id="topMenusList" class="space-y-4"></div>
+                </div>
+            </div>
+            
+        </div> <!-- ✨ ปิด TAB 1: OVERVIEW แบบสมบูรณ์ที่ตรงนี้ ✨ -->
+        
+
+        <!-- ==============================================
+             TAB 2: STATIONS (วิเคราะห์รายซุ้ม)
+             ============================================== -->
+        <div id="view-stations" class="dashboard-view hidden animate-slide-up space-y-6">
+            
+            <!-- ✨ เพิ่ม Highlight: Fastest / Slowest Station ตรงนี้ ✨ -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="glass-card p-4 flex items-center gap-4 border-emerald-500/20">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-widest">ทำเวลาดีที่สุด</p>
+                        <p class="text-xl font-bold text-white"><span id="statFastestStation">กำลังคำนวณ...</span></p>
+                    </div>
+                </div>
+                <div class="glass-card p-4 flex items-center gap-4 border-red-500/20">
+                    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="currentColor" height="30px" width="30px" version="1.2" baseProfile="tiny" id="_x31_" viewBox="0 0 256 175" xml:space="preserve">
+                    <path d="M185,29.7v0.2l15-12.6c-11.4-6.1-23.9-9.5-37.5-9.5s-26.2,3.4-37.1,9.3l15,12.6L185,29.7L185,29.7z M105.1,93.2  c-24.7,0-45,20.3-45,45v4.5l0,0c0.2,9.5,7.9,17,17.4,17s17.2-7.5,17.4-17l0,0v-4.5c0-5.7,4.5-10.1,10.1-10.1  c9.7,0,17.6-7.9,17.6-17.6S114.8,93.2,105.1,93.2z M221.9,92.8c-9.7,0-17.6,7.9-17.6,17.6v32.4l0,0c0.4,9.3,7.9,16.8,17.4,16.8  s17-7.5,17.4-16.8l0,0v-32.7C239.3,100.5,231.4,92.8,221.9,92.8z M252.7,101.9c0-4.3-1.4-8.5-3.4-12c-2.2,1.6-4.7,2.6-7.7,2.6  c4.1,4.9,6.5,11,6.5,17.6v5.5C251.3,111.8,252.7,107,252.7,101.9z M131.7,110.6c0,5.7-1.8,10.7-4.7,15c11.6,2.6,23.5,4.1,35.7,4.1  c11.4,0,22.1-1.2,32.7-3.4v-16c0-6.5,2.4-12.6,6.3-17h-76.5C129,98,131.7,103.9,131.7,110.6z M125,93.4L125,93.4c0.2,0,0-0.2,0-0.2  V93.4z M245.8,79.6c0-2.4-2-4.7-4.5-4.7h-0.6c-3.4-21.7-15.4-40.6-32.7-52.5l-17.6,14.8c9.7,11.4,16.4,24.1,20.3,37.9h-9.5  c-4.3-13-11.4-25.6-21.5-35.9h-32.9c-10.1,10.5-17,22.7-21.5,35.9h-9.5c3.9-13.4,10.3-26,19.9-36.9l-18.5-15.6  c-17,12.2-29.4,30.8-32.7,52.5h-1.2c-2.4,0-4.5,2-4.5,4.5c0,2.4,2,4.5,4.5,4.5h157.8C243.8,84.1,245.8,82,245.8,79.6z M81.6,89.5  c-4.9-0.6-8.9-4.7-8.9-9.9v-8.9c0-18.7-15-33.9-33.9-33.9c-18.7,0-33.9,15-33.9,33.9v8.9c0,4.9,4.1,8.9,8.9,8.9h24.5  c2.2,11.4,8.5,20.7,17.6,27.4C61.1,104.3,70.2,95.2,81.6,89.5z M24.2,64.4c-3,0-5.7-2.4-5.7-5.7c0-3,2.4-5.7,5.7-5.7  s5.7,2.4,5.7,5.7C29.8,61.9,27.4,64.4,24.2,64.4z"/>
+                    </svg>
+                    </div>
+                    <div>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-widest">ใช้เวลามากที่สุด</p>
+                        <p class="text-xl font-bold text-white"><span id="statSlowestStation">กำลังคำนวณ...</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card p-6">
+                <h3 class="text-xl font-bold mb-1 flex items-center gap-2"><i class="fas fa-store text-emerald-400"></i> รายได้แยกซุ้ม</h3>
+                <p class="text-medium text-slate-400 mb-6 font-light">คลิกแท่งกราฟเพื่อดูรายละเอียดแต่ละซุ้ม</p>
+                <div class="h-96 relative"><canvas id="stationChart"></canvas></div>
+            </div>
+        </div>
+
+<!-- ==============================================
+             TAB 3: ANALYTICS (วิเคราะห์พฤติกรรมลูกค้า)
+             ============================================== -->
+        <div id="view-analytics" class="dashboard-view hidden animate-slide-up">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- 🟦 ส่วนที่ 1: Insight Cards (กว้าง 8 ส่วน) -->
+                <div class="lg:col-span-8 space-y-4">
+                    <div class="flex items-center gap-3 mb-2 px-2">
+                        <!-- เปลี่ยนแท่งสีเป็นไอคอนกลุ่มคน -->
+                        <div class="text-pink-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7">
+                                <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
+                                <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-white tracking-wider">วิเคราะห์ลูกค้า</h3>
+                    </div>
+
+                    <!-- 💳 1. Financial Insight -->
+                    <div class="glass-card p-6 relative overflow-hidden border-purple-500/20 bg-gradient-to-br from-purple-500/10 via-transparent to-transparent group transition-all duration-500">
+                        <!-- ไอคอนเงาด้านหลัง -->
+                        <div class="absolute -right-6 -bottom-8 text-purple-500/5 text-9xl transform -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row md:items-center relative z-10">
+                            <!-- ข้อมูลหลัก (Hero Metric) -->
+                            <div class="flex-1 space-y-1">
+                                <p class="text-[10px] uppercase tracking-[0.2em] text-purple-400/60 font-bold flex items-center gap-2">
+                                    <i class="fas fa-coins"></i> ยอดเฉลี่ยต่อหัว
+                                </p>
+                                <div class="text-5xl font-black text-white tracking-wide leading-none py-2">
+                                    <span id="statAvgSpend">0</span> 
+                                    <span class="text-xs text-slate-500 font-normal ml-1">บาท</span>
+                                </div>
+                            </div>
+                            
+                            <!-- ข้อมูลรอง (จัดตำแหน่งให้ตรงกัน) -->
+                            <div class="flex gap-12 mt-6 md:mt-0 md:border-l border-white/10 md:pl-12 w-full md:w-[320px] shrink-0">
+                                <div class="w-1/2 space-y-1 text-left">
+                                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-bold">บิลที่แพงที่สุด</p>
+                                    <p class="text-xl font-bold text-emerald-400 tracking-wide" id="statMaxBill">฿0</p>
+                                </div>
+                                <div class="w-1/2 space-y-1 text-left">
+                                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-bold">บิลที่ถูกที่สุด</p>
+                                    <p class="text-xl font-bold text-red-400 tracking-wide" id="statMinBill">฿0</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ⏳ 2. Time Insight -->
+                    <div class="glass-card p-6 relative overflow-hidden border-blue-500/20 bg-gradient-to-br from-blue-500/10 via-transparent to-transparent group transition-all duration-500">
+                        <!-- ไอคอนเงาด้านหลัง -->
+                        <div class="absolute -right-6 -bottom-8 text-blue-500/5 text-9xl transform -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:items-center relative z-10">
+                            <div class="flex-1 space-y-1">
+                                <p class="text-[10px] uppercase tracking-[0.2em] text-blue-400/60 font-bold flex items-center gap-2">
+                                    <i class="fas fa-hourglass-half"></i> เวลานั่งโต๊ะเฉลี่ย
+                                </p>
+                                <div class="text-5xl font-black text-white tracking-wide leading-none py-2">
+                                    <span id="statAvgDwell">0</span> 
+                                    <span class="text-xs text-slate-500 font-normal ml-1">Mins</span>
+                                </div>
+                            </div>
+                            
+                            <!-- ตำแหน่งคงที่ (Fixed width md:w-[320px]) -->
+                            <div class="flex gap-12 mt-6 md:mt-0 md:border-l border-white/10 md:pl-12 w-full md:w-[320px] shrink-0">
+                                <div class="w-1/2 space-y-1 text-left">
+                                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-bold">เวลานั่งนานสุด</p>
+                                    <p class="text-xl font-bold text-orange-400 tracking-wide" id="statLongestStay">0 นาที</p>
+                                </div>
+                                <div class="w-1/2 space-y-1 text-left">
+                                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-bold">เวลานั่งสั้นสุด</p>
+                                    <p class="text-xl font-bold text-sky-400 tracking-wide" id="statShortestStay">0 นาที</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🪑 3. Table Insight -->
+                    <div class="glass-card p-6 relative overflow-hidden border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent group transition-all duration-500">
+                        <!-- ไอคอนเงาด้านหลัง -->
+                        <div class="absolute -right-6 -bottom-8 text-emerald-500/5 text-9xl transform -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
+                            <i class="fas fa-chair"></i>
+                        </div>
+
+                        <div class="flex flex-col md:flex-row md:items-center relative z-10">
+                            <div class="flex-1 space-y-1">
+                                <p class="text-[10px] uppercase tracking-[0.2em] text-emerald-400/60 font-bold flex items-center gap-2">
+                                    <i class="fas fa-file-invoice"></i> จำนวนบิลทั้งหมด
+                                </p>
+                                <div class="text-5xl font-black text-white tracking-wider"><span id="statTotalBills">0</span> <span class="text-xs text-slate-500 font-normal">Bills</span></div>
+                            </div>
+                            
+                            <div class="flex gap-12 mt-6 md:mt-0 md:border-l border-white/10 md:pl-12 w-full md:w-[320px] shrink-0">
+                                <div class="w-1/2 space-y-1 text-left">
+                                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Top Turnover</p>
+                                    <p class="text-xl font-bold text-emerald-400 tracking-wide" id="statMaxTurnover">-</p>
+                                </div>
+                                <div class="w-1/2 space-y-1 text-left">
+                                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-bold">Low Turnover</p>
+                                    <p class="text-xl font-bold text-slate-400 tracking-wide" id="statMinTurnover">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-4 flex flex-col gap-4">
+                    <div class="px-2">
+                         <h3 class="text-xl font-bold text-white tracking-wider flex items-center gap-2">
+                             <i class="fas fa-pie-chart text-purple-400"></i> รายได้แยกประเภท
+                         </h3>
+                    </div>
+                    <!-- ปรับกล่องให้ยืดเต็มความสูง (flex-1) เพื่อให้พอดีกับฝั่งซ้าย -->
+                    <div class="glass-card p-8 flex flex-col items-center justify-center h-full min-h-0 relative overflow-hidden">
+                        <div class="w-full relative flex items-center justify-center">
+                            <!-- ขยายกราฟให้ใหญ่ขึ้นอีกระดับ -->
+                            <div class="w-full max-w-[300px] aspect-square relative">
+                                <canvas id="typeChart"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
+                                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-1">Total Net</p>
+                                    <p class="text-xl font-black text-white tracking-wide leading-none" id="donutTotal">฿0</p>
+                                </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+    </main>
+
+    <!-- ==============================================
+         MODAL: STATION DETAIL
+         ============================================== -->
+    <div id="stationModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[100]">
+        <div class="bg-[#141414] w-full max-w-lg rounded-3xl border border-white/10 p-8 shadow-2xl glass-card relative overflow-hidden">
+            <div id="modalColorStrip" class="absolute top-0 left-0 w-full h-2 bg-purple-500"></div>
+            
+            <div class="flex justify-between items-start mb-6 pt-2">
+                <div>
+                    <h2 class="text-3xl font-black text-white" id="modalStationName">ชื่อซุ้ม</h2>
+                    <p class="text-slate-400 text-sm">ข้อมูลเชิงลึก</p>
+                </div>
+                <button onclick="document.getElementById('stationModal').classList.add('hidden')" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 transition-all"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <!-- กล่องรายได้รวม (อัปเดตใส่พื้นหลังเงิน) -->
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden">
+                    <div class="absolute -right-3 -bottom-3 text-white/5 text-5xl"><i class="fas fa-money-bill-wave"></i></div>
+                    <div class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">รายได้รวม</div>
+                    <div class="text-2xl font-bold text-white" id="modalRevenue">฿0</div>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden">
+                    <div class="absolute -right-3 -bottom-3 text-white/5 text-5xl"><i class="fas fa-stopwatch"></i></div>
+                    <div class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">เวลารอเฉลี่ย</div>
+                    <div class="text-2xl font-bold text-white" id="modalWaitTime">0 นาที</div>
+                </div>
+            </div>
+
+            <h3 class="text-sm font-bold text-slate-300 mb-3 border-b border-white/10 pb-2"><i class="fas fa-star text-yellow-500 mr-2"></i> เมนูขายดีประจำซุ้ม</h3>
+            <div id="modalTopItems" class="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2"></div>
+        </div>
+    </div>
+    <script>
+  /**
+   * ฟังก์ชันกรองหน่วยออกเฉพาะตำแหน่งที่กำหนด
+   * @param {string} id - ID ของ Element ที่ต้องการดักจับ
+   * @param {string} textToRemove - ข้อความหรือสัญลักษณ์ที่ต้องการตัดออก
+   */
+  const cleanSpecificValue = (id, textToRemove) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const observer = new MutationObserver(() => {
+      // ตรวจสอบว่าในข้อความมีหน่วยที่ต้องการลบปนอยู่หรือไม่
+      if (el.innerText.includes(textToRemove)) {
+        const cleanedValue = el.innerText.replace(textToRemove, '').trim();
+        // อัปเดตเฉพาะเมื่อค่าเปลี่ยนไปจริงๆ เพื่อป้องกัน Loop
+        if (el.innerText !== cleanedValue) {
+          el.innerText = cleanedValue;
+        }
+      }
+    });
+
+    // เริ่มการดักจับการเปลี่ยนแปลงของตัวเลขภายใน Span
+    observer.observe(el, { childList: true, characterData: true, subtree: true });
+  };
+
+  // เจาะจงลบเฉพาะ 2 ตำแหน่งที่คุณต้องการเท่านั้น
+  cleanSpecificValue('statAvgSpend', '฿');     // ลบ ฿ ออกจากยอดเฉลี่ยต่อหัว
+  cleanSpecificValue('statAvgDwell', 'นาที');  // ลบ คำว่านาที ออกจากเวลานั่งเฉลี่ย
+</script>
+
+
+    <script>
+        // เปลี่ยนชื่อตัวแปรเป็น supabaseClient เพื่อไม่ให้ชนกับไลบรารีหลัก
+        const SUPABASE_URL = 'https://xjosswxrtcanhvpdbrap.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqb3Nzd3hydGNhbmh2cGRicmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjkyODcsImV4cCI6MjA5MjUwNTI4N30.DrtoBXmdL1EN17sVYZIYNVVOOp7UHfeAz1sDImZmYFM';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 🎨 ชุดสีประจำซุ้ม
+        const stationColors = {
+            'โรบินฮู้ด': '#ef4444',     'หมูกระทะ': '#22c55e',      'ไก่ไวน์': '#a855f7',
+            'ส้มตำ': '#d97706',         'กระต่าย': '#ec4899',       'ต้มยำ': '#f97316',
+            'คอหมู': '#78350f',         'บาร์บีคิว': '#c2410c',     'ไข่เจียว': '#eab308',
+            'ข้าว': '#38bdf8',          'น้ำ': '#1d4ed8',           'โอ้เอ๋ว': '#d946ef',
+            'default': '#64748b'
+        };
+
+        let charts = { peak: null, station: null, type: null, pending: null };
+        let currentRawData = { servedItems: [], sessions: [], orders: [] };
+
+        // ════════════════════════════════════════════════
+        // 1. Navigation & Default Date
+        // ════════════════════════════════════════════════
+        function getTodayBKK() {
+            const now = new Date();
+            const bkkTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (7 * 3600000));
+            return bkkTime.toISOString().split('T')[0];
+        }
+
+        window.onload = () => {
+            // เซ็ตวันที่ปัจจุบันของประเทศไทยเป็น Default
+            document.getElementById('datePicker').value = getTodayBKK();
+            
+            switchView('overview');
+            fetchDashboardData();
+
+            // ใช้ supabaseClient ในการ Subscribe Realtime
+            supabaseClient.channel('dashboard_updates')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => autoRefreshIfToday())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => autoRefreshIfToday())
+                .subscribe();
+        };
+
+        function switchView(viewId) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            const activeTab = document.getElementById(`tab-${viewId}`);
+            if(activeTab) {
+                activeTab.classList.add('active');
+                const indicator = document.getElementById('navIndicator');
+                indicator.style.width = `${activeTab.offsetWidth}px`;
+                indicator.style.left = `${activeTab.offsetLeft}px`;
+            }
+
+            document.querySelectorAll('.dashboard-view').forEach(v => v.classList.add('hidden'));
+            const targetView = document.getElementById(`view-${viewId}`);
+            if(targetView) targetView.classList.remove('hidden');
+
+            // บังคับให้กราฟ Resize เมื่อแสดงผล เพื่อแก้ปัญหากราฟหายตอนซ่อนหน้า
+            setTimeout(() => {
+                if (viewId === 'overview' && charts.peak) charts.peak.resize();
+                if (viewId === 'stations' && charts.station) charts.station.resize();
+                if (viewId === 'analytics' && charts.type) charts.type.resize();
+            }, 100);
+        }
+
+        function autoRefreshIfToday() {
+            if (document.getElementById('datePicker').value === getTodayBKK()) {
+                fetchDashboardData();
+            }
+        }
+
+        function formatDuration(ms) {
+            if (ms === 0 || isNaN(ms)) return '0 นาที';
+            const totalSecs = Math.floor(ms / 1000);
+            if (totalSecs < 60) return `${totalSecs} วิ.`; // ถ้าไม่ถึง 1 นาที ให้แสดงเป็นวินาที
+            const mins = Math.floor(totalSecs / 60);
+            const hrs = Math.floor(mins / 60);
+            if (hrs > 0) return `${hrs} ชม. ${mins % 60} น.`;
+            return `${mins} นาที`;
+        }
+
+        // ════════════════════════════════════════════════
+        // 2. Data Fetching & Processing
+        // ════════════════════════════════════════════════
+        async function fetchDashboardData() {
+            const selectedDate = document.getElementById('datePicker').value;
+            
+            const bkkOffset = 7 * 3600000;
+            const startOfDay = new Date(`${selectedDate}T00:00:00Z`);
+            startOfDay.setTime(startOfDay.getTime() - bkkOffset); 
+            
+            const endOfDay = new Date(startOfDay.getTime());
+            endOfDay.setDate(endOfDay.getDate() + 1);
+
+            const startOfYesterday = new Date(startOfDay.getTime() - 86400000);
+            const endOfYesterday = new Date(startOfDay.getTime());
+
+            try {
+                // ใช้ supabaseClient สำหรับการ Fetch ข้อมูลทั้งหมด
+                const { data: items } = await supabaseClient.from('order_items')
+                    .select('id, item_name_th, quantity, total_price, status, kds_station, created_at, served_at, session_token, order_id')
+                    .gte('created_at', startOfDay.toISOString())
+                    .lt('created_at', endOfDay.toISOString())
+                    .neq('status', 'cancel');
+
+                const { data: orders } = await supabaseClient.from('orders')
+                    .select('id, order_type')
+                    .gte('created_at', startOfDay.toISOString())
+                    .lt('created_at', endOfDay.toISOString());
+
+                // เพิ่ม table_id เข้าไปใน select
+                const { data: sessions } = await supabaseClient.from('sessions')
+                    .select('token, discount, pax, session_type, opened_at, closed_at, table_id') 
+                    .gte('opened_at', startOfDay.toISOString())
+                    .lt('opened_at', endOfDay.toISOString());
+
+
+
+                const { data: yestItems } = await supabaseClient.from('order_items')
+                    .select('total_price, kds_station, session_token')
+                    .eq('status', 'served')
+                    .gte('created_at', startOfYesterday.toISOString())
+                    .lt('created_at', endOfYesterday.toISOString());
+                
+                const { data: yestSessions } = await supabaseClient.from('sessions')
+                    .select('token, discount')
+                    .gte('opened_at', startOfYesterday.toISOString())
+                    .lt('opened_at', endOfYesterday.toISOString());
+
+                processData(items || [], orders || [], sessions || [], yestItems || [], yestSessions || []);
+
+            } catch (err) { console.error("Fetch Error:", err); }
+        }
+
+        function processData(items, orders, sessions, yestItems, yestSessions) {
+            const pendingItems = items.filter(i => i.status === 'pending');
+            const servedItems = items.filter(i => i.status === 'served');
+            currentRawData = { servedItems, sessions, orders };
+
+            const orderTypeMap = orders.reduce((acc, o) => { acc[o.id] = o.order_type; return acc; }, {});
+            const discountMap = sessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
+            const yestDiscountMap = yestSessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
+
+            // --- 1. คำนวณรายได้ ---
+            const calcNetRevenue = (itemArray, discMap) => {
+                let gross = 0, discountAmt = 0;
+                itemArray.forEach(item => {
+                    const price = parseFloat(item.total_price) || 0;
+                    gross += price;
+                    if (item.kds_station !== 'น้ำ') {
+                        discountAmt += price * ((discMap[item.session_token] || 0) / 100);
+                    }
+                });
+                return { gross, discountAmt, net: gross - discountAmt };
+            };
+
+            const todayRev = calcNetRevenue(servedItems, discountMap);
+            const yestRev = calcNetRevenue(yestItems, yestDiscountMap);
+
+            document.getElementById('statNet').innerText = `฿${todayRev.net.toLocaleString('th-TH', {minimumFractionDigits:2})}`;
+            document.getElementById('statGross').innerText = `฿${todayRev.gross.toLocaleString('th-TH')}`;
+            document.getElementById('statDiscount').innerText = `-฿${todayRev.discountAmt.toLocaleString('th-TH', {minimumFractionDigits:2})}`;
+            document.getElementById('statPending').innerText = pendingItems.length;
+            document.getElementById('donutTotal').innerText = `฿${todayRev.net.toLocaleString('th-TH')}`;
+
+            const trendEl = document.getElementById('trendNet');
+            if (yestRev.net === 0) {
+                trendEl.innerHTML = `<span class="text-slate-400">N/A</span>`;
+            } else {
+                const diff = todayRev.net - yestRev.net;
+                const pct = (diff / yestRev.net) * 100;
+                if (diff >= 0) {
+                    trendEl.className = 'text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/30';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-up mr-1"></i> ${pct.toFixed(1)}%`;
+                } else {
+                    trendEl.className = 'text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-lg border border-red-500/30';
+                    trendEl.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${Math.abs(pct).toFixed(1)}%`;
+                }
+            }
+
+            // --- 2. คำนวณ Customer Insights (Spend, Dwell Time, Turnover) ---
+            document.getElementById('statTotalBills').innerText = orders.length;
+            
+            let totalPax = 0;
+            let totalDwellTimeMs = 0;
+            let validDwellSessions = 0;
+
+            let longestStayMs = 0;
+            let shortestStayMs = Infinity;
+            let maxBill = 0;
+            let minBill = Infinity;
+
+            const tableCounts = {}; // นับบิลแต่ละโต๊ะ
+
+            // 2.1 หาระยะเวลา และนับบิลรายโต๊ะ
+            sessions.forEach(s => {
+                // นับโต๊ะ (ไม่นับ Takehome)
+                if (s.table_id && s.table_id.toLowerCase() !== 'takehome') {
+                    tableCounts[s.table_id] = (tableCounts[s.table_id] || 0) + 1;
+                }
+
+                if (s.session_type === 'dine_in' || !s.session_type) {
+                    const pax = parseInt(s.pax, 10) || 1;
+                    totalPax += pax;
+
+                    if (s.opened_at && s.closed_at) {
+                        const dwellTime = new Date(s.closed_at).getTime() - new Date(s.opened_at).getTime();
+                        totalDwellTimeMs += dwellTime;
+                        validDwellSessions++;
+
+                        if (dwellTime > longestStayMs) longestStayMs = dwellTime;
+                        if (dwellTime > 0 && dwellTime < shortestStayMs) shortestStayMs = dwellTime;
+                    }
+                }
+            });
+
+            if (shortestStayMs === Infinity) shortestStayMs = 0;
+
+            // คำนวณหาโต๊ะหมุนไว/ช้าสุด (Turnover)
+            let maxTableCount = 0; let minTableCount = Infinity;
+            let maxTableId = '-'; let minTableId = '-';
+            
+            Object.entries(tableCounts).forEach(([tId, count]) => {
+                if (count > maxTableCount) { maxTableCount = count; maxTableId = tId; }
+                if (count < minTableCount) { minTableCount = count; minTableId = tId; }
+            });
+            if (minTableCount === Infinity) minTableCount = 0;
+
+            // 2.2 หายอดบิลสุทธิรายโต๊ะ
+            const sessionNetTotals = {};
+            servedItems.forEach(i => {
+                if(orderTypeMap[i.order_id] === 'dine_in' || !orderTypeMap[i.order_id]) {
+                    const token = i.session_token;
+                    if(token) {
+                        const price = parseFloat(i.total_price || 0);
+                        const discountPct = i.kds_station === 'น้ำ' ? 0 : (discountMap[token] || 0);
+                        const netPrice = price * (1 - discountPct / 100);
+                        sessionNetTotals[token] = (sessionNetTotals[token] || 0) + netPrice;
+                    }
+                }
+            });
+
+            let dineInNet = 0;
+            Object.values(sessionNetTotals).forEach(netTotal => {
+                dineInNet += netTotal;
+                if (netTotal > maxBill) maxBill = netTotal;
+                if (netTotal > 0 && netTotal < minBill) minBill = netTotal;
+            });
+            if (minBill === Infinity) minBill = 0;
+
+            // 2.3 อัปเดตหน้าจอทั้งหมด
+            const avgSpend = totalPax > 0 ? (dineInNet / totalPax) : 0;
+            document.getElementById('statAvgSpend').innerText = `฿${Math.round(avgSpend).toLocaleString()}`;
+            
+            const statOverviewAvgSpend = document.getElementById('statOverviewAvgSpend');
+            if (statOverviewAvgSpend) statOverviewAvgSpend.innerText = `฿${Math.round(avgSpend).toLocaleString()}`;
+            
+            const statOverviewTotalBills = document.getElementById('statOverviewTotalBills');
+            if (statOverviewTotalBills) statOverviewTotalBills.innerText = orders.length;
+
+            const avgDwellMs = validDwellSessions > 0 ? (totalDwellTimeMs / validDwellSessions) : 0;
+            document.getElementById('statAvgDwell').innerText = formatDuration(avgDwellMs);
+            
+            document.getElementById('statMaxBill').innerText = `฿${Math.round(maxBill).toLocaleString()}`;
+            document.getElementById('statMinBill').innerText = `฿${Math.round(minBill).toLocaleString()}`;
+            
+            document.getElementById('statLongestStay').innerText = formatDuration(longestStayMs);
+            document.getElementById('statShortestStay').innerText = formatDuration(shortestStayMs);
+
+            // แสดงผลโต๊ะ Turnover
+            document.getElementById('statMaxTurnover').innerText = maxTableCount > 0 ? `${maxTableId} (${maxTableCount} บิล)` : '-';
+            document.getElementById('statMinTurnover').innerText = minTableCount > 0 ? `${minTableId} (${minTableCount} บิล)` : '-';
+
+            // --- 3. คำนวณความเร็วรายซุ้ม (Station Performance) ---
+            const stationTimes = {}; // { 'ซุ้มA': { totalMs: 0, count: 0 } }
+            servedItems.forEach(item => {
+                if (item.kds_station && item.created_at && item.served_at) {
+                    const waitTime = new Date(item.served_at).getTime() - new Date(item.created_at).getTime();
+                    if (!stationTimes[item.kds_station]) stationTimes[item.kds_station] = { totalMs: 0, count: 0 };
+                    stationTimes[item.kds_station].totalMs += waitTime;
+                    stationTimes[item.kds_station].count++;
+                }
+            });
+
+            let fastestStation = { name: '-', time: Infinity };
+            let slowestStation = { name: '-', time: 0 };
+
+            Object.keys(stationTimes).forEach(station => {
+                const avgMs = stationTimes[station].totalMs / stationTimes[station].count;
+                // พิจารณาเฉพาะซุ้มที่มีคิวพอสมควร (เช่น มากกว่า 1 จาน) เพื่อตัด outlier
+                if (stationTimes[station].count > 0) {
+                    if (avgMs < fastestStation.time) { fastestStation = { name: station, time: avgMs }; }
+                    if (avgMs > slowestStation.time) { slowestStation = { name: station, time: avgMs }; }
+                }
+            });
+
+            document.getElementById('statFastestStation').innerHTML = fastestStation.name !== '-' 
+                ? `ซุ้ม${fastestStation.name} <span class="text-sm font-normal text-slate-400">(${Math.round(fastestStation.time / 60000)}m)</span>` 
+                : '-';
+            
+            document.getElementById('statSlowestStation').innerHTML = slowestStation.name !== '-' 
+                ? `ซุ้ม${slowestStation.name} <span class="text-sm font-normal text-slate-400">(${Math.round(slowestStation.time / 60000)}m)</span>` 
+                : '-';
+
+            // --- 4. Render Charts (ของเดิม) ---
+            const hoursCount = Array(24).fill(0);
+            items.forEach(i => hoursCount[new Date(i.created_at).getHours()]++);
+            renderPeakChart(hoursCount);
+
+            const menuRev = {};
+            servedItems.forEach(i => menuRev[i.item_name_th] = (menuRev[i.item_name_th] || 0) + parseFloat(i.total_price || 0));
+            document.getElementById('topMenusList').innerHTML = Object.entries(menuRev).sort((a,b) => b[1] - a[1]).slice(0, 5).map((m, i) => `
+                <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-400 border border-slate-700">${i+1}</div>
+                        <span class="font-medium text-slate-200">${m[0]}</span>
+                    </div>
+                    <span class="font-bold text-emerald-400">฿${m[1].toLocaleString()}</span>
+                </div>
+            `).join('') || '<div class="text-slate-500 text-center py-5">ยังไม่มีข้อมูล</div>';
+
+            const stationGross = {};
+            servedItems.forEach(i => {
+                const st = i.kds_station || 'Unknown';
+                stationGross[st] = (stationGross[st] || 0) + parseFloat(i.total_price || 0);
+            });
+            renderStationChart(stationGross);
+
+            const typeGross = { 'dine_in': 0, 'takehome': 0, 'staff': 0 };
+            servedItems.forEach(i => {
+                const t = orderTypeMap[i.order_id] || 'dine_in';
+                typeGross[t] = (typeGross[t] || 0) + parseFloat(i.total_price || 0);
+            });
+            renderTypeChart(typeGross);
+
+            // --- เตรียมข้อมูลสำหรับกราฟ Pie ออเดอร์ค้าง ---
+            const pendingByStation = {};
+            pendingItems.forEach(i => {
+                const st = i.kds_station || 'Unknown';
+                pendingByStation[st] = (pendingByStation[st] || 0) + i.quantity;
+            });
+            renderPendingChart(pendingByStation);
+
+        }
+
+        // ════════════════════════════════════════════════
+        // 3. Chart.js Configurations
+        // ════════════════════════════════════════════════
+        Chart.defaults.color = 'rgba(255,255,255,0.5)';
+        Chart.defaults.font.family = 'Kanit';
+
+        function renderPeakChart(dataArr) {
+            if (charts.peak) charts.peak.destroy();
+            const ctx = document.getElementById('peakChart').getContext('2d');
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
+            charts.peak = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
+                    datasets: [{
+                        label: 'จำนวนรายการอาหาร (Items)', data: dataArr,
+                        borderColor: '#3b82f6', backgroundColor: gradient, borderWidth: 3,
+                        pointBackgroundColor: '#fff', pointBorderColor: '#3b82f6', pointRadius: 4,
+                        fill: true, tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        function renderStationChart(stationData) {
+            if (charts.station) charts.station.destroy();
+            const ctx = document.getElementById('stationChart').getContext('2d');
+            const sortedData = Object.entries(stationData).sort((a,b) => b[1] - a[1]);
+            const labels = sortedData.map(d => d[0]);
+            const bgColors = labels.map(l => stationColors[l] || stationColors['default']);
+
+            charts.station = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{ data: sortedData.map(d => d[1]), backgroundColor: bgColors, borderRadius: 8 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } },
+                    onClick: (e, activeElements) => {
+                        if (activeElements.length > 0) openStationModal(labels[activeElements[0].index]);
+                    }
+                }
+            });
+        }
+
+        function renderTypeChart(typeData) {
+            if (charts.type) charts.type.destroy();
+            const ctx = document.getElementById('typeChart').getContext('2d');
+            charts.type = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['ทานที่ร้าน', 'กลับบ้าน', 'พนักงาน'],
+                    datasets: [{ data: [typeData['dine_in'], typeData['takehome'], typeData['staff']], backgroundColor: [
+                            '#3b82f6', // ทานที่ร้าน (สีฟ้า Blue 500)
+                            '#a855f7', // กลับบ้าน (สีม่วง Purple 500)
+                            '#f59e0b'  // พนักงาน (สีส้ม Amber 500)
+                        ], borderWidth: 0, hoverOffset: 4 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } } }
+            });
+        }
+
+        function renderPendingChart(dataMap) {
+            const ctx = document.getElementById('pendingChart');
+            if (!ctx) return;
+            
+            if (charts.pending) charts.pending.destroy();
+            
+            const labels = Object.keys(dataMap);
+            const data = Object.values(dataMap);
+            
+            const noPendingMsg = document.getElementById('noPendingMsg');
+            
+            // ถ้าไม่มีออเดอร์ค้างเลย ให้ซ่อนกราฟแล้วโชว์ข้อความ "ครัวโล่ง"
+            if (data.length === 0) {
+                ctx.style.display = 'none';
+                if(noPendingMsg) noPendingMsg.classList.remove('hidden');
+                return;
+            } else {
+                ctx.style.display = 'block';
+                if(noPendingMsg) noPendingMsg.classList.add('hidden');
+            }
+
+            const bgColors = labels.map(l => stationColors[l] || stationColors['default']);
+
+            charts.pending = new Chart(ctx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{ 
+                        data: data, 
+                        backgroundColor: bgColors, 
+                        borderWidth: 2,
+                        borderColor: '#0a0a0a' // สีเส้นขอบให้กลืนกับพื้นหลังการ์ด
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '60%', 
+                    plugins: { 
+                        legend: { 
+                            position: 'right', 
+                            labels: { 
+                                boxWidth: 12, 
+                                padding: 12, 
+                                font: { family: 'Kanit', size: 10 }, 
+                                color: '#94a3b8' 
+                            } 
+                        } 
+                    } 
+                }
+            });
+        }
+
+        // ════════════════════════════════════════════════
+        // 4. Modal & Export
+        // ════════════════════════════════════════════════
+        function openStationModal(stationName) {
+            const stationItems = currentRawData.servedItems.filter(i => i.kds_station === stationName);
+            const revenue = stationItems.reduce((s, i) => s + parseFloat(i.total_price||0), 0);
+            
+            let totalWaitMs = 0, validWaitCount = 0;
+            stationItems.forEach(item => {
+                if(item.created_at && item.served_at) {
+                    totalWaitMs += (new Date(item.served_at).getTime() - new Date(item.created_at).getTime());
+                    validWaitCount++;
+                }
+            });
+            // แก้ไข: ใช้ formatDuration แทนการหารตรงๆ และเปลี่ยนตัวแปรเป็น avgWaitMs
+            const avgWaitMs = validWaitCount > 0 ? (totalWaitMs / validWaitCount) : 0;
+
+            const itemCounts = {};
+            stationItems.forEach(i => itemCounts[i.item_name_th] = (itemCounts[i.item_name_th] || 0) + i.quantity);
+            const topMenus = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
+
+            document.getElementById('modalStationName').innerText = `ซุ้ม${stationName}`;
+            document.getElementById('modalColorStrip').style.backgroundColor = stationColors[stationName] || stationColors['default'];
+            document.getElementById('modalRevenue').innerText = `฿${revenue.toLocaleString()}`;
+            // แก้ไข: เรียกใช้ formatDuration และส่ง avgWaitMs เข้าไป
+            document.getElementById('modalWaitTime').innerText = formatDuration(avgWaitMs);
+            
+            document.getElementById('modalTopItems').innerHTML = topMenus.map((m, i) => `
+                <div class="flex justify-between items-center text-sm p-2 bg-white/5 rounded-lg border border-white/5">
+                    <span class="text-slate-300"><span class="text-slate-500 mr-2">${i+1}.</span>${m[0]}</span>
+                    <span class="font-bold text-white">${m[1]} จาน</span>
+                </div>
+            `).join('') || '<div class="text-slate-500 text-sm">ไม่มีข้อมูล</div>';
+
+            document.getElementById('stationModal').classList.remove('hidden');
+        }
+
+        // ════════════════════════════════════════════════
+        // 4. Modal & Export (Update)
+        // ════════════════════════════════════════════════
+
+        async function exportToPDF() {
+            const exportBtn = event.currentTarget; // ปุ่มที่ถูกกด
+            const originalText = exportBtn.innerHTML;
+            
+            // เปลี่ยนสถานะปุ่มเป็นกำลังโหลด
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้าง PDF...';
+            exportBtn.disabled = true;
+
+            try {
+                // อ้างอิงถึงพื้นที่หลักที่จะแคปหน้าจอ (หน้า Overview หรือ Analytics)
+                const targetArea = document.querySelector('main');
+                const selectedDate = document.getElementById('datePicker').value;
+
+                // ใช้ html2canvas ถ่ายภาพพื้นที่เป้าหมาย
+                const canvas = await html2canvas(targetArea, {
+                    scale: 2, // เพิ่มความคมชัด
+                    backgroundColor: '#050505', // ตั้งสีพื้นหลังให้ตรงกับเว็บ
+                    logging: false,
+                    useCORS: true // อนุญาตให้โหลดรูปภาพข้ามโดเมนได้ (ถ้ามี)
+                });
+
+                // แปลงภาพที่ได้เป็นข้อมูล URL
+                const imgData = canvas.toDataURL('image/png');
+
+                // ตั้งค่าขนาดหน้า PDF เป็นแนวตั้ง (A4)
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                // คำนวณขนาดเพื่อให้ภาพพอดีกับกระดาษ A4
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+                // ใส่หัวข้อรายงานและวันที่
+                pdf.setFontSize(16);
+                pdf.setTextColor(0, 0, 0); // สีดำ
+                pdf.text(`VETRES Dashboard Report`, 10, 15);
+                pdf.setFontSize(10);
+                pdf.text(`Exported Date: ${selectedDate}`, 10, 22);
+
+                // แปะภาพลงใน PDF (เว้นระยะขอบบนไว้ 30mm สำหรับหัวข้อ)
+                pdf.addImage(imgData, 'PNG', 0, 30, pdfWidth, pdfHeight);
+
+                // สั่งเซฟไฟล์
+                pdf.save(`VETRES_Dashboard_${selectedDate}.pdf`);
+
+            } catch (error) {
+                console.error("PDF Export Error:", error);
+                alert("เกิดข้อผิดพลาดในการสร้าง PDF");
+            } finally {
+                // คืนสถานะปุ่มกลับมาเหมือนเดิม
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

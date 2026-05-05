@@ -1,0 +1,3223 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+  <title>Vet Restaurant</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Prompt', 'sans-serif'],
+          }
+        }
+      },
+      safelist: [
+        'bg-green-500', 
+        'bg-red-600', 
+        'bg-yellow-500',
+        'opacity-0', 
+        'opacity-100', 
+        'translate-x-full', 
+        'translate-x-0',
+        'z-[100]'
+      ]
+    }
+  </script>
+
+  <style>
+    /* Transitions for smooth animations */
+    #mainHeaderContent {
+      overflow: hidden; 
+      will-change: height, opacity, margin-bottom; 
+    }
+    .break-word-force {
+      word-break: break-all;
+      overflow-wrap: break-word; 
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-150%) skewX(-15deg); }
+      60% { transform: translateX(250%) skewX(-15deg); } 
+      100% { transform: translateX(250%) skewX(-15deg); } 
+    }
+    .shimmer-effect {
+      position: relative;
+      overflow: hidden; 
+    }
+    .shimmer-effect::after {
+      content: '';
+      position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+      background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 100%);
+      transform: translateX(-150%) skewX(-15deg);
+      animation: shimmer 3s infinite; 
+    }
+    .gpu-accelerated {
+        transform: translateZ(0); 
+        backface-visibility: hidden; 
+        perspective: 1000px;
+    }
+    @keyframes gel-bounce {
+        0%   { transform: scale(1, 1); }
+        30%  { transform: scale(1.05, 0.95); } 
+        50%  { transform: scale(0.95, 1.05); } 
+        70%  { transform: scale(1.02, 0.98); } 
+        100% { transform: scale(1, 1); }
+    }
+    .bar-bounce-active { animation: gel-bounce 0.4s ease-out; }
+    @keyframes price-flash {
+        0%   { color: #fb923c; text-shadow: none; }
+        50%  { color: #fff; text-shadow: 0 0 10px rgba(255, 165, 0, 0.8); } 
+        100% { color: #fb923c; text-shadow: none; }
+    }
+    .price-flash-active { animation: price-flash 0.4s ease-out; }
+    @keyframes shockwave-expand {
+        0% { transform: scale(0); opacity: 0.8; }
+        100% { transform: scale(20); opacity: 0; }
+    }
+    .shockwave-active {
+        animation: shockwave-expand 0.5s ease-out forwards;
+        will-change: transform, opacity; 
+    }
+    #smart-cart-bar > div {
+        backdrop-filter: blur(12px); 
+        -webkit-backdrop-filter: blur(12px); 
+    }
+    @keyframes pop-in {
+        0% { transform: scale(0.8); opacity: 0; }
+        50% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fade-out {
+        0% { transform: scale(1); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0; }
+    }
+    .toast-enter { animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    .toast-exit { animation: fade-out 0.3s ease-in forwards; }
+    @keyframes icon-catch {
+        0% { transform: scale(1); }
+        40% { transform: scale(0.8); } 
+        100% { transform: scale(1); }
+    }
+    .icon-catch-active { animation: icon-catch 0.3s ease-out; }
+
+    /* =========================================
+       NEW QR LANDING UI STYLES
+    ========================================= */
+    :root {
+      --primary: #FF6B35;
+      --orb-size: clamp(280px, 75vw, 600px); 
+    }
+    
+    .noise-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 999; opacity: 0.08;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .orb-container {
+      position: relative; z-index: 10; width: var(--orb-size); height: var(--orb-size);
+      display: flex; align-items: center; justify-content: center; border-radius: 50%; background: white;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.08), 0 10px 30px rgba(0,0,0,0.03); 
+      transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease;
+      will-change: transform; animation: floatOrb 5s ease-in-out infinite;
+    }
+
+    .orb-inner {
+      position: absolute; inset: 10px; background: var(--primary); border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: white; transition: transform 0.4s ease; overflow: hidden;
+    }
+    .orb-inner::after {
+      content: ''; position: absolute; inset: 0; opacity: 0.15; mix-blend-mode: soft-light;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    .orb-inner .label { font-size: 1.35rem; font-weight: 600; text-transform: uppercase; letter-spacing: 4px; opacity: 0.9; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .orb-inner .number { font-size: calc(var(--orb-size) * 0.4); font-weight: 800; line-height: 0.9; letter-spacing: -2px; text-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    
+    .welcome-text {
+      position: absolute; bottom: 10vh; width: 100%; text-align: center; padding: 0 20px;
+      opacity: 0; transform: translateY(30px);
+      animation: fadeUpText 0.8s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    .welcome-text h1 { font-size: 2.5rem; margin: 0; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+    .welcome-text p { font-size: 1.2rem; color: #888; margin-top: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 2px; }
+
+    @keyframes fadeUpText { to { opacity: 1; transform: translateY(0); } }
+    @keyframes floatOrb { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+    /* State: Touch/Active */
+    #qrLandingScreen:active .orb-container { 
+      transform: scale(0.95) translateY(0); animation: none; box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
+    }
+
+    /* State: EXPANDING */
+    #qrLandingScreen.expanding .welcome-text { opacity: 0; transition: opacity 0.2s; }
+    #qrLandingScreen.expanding .orb-container {
+      animation: none; box-shadow: none; transform: scale(5); transition: transform 0.5s cubic-bezier(0.5, 0, 0, 1);
+    }
+    #qrLandingScreen.expanding .orb-inner span { opacity: 0; transition: opacity 0.1s ease; }
+
+    /* Loader */
+    .loader {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 60px; height: 60px; border: 5px solid rgba(255,255,255,0.4);
+      border-radius: 50%; border-top-color: white; opacity: 0; z-index: 20; pointer-events: none;
+    }
+    @keyframes qrSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+    @keyframes qrFadeIn { to { opacity: 1; } }
+    
+    #qrLandingScreen.expanding .loader { 
+      animation: qrSpin 0.8s infinite linear, qrFadeIn 0.3s 0.3s forwards; 
+    }
+
+    body {
+        font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased; 
+        -moz-osx-font-smoothing: grayscale;
+        overscroll-behavior-y: none;
+        min-height: 100vh;
+        background-color: #f3f4f6; 
+    }
+    html { overscroll-behavior-y: none; background-color: #f3f4f6; height: 100%; }
+    .category-image {
+      width: 4rem; 
+      object-fit: cover; 
+      object-position: center; 
+      will-change: height, opacity, margin-bottom;
+    }
+    @keyframes shake {
+      10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-3px, 0, 0); } 40%, 60% { transform: translate3d(3px, 0, 0); }
+    }
+    .shake { animation: shake 0.7s cubic-bezier(.36,.07,.19,.97) both; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+<!-- ============================================================ -->
+<!-- QR LANDING UI — shown when user scans QR (has qr_id param) -->
+<!-- ============================================================ -->
+<div id="qrLandingScreen" class="fixed inset-0 z-[9999] hidden flex-col items-center justify-center cursor-pointer select-none"
+     style="background-color: #FDFBF7; touch-action: manipulation; overscroll-behavior: none;"
+     onclick="landingCircleClick()">
+
+  <div class="noise-overlay"></div>
+
+  <div class="orb-container">
+    <div class="orb-inner">
+      <span class="label">TABLE</span>
+      <span id="landingTableNumber" class="number">A01</span>
+    </div>
+  </div>
+
+  <div class="welcome-text">
+    <h1 class="text-[#222]">Vet Restaurant</h1>
+    <p>Tap to Order</p>
+  </div>
+
+  <div class="loader"></div>
+</div>
+
+<div id="waitingStaffScreen" class="fixed inset-0 z-[9999] hidden flex-col items-center justify-center bg-[#FDFBF7]">
+    <div class="noise-overlay"></div>
+    <div class="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-6 animate-pulse shadow-inner border-4 border-white">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+    </div>
+    <h1 class="text-2xl font-extrabold text-gray-800 mb-2">รอพนักงานเปิดโต๊ะ</h1>
+    <p class="text-gray-500 text-center text-sm px-6 mb-8 leading-relaxed">
+        ท่านสแกนโต๊ะ <span id="waitTableNumber" class="font-bold text-orange-600 text-lg"></span> ถูกต้องแล้ว<br>
+        กรุณารอสักครู่ กำลังรอพนักงานเปิดบิลให้ท่าน
+    </p>
+    
+    <button onclick="checkTableStatusManual()" id="btnRefreshStatus" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 px-8 rounded-full shadow-lg transition-all active:scale-95 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <span>ตรวจสอบอีกครั้ง</span>
+    </button>
+</div>
+
+<div class="relative w-full bg-gray-200 z-30">
+  <div class="max-w-5xl mx-auto">
+    <div class="relative w-full h-48 sm:h-56 group overflow-hidden">
+      <div id="bannerScrollContainer" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full w-full scroll-smooth touch-pan-x z-0"></div>
+      <div id="bannerDotsContainer" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none overflow-hidden"></div>
+      <div class="absolute bottom-0 left-0 right-0 h-full pointer-events-none z-20">
+          <div class="absolute left-4 bottom-4 pointer-events-auto">
+              <div class="bg-white/95 backdrop-blur-md text-gray-900 px-2.5 py-1.5 rounded-xl shadow-lg flex items-center gap-2 border border-white/50">
+                 <div class="bg-red-500 rounded-full p-1 shadow-sm text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+                 </div>
+                 <span id="table-display-number" class="text-lg font-black leading-none">N/A</span>
+              </div>
+          </div>
+          <div id="discount-display" class="hidden absolute right-4 bottom-4 pointer-events-auto bg-green-600 text-white px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg border-2 border-white/80 shimmer-effect"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sticky top-0 z-40 bg-white shadow-md">
+  <div class="max-w-5xl mx-auto">
+        <div class="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
+            <div class="flex-grow relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+                </span>
+                <input id="searchInput" type="text" placeholder="Search..." class="w-full bg-gray-100 text-gray-800 pl-11 pr-4 py-2.5 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all text-base placeholder-gray-400">
+            </div>
+
+            <div class="relative">
+                <button onclick="openHistorySheet()" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+                    <span id="history-badge" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white hidden"></span>
+                </button>
+            </div>
+
+            <div class="relative">
+                <button id="langToggleBtn" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-50 text-gray-600 hover:bg-orange-50 hover:text-orange-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="m10.5 21 5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 0 1 6-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 0 1-3.827-5.802" /></svg>
+                </button>
+                <div id="langDropdown" class="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 hidden z-50">
+                  <div class="flex flex-col p-1" id="langSwitcher">
+                    <button data-lang="th" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600">🇹🇭 Thai</button>
+                    <button data-lang="en" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600">🇬🇧 English</button>
+                    <button data-lang="cn" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600">🇨🇳 Chinese</button>
+                  </div>
+                </div>
+            </div>
+        </div>
+
+        <nav id="categoryNavbar" class="bg-white pb-2">
+            <div class="mx-auto flex gap-3 py-2 px-4 overflow-x-auto no-scrollbar"></div>
+        </nav>
+  </div>
+</div>
+
+<div id="scrollSentinel" class="h-1"></div>
+<main id="menuContainer" class="max-w-5xl mx-auto px-4 py-6"></main>
+<div class="w-full h-50 bg-transparent pointer-events-none"></div>
+
+<div id="smart-cart-bar" onclick="openCartSheet()" class="fixed bottom-6 left-4 right-4 z-40 transform translate-y-[200%] transition-transform duration-500 cubic-bezier(0.2, 0.8, 0.2, 1)">
+    <div class="relative overflow-hidden rounded-full bg-gray-900/90 backdrop-blur-xl border border-white/10 shadow-2xl h-16 flex items-center justify-between px-2 pr-6 group">
+        <div id="bar-shockwave" class="absolute left-8 top-1/2 -translate-y-1/2 -ml-2 w-12 h-12 bg-orange-500/50 rounded-full blur-md pointer-events-none opacity-0 transition-none"></div>
+        <div class="flex items-center gap-3 relative z-10">
+            <div id="cart-icon-target" class="relative w-12 h-12 bg-white/5 rounded-full flex items-center justify-center border border-white/10 shadow-inner transition-transform duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-orange-500" id="cart-svg">
+                    <path fill-rule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 004.25 22.5h15.5a1.875 1.875 0 001.865-2.071l-1.263-12a1.875 1.875 0 00-1.865-1.679H16.5V6a4.5 4.5 0 10-9 0zM12 3a3 3 0 00-3 3v.75h6V6a3 3 0 00-3-3zm-3 8.25a3 3 0 106 0v-.75a.75.75 0 011.5 0v.75a4.5 4.5 0 11-9 0v-.75a.75.75 0 011.5 0v.75z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="flex items-baseline gap-1.5 pl-1">
+                <span id="cart-total-qty" class="text-orange-500 font-bold text-xl leading-none">0</span>
+                <span id="cart-unit-text" class="text-gray-400 text-sm font-medium">items</span>
+            </div>
+        </div>
+        <div class="relative z-10 flex items-center gap-4">
+            <span id="cart-total-price" class="text-white font-bold text-xl tracking-tight transition-all duration-200">฿0</span>
+            <div class="text-gray-400 group-hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" /></svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="cartBottomSheet" class="fixed inset-0 z-50 flex flex-col justify-end pointer-events-none">
+    <div id="cartBackdrop" onclick="closeCartSheet()" class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+    <div id="cartSheetContent" class="gpu-accelerated relative w-full bg-gray-50 rounded-t-[2.5rem] shadow-2xl transform translate-y-full transition-transform duration-400 cubic-bezier(0.2, 0.8, 0.2, 1) pointer-events-auto flex flex-col max-h-[100vh] will-change-transform overflow-hidden z-50">
+        <div class="relative bg-gradient-to-br from-orange-500 to-orange-600 shadow-md flex-shrink-0 rounded-t-[2.5rem]">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none mix-blend-overlay"></div>
+            <div class="w-full flex justify-center pt-3 pb-2" onclick="closeCartSheet()">
+                <div class="w-12 h-1.5 bg-white/30 rounded-full backdrop-blur-sm"></div>
+            </div>
+            <div class="px-6 pb-6 pt-1 flex justify-between items-center relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md border border-white/10 flex items-center justify-center shadow-inner text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <div>
+                        <h2 id="cart-header-title" class="text-2xl font-bold text-white leading-none tracking-tight">ตะกร้าของฉัน</h2>
+                        <p id="cart-header-subtitle" class="text-orange-50 text-xs mt-1.5 font-medium opacity-90">ตรวจสอบรายการอาหาร</p>
+                    </div>
+                </div>
+                <button onclick="closeCartSheet()" class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all active:scale-95 border border-white/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+                </button>
+            </div>
+        </div>
+        <div id="cartItems" class="flex-1 overflow-y-auto p-4 min-h-[200px] bg-white"></div>
+        <div class="p-4 bg-white border-t border-gray-100 pb-8 flex-shrink-0 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-20"></div>
+    </div>
+</div>
+
+<div id="historySheet" class="fixed inset-0 z-[60] flex flex-col justify-end pointer-events-none">
+    <div id="historyBackdrop" onclick="closeHistorySheet()" class="absolute inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+    <div id="historyContent" class="gpu-accelerated relative w-full bg-gray-50 rounded-t-[2.5rem] shadow-2xl transform translate-y-full transition-transform duration-400 cubic-bezier(0.2, 0.8, 0.2, 1) pointer-events-auto flex flex-col max-h-[85vh] overflow-hidden">
+        <div class="bg-white border-b border-gray-100 p-5 flex justify-between items-center rounded-t-[2.5rem]">
+            <h2 id="history-title-label" class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-orange-500">
+                  <path d="M10.5 18.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" />
+                  <path fill-rule="evenodd" d="M8.625.75A3.375 3.375 0 0 0 5.25 4.125v15.75a3.375 3.375 0 0 0 3.375 3.375h6.75a3.375 3.375 0 0 0 3.375-3.375V4.125A3.375 3.375 0 0 0 15.375.75h-6.75ZM7.5 4.125C7.5 3.504 8.004 3 8.625 3H9.75v.375c0 .621.504 1.125 1.125 1.125h2.25c.621 0 1.125-.504 1.125-1.125V3h1.125c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125h-6.75A1.125 1.125 0 0 1 7.5 19.875V4.125Z" clip-rule="evenodd" />
+                  <path d="M9 7.5a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75ZM9 10.5a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75ZM9 13.5a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z" />
+                </svg>
+                <span data-translate="history_title">ประวัติการสั่งซื้อ</span>
+            </h2>
+            <button onclick="closeHistorySheet()" class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div id="historyList" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"></div>
+        <div class="p-4 bg-white border-t border-gray-100 pb-8 flex justify-center">
+            <button onclick="clearOrderHistory()" class="text-red-500 text-sm font-semibold flex items-center gap-1 opacity-70 hover:opacity-100">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clip-rule="evenodd" /></svg>
+                <span data-translate="history_clear">ล้างประวัติ</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="confirmOrderModal" class="fixed inset-0 z-[70] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all scale-100">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-orange-500">
+                    <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2" id="conf-title">ยืนยันการสั่งซื้อ</h3>
+            <p class="text-gray-500 text-sm" id="conf-msg">คุณต้องการส่งออเดอร์นี้ไปยังครัวใช่หรือไม่?</p>
+            <div class="mt-4 bg-gray-50 rounded-xl p-3 border border-gray-100">
+                <span class="text-sm text-gray-500" id="conf-total-label">ยอดรวมสุทธิ</span>
+                <div class="text-2xl font-bold text-orange-600" id="conf-total">฿0</div>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-0 border-t border-gray-100">
+            <button onclick="closeConfirmModal()" class="py-4 text-gray-600 font-bold hover:bg-gray-50 active:bg-gray-100 transition-colors" id="conf-btn-cancel">ยกเลิก</button>
+            <button onclick="processSubmission()" class="py-4 bg-orange-500 text-white font-bold hover:bg-orange-600 active:bg-orange-700 transition-colors" id="conf-btn-yes">ยืนยัน</button>
+        </div>
+    </div>
+</div>
+
+<div id="bottomSheet" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeBottomSheet()"></div>
+    <div id="bottomSheetContent" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 max-h-[90vh] flex flex-col">
+        <button onclick="closeBottomSheet()" class="absolute top-4 right-4 z-50 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-md active:scale-90 transition-transform hover:bg-white text-gray-800 border border-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+
+        <div id="bs-scroll-container" class="overflow-y-auto flex-1 pb-4 no-scrollbar relative"> 
+            <div class="relative w-full h-64 sm:h-72">
+                <img id="bs-image" src="" class="w-full h-full object-cover rounded-t-3xl" alt="Menu Image">
+            </div>
+            <div class="px-5 pt-5">
+                <h3 id="bs-title" class="text-2xl font-bold text-gray-900 mb-1"></h3>
+                <p id="bs-desc" class="text-gray-500 text-sm mb-3 leading-relaxed"></p>
+                <div id="bs-price-display" class="mb-6"></div>
+            </div>
+            <div class="h-2 bg-gray-100 mb-5"></div>
+            <div id="bs-options-container" class="px-5 mb-4 hidden">
+                <div id="bs-radio-container"></div>
+                <div id="bs-validation-message" class="hidden text-red-500 text-sm mt-2 text-center bg-red-50 p-2 rounded-lg border border-red-200">* กรุณาระบุตัวเลือก</div>
+            </div>
+            <div class="px-5 mb-4">
+                <label id="bs-note-label" class="block text-gray-700 font-semibold mb-2 text-sm">หมายเหตุถึงร้าน</label>
+                <textarea id="bs-note" rows="2" class="w-full border border-gray-300 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none transition-shadow" placeholder="เช่น ไม่ใส่ผัก, ขอช้อนส้อม"></textarea>
+            </div>
+        </div>
+
+        <div class="flex-none bg-white border-t border-gray-100 p-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-20">
+            <div class="flex justify-center items-center mb-4">
+                <div class="flex items-center bg-gray-100 rounded-full px-2 py-1">
+                    <button id="bs-minus" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-gray-600 shadow-sm active:scale-90 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
+                    </button>
+                    <span id="bs-qty" class="text-xl font-bold text-gray-800 w-12 text-center select-none">1</span>
+                    <button id="bs-plus" class="w-10 h-10 flex items-center justify-center bg-white rounded-full text-orange-600 shadow-sm active:scale-90 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                </div>
+            </div>
+            <button id="bs-addToCartBtn" class="w-full bg-orange-600 text-white font-bold text-lg py-4 rounded-2xl shadow-lg hover:bg-orange-700 active:scale-95 transition-all flex justify-between px-6 items-center">
+                <span>เพิ่มลงตะกร้า</span><span id="bs-total-price">฿0</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="customModal" class="fixed inset-0 z-[300] hidden bg-black bg-opacity-50 flex items-center justify-center">
+    <div id="modalContent" class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-sm transform scale-90 transition-transform duration-300">
+        <h3 id="modalTitle" class="text-xl font-bold text-red-600 mb-3"></h3>
+        <p id="modalMessage" class="text-gray-700 mb-4"></p>
+        <button id="closeModalBtn" class="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold">ปิด</button>
+    </div>
+</div>
+
+<div id="staffModal" class="fixed inset-0 z-[200] hidden bg-black bg-opacity-90 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md transform transition-all scale-100 mx-4">
+        <h2 id="staffModalTitle" class="text-2xl font-bold text-gray-800 mb-4 text-center">Staff Login</h2>
+        <div id="staffFormContainer" class="flex flex-col gap-4">
+            <div>
+                <label id="staffInputLabel1" class="block text-gray-700 font-semibold mb-1">ระบุข้อมูล</label>
+                <input id="staffInput1" type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-xl focus:border-orange-500 focus:outline-none" placeholder="...">
+            </div>
+            <div id="staffInputGroup2" class="hidden">
+                <label id="staffInputLabel2" class="block text-gray-700 font-semibold mb-1">ข้อมูลเพิ่มเติม</label>
+                <input id="staffInput2" type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-xl focus:border-orange-500 focus:outline-none">
+            </div>
+            <div id="staffDiscountGroup" class="hidden">
+                <label class="block text-gray-700 font-semibold mb-2">ส่วนลด</label>
+                <div class="grid grid-cols-3 gap-2">
+                    <button type="button" class="discount-btn bg-gray-200 py-2 rounded-lg font-bold border-2 border-transparent" onclick="selectStaffDiscount(0, this)">None</button>
+                    <button type="button" class="discount-btn bg-gray-200 py-2 rounded-lg font-bold border-2 border-transparent" onclick="selectStaffDiscount(0.05, this)">5%</button>
+                    <button type="button" class="discount-btn bg-gray-200 py-2 rounded-lg font-bold border-2 border-transparent" onclick="selectStaffDiscount(0.10, this)">10%</button>
+                </div>
+            </div>
+            <button id="staffConfirmBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg text-xl mt-2 shadow-lg">ยืนยันและเริ่มสั่ง</button>
+        </div>
+    </div>
+</div>
+
+<div id="toastContainer" class="fixed top-5 right-5 z-[100] pointer-events-none flex flex-col gap-2 w-full max-w-xs pr-4"></div>
+<input type="hidden" id="tableNumber" value="">
+
+<script>
+// --- SUPABASE CONFIGURATION ---
+const SUPABASE_URL = 'https://xjosswxrtcanhvpdbrap.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqb3Nzd3hydGNhbmh2cGRicmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjkyODcsImV4cCI6MjA5MjUwNTI4N30.DrtoBXmdL1EN17sVYZIYNVVOOp7UHfeAz1sDImZmYFM';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- GLOBAL STATE ---
+let menuData = [], flatMenu = {}, cart = [], currentLang = 'th';
+let currentItemForBottomSheet = null, lastClickedImageElement = null;
+let editingIndex = null; 
+let activeMenuItem = null; 
+let globalCartTotalQty = 0;
+let globalCartTotalPrice = 0;
+
+// SERVER_DATA from URL Params / LocalStorage
+const urlParams = new URLSearchParams(window.location.search);
+let SERVER_DATA = {
+    tableNumber: urlParams.get('table') || localStorage.getItem('vetres_table') || '',
+    token: urlParams.get('token') || localStorage.getItem('vetres_token') || '',
+    discount: urlParams.get('discount') || localStorage.getItem('vetres_discount') || '0',
+    sessionId: urlParams.get('session') || localStorage.getItem('vetres_session') || ''
+};
+const STAFF_ROLE = urlParams.get('role') || localStorage.getItem('vetres_role') || 'customer';
+
+let rawDiscount = SERVER_DATA.discount;
+let DISCOUNT_PERCENT = 0; 
+let DISCOUNT_DISPLAY = 'None'; 
+
+const RECOMMEND_CONFIG = [
+    { keyword: 'น้ำ', label: { th: 'รับน้ำดื่ม?', en: 'Need a drink?', cn: '来点喝的吗？' }, btnText: { th: 'ดูเครื่องดื่ม', en: 'See Drinks', cn: '看饮料' }, imageUrl: 'https://res.cloudinary.com/dsrxsg4ou/image/upload/v1765032204/%E0%B8%99%E0%B9%89%E0%B8%B3_exeued.jpg', targetId: 'category-น้ำ' },
+    { keyword: 'ข้าว', label: { th: 'รับข้าว?', en: 'Need rice?', cn: '来碗热饭？' }, btnText: { th: 'ดูเมนูข้าว', en: 'Order Rice', cn: '点米饭' }, imageUrl: 'https://res.cloudinary.com/dsrxsg4ou/image/upload/v1765286192/LINE_ALBUM_Gas_V.2_251209_9_wweqd6.jpg', targetId: 'category-ข้าว' },
+    { keyword: 'โอ้เอ๋ว', label: { th: 'รับของหวาน?', en: 'Dessert?', cn: '来点甜品？' }, btnText: { th: 'ดูโอ้เอ๋ว', en: 'See Dessert', cn: '看甜品' }, imageUrl: 'https://res.cloudinary.com/dsrxsg4ou/image/upload/v1765286217/LINE_ALBUM_Gas_V.2_251209_50_axlevl.jpg', targetId: 'category-โอ้เอ๋ว' }
+];
+
+const placeholderImage = 'https://via.placeholder.com/400x300?text=No+Image';
+
+const translations = { 
+    'table_label': { th: 'โต๊ะ', en: 'Table', cn: '桌号' },
+    'search_placeholder': { th: 'ค้นหาเมนู...', en: 'Search menu...', cn: '搜索菜单...' }, 
+    'your_order': { th: 'รายการของคุณ', en: 'Your Order', cn: '您的订单' }, 
+    'total': { th: 'ทั้งหมด', en: 'Total', cn: '总计' }, 
+    'confirm_order': { th: '✅ ยืนยันออเดอร์', en: '✅ Confirm Order', cn: '✅ 确认订单' }, 
+    'submitting': { th: 'กำลังส่ง...', en: 'Submitting...', cn: '提交中...' }, 
+    'options': { th: 'ตัวเลือก', en: 'Options', cn: '选项' }, 
+    'special_instructions': { th: 'คำแนะนำพิเศษ:', en: 'Special Instructions:', cn: '特殊说明:' }, 
+    'add_to_cart': { th: 'เพิ่มลงตะกร้า', en: 'Add to cart', cn: '添加到购物车' }, 
+    'view_cart_hint': { th: 'แตะเพื่อดูตะกร้า', en: 'Tap to view cart', cn: '点击查看购物车' },
+    'cart_empty_title': { th: 'ตะกร้าของคุณว่าง', en: 'Your cart is empty', cn: '您的购物车是空的' },
+    'cart_empty_subtitle': { th: 'สามารถดูรายการที่สั่งไปแล้วในใบออเดอร์จากบริกร', en: 'You can see ordered items on the receipt from your server', cn: '您可以从服务员的订单上查看已订购的商品' },
+    'discount_notice': { th: '* ราคายังไม่รวมส่วนลด', en: '* Price does not include discount', cn: '* 价格不含折扣' },
+    'select_options_alert': { th: '* กรุณาระบุตัวเลือก', en: '* Please select all required options', cn: '* 请选择所有必选项' },
+    'option_label': { th: 'ตัวเลือก', en: 'Option', cn: '选项' }, 
+    'note_label': { th: 'หมายเหตุ', en: 'Note', cn: '笔记' }, 
+    'unit_items': { th: 'รายการ', en: 'items', cn: '件' },
+    'cart_header': { th: 'ตะกร้าของฉัน', en: 'My Cart', cn: '我的购物车' },
+    'cart_subtitle': { th: 'ตรวจสอบความถูกต้องก่อนสั่งซื้อ', en: 'Please review your order', cn: '请在下单前核对' },
+    'total_net': { th: 'ยอดรวมสุทธิ', en: 'Total Net', cn: '净总计' },
+    'confirm_order_btn': { th: 'ยืนยันออเดอร์', en: 'Confirm Order', cn: '确认下单' },
+    'cart_empty_state': { th: 'ยังไม่มีรายการอาหาร', en: 'No items selected', cn: '暂无商品' },
+    'recommend_header': { th: 'รับอะไรเพิ่มไหมครับ?', en: 'Want anything else?', cn: '还要加点什么吗？' },
+    'subtotal': { th: 'รวมค่าอาหาร', en: 'Subtotal', cn: '小计' },
+    'discount_label': { th: 'ส่วนลด', en: 'Discount', cn: '折扣' },
+    'discount_exclusion_notice': { th: '* น้ำไม่รวมในส่วนลด', en: '* Water is excluded from discount', cn: '* 水不包含在折扣内' },
+    'ขายดี': { th: 'ขายดี', en: 'BEST SELLER', cn: '热销' },
+    'ต้องลอง': { th: 'ต้องลอง', en: 'MUST TRY', cn: '必尝' },
+    'ใหม่': { th: 'ใหม่', en: 'NEW', cn: '新品' },            
+    'แนะนำ': { th: 'แนะนำ', en: 'RECOMMENDED', cn: '推荐' },
+    '15m': { th: 'รอ > 15 นาที', en: 'WAIT > 15 MIN', cn: '需等 > 15分' },
+    '30m': { th: 'รอ > 30 นาที', en: 'WAIT > 30 MIN', cn: '需等 > 30分' },
+    'toast_success': { th: 'บันทึกออเดอร์เรียบร้อย!', en: 'Order placed successfully!', cn: '下单成功！' },
+    'toast_error': { th: 'เกิดข้อผิดพลาด', en: 'Error occurred', cn: '发生错误' },
+    'note_placeholder': { th: 'ระบุรายละเอียดเพิ่มเติม (ถ้ามี)', en: 'Add details (optional)', cn: '添加详细信息 (可选)' },
+    'toast_connection_error': { th: 'การเชื่อมต่อล้มเหลว', en: 'Connection failed', cn: '连接失败' },
+    'history_title': { th: 'ประวัติออเดอร์', en: 'History', cn: '历史' },
+    'history_empty': { th: 'ไม่พบประวัติในเครื่องนี้', en: 'No history on this device', cn: '本机无历史记录' },
+    'history_empty_sub': { th: 'รายการที่สั่งจากเครื่องอื่น หรือสั่งกับพนักงาน จะไม่แสดงที่นี่', en: 'Orders placed via other devices or staff will not appear here.', cn: '其他设备或服务员下的订单不会在此显示' },
+    'history_clear': { th: 'ล้างประวัติ', en: 'Clear History', cn: '清除历史' },
+    'history_confirm_clear': { th: 'ยืนยันจะล้างประวัติทั้งหมด?', en: 'Are you sure you want to clear history?', cn: '确定要清除所有历史记录吗？' },
+    'status_sent': { th: 'ส่งแล้ว', en: 'Sent', cn: '已发送' },
+    'confirm_modal_title': { th: 'ยืนยันการสั่งซื้อ', en: 'Confirm Order', cn: '确认订单' },
+    'confirm_modal_msg': { th: 'คุณต้องการส่งออเดอร์นี้ไปยังครัวใช่หรือไม่?', en: 'Send this order to the kitchen?', cn: '确定发送此订单到厨房吗？' },
+    'btn_cancel': { th: 'ยกเลิก', en: 'Cancel', cn: '取消' },
+    'btn_confirm': { th: 'ยืนยัน', en: 'Confirm', cn: '确认' }
+};
+
+const STATUS_MAP = {
+    "หมด": { badgeClass: "bg-gray-500 text-white", text: { th: "สินค้าหมด", en: "Sold Out", cn: "售罄" }, isOrderable: false },
+    "ไม่พร้อม": { badgeClass: "bg-red-500 text-white", text: { th: "ไม่พร้อมชั่วคราว", en: "Unavailable", cn: "暂停供应" }, isOrderable: false },
+    "15m": { badgeClass: "hidden", text: { th: "รอ > 15 นาที", en: "Wait > 15m", cn: "需等 > 15分" }, isOrderable: true },
+    "30m": { badgeClass: "hidden", text: { th: "รอ > 30 นาที", en: "Wait > 30m", cn: "需等 > 30分" }, isOrderable: true },
+    "ขายดี": { badgeClass: "bg-pink-500 text-white", text: { th: "🔥 ขายดี", en: "🔥 Best Seller", cn: "🔥 热销" }, isOrderable: true },
+    "ต้องลอง": { badgeClass: "bg-blue-500 text-white", text: { th: "✨ ต้องลอง", en: "✨ Must Try", cn: "✨ 必尝" }, isOrderable: true },
+    "TH_Only": { badgeClass: "bg-purple-600 text-white", text: { th: "เฉพาะกลับบ้าน", en: "Takehome Only", cn: "仅限外带" }, isOrderable: true },
+    "ปกติ": { badgeClass: "hidden", text: { th: "", en: "", cn: "" }, isOrderable: true }
+};
+
+const STAFF_CONFIG = {
+    'server123': { title: '👨‍🍳 บริกรรับออเดอร์', label: 'เลขโต๊ะ', label2: 'ชื่อบริกร', prefix: 'SERVER', showDiscount: false, showStation: true, inputType: 'text' },
+    'takehome123': { title: '🏠 สั่งกลับบ้าน', label: 'คิวที่', prefix: 'TAKEHOME', showDiscount: true, showStation: false, inputType: 'text' },
+    'staff123': { title: '🫂 Staff', label: 'ชื่อ', prefix: 'STAFF', showDiscount: false, showStation: true, fixedDiscount: 0.10 }
+};
+
+// ==========================================
+// 🔐 QR-BASED SESSION TOKEN AUTHENTICATION
+// ==========================================
+
+const QR_ID_PARAM  = urlParams.get('qr_id')  || '';
+const TOKEN_PARAM  = urlParams.get('token')   || '';
+const TABLE_PARAM  = urlParams.get('table')   || '';
+
+function redirectToExpired() {
+    window.location.replace('expired.html');
+}
+
+function hideAuthScreens() {
+    const authScreen   = document.getElementById('authLoadingScreen');
+    const landingScreen = document.getElementById('qrLandingScreen');
+    if (authScreen)    { authScreen.style.display   = 'none'; }
+    if (landingScreen) { landingScreen.style.display = 'none'; }
+}
+
+function showLandingUI(tableId, token) {
+    const authScreen    = document.getElementById('authLoadingScreen');
+    const landingScreen = document.getElementById('qrLandingScreen');
+    const tableLabel    = document.getElementById('landingTableNumber');
+
+    if (authScreen)    { authScreen.style.display   = 'none'; }
+    if (tableLabel)    { tableLabel.textContent      = tableId; }
+
+    // Store resolved token for the redirect on circle click
+    window._landingToken = token;
+    window._landingTable = tableId;
+
+    if (landingScreen) {
+        landingScreen.style.display = 'flex';
+    }
+}
+
+let isNavigating = false;
+
+function landingCircleClick() {
+    if (isNavigating) return;
+    isNavigating = true;
+
+    // สั่นมือถือเบาๆ ถ้าอุปกรณ์รองรับ
+    if (navigator.vibrate) navigator.vibrate(15);
+    
+    const landingScreen = document.getElementById('qrLandingScreen');
+    landingScreen.classList.add('expanding');
+    
+    setTimeout(() => {
+        const table = window._landingTable || TABLE_PARAM;
+        const token = window._landingToken || '';
+
+        // 1. อัปเดต URL บน Address Bar เงียบๆ (เอา qr_id ออก) โดยไม่เกิดการ Reload
+        // ทำให้ผู้ใช้ไม่สามารถกด Back กลับมาหน้า Landing ได้
+        const newUrl = `customer.html?table=${encodeURIComponent(table)}&token=${encodeURIComponent(token)}`;
+        window.history.replaceState(null, '', newUrl);
+
+        // 2. ซ่อนหน้าต่าง Landing 
+        landingScreen.style.display = 'none';
+
+        // 3. เข้าสู่กระบวนการยืนยัน Token และเปิดหน้าสั่งอาหารโดยตรง (ใช้ฟังก์ชันที่มีอยู่แล้วในระบบ)
+        authenticateViaToken(table, token);
+
+    }, 500); // รอให้อนิเมชันลูกแก้วขยายจบก่อน
+}
+
+
+// ── Legacy / Staff flow (no qr_id, no token from QR) ───────────
+async function resolveSession() {
+    if (!SERVER_DATA.sessionId && SERVER_DATA.tableNumber &&
+        SERVER_DATA.tableNumber !== 'TH' && SERVER_DATA.tableNumber !== 'STAFF') {
+        const { data } = await supabaseClient
+            .from('tables')
+            .select('current_session_id, sessions!fk_current_session(token)')
+            .eq('id', SERVER_DATA.tableNumber)
+            .single();
+
+        if (data && data.current_session_id) {
+            SERVER_DATA.sessionId = data.current_session_id;
+            if (data.sessions) SERVER_DATA.token = data.sessions.token;
+        }
+    }
+}
+
+// ── Master entry point (STRICT URL VALIDATION) ─────────────────
+async function initializeApp() {
+    // ── Non-customer staff roles bypass QR auth entirely ──
+    if (STAFF_ROLE !== 'customer') {
+        hideAuthScreens();
+        setupStaffModal();
+        return;
+    }
+
+    const hasTable = !!TABLE_PARAM;
+    const hasQrId  = !!QR_ID_PARAM;
+    const hasToken = !!TOKEN_PARAM;
+
+    // ── Allowed Pattern A: ลูกค้าสแกน QR โต๊ะมาครั้งแรก (?table=X&qr_id=Y)
+    if (hasTable && hasQrId && !hasToken) {
+        await authenticateViaQR(TABLE_PARAM, QR_ID_PARAM);
+        return;
+    }
+
+    // ── Allowed Pattern B: ลูกค้ากดมาจากหน้าวงกลม หรือมี Token อยู่แล้ว (?token=X)
+    if (hasToken && !hasQrId) {
+        await authenticateViaToken(TABLE_PARAM, TOKEN_PARAM);
+        return;
+    }
+
+    // ── Anything else → หมดอายุ / เข้าผิดทาง ──
+    redirectToExpired();
+}
+
+let waitingInterval = null;
+let waitTableIdStr = '';
+
+// ── Scenario A: ตรวจสอบจาก QR Code (เช็ค qr_id) ──────────────────────
+async function authenticateViaQR(tableId, qrId) {
+    try {
+        // 1. เช็คว่า qr_id ตรงกับโต๊ะในฐานข้อมูลหรือไม่
+        const { data: tableData, error: tErr } = await supabaseClient
+            .from('tables')
+            .select('id, qr_id, status')
+            .eq('id', tableId)
+            .maybeSingle();
+
+        if (tErr || !tableData || tableData.qr_id !== qrId) {
+            console.warn("QR Validation Mismatch");
+            redirectToExpired(); return;
+        }
+
+        // 2. เช็คว่าโต๊ะนี้ถูกเปิด Session โดยพนักงานหรือยัง
+        const { data: sessionData, error: sErr } = await supabaseClient
+            .from('sessions')
+            .select('id, token, is_active')
+            .eq('table_id', tableId)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        if (sErr || !sessionData) {
+            // ✅ QR ถูก โต๊ะถูก แต่ยังไม่เปิดบิล -> โชว์หน้าจอรอ
+            showWaitingScreen(tableId);
+            return;
+        }
+
+        // 3. ถูกต้องทั้งหมด มีบิลแล้ว -> แสดงหน้า Landing (วงกลมโต๊ะ)
+        showLandingUI(tableId, sessionData.token);
+
+    } catch (err) {
+        console.error("QR Auth Error:", err);
+        redirectToExpired();
+    }
+}
+
+// ── ฟังก์ชันควบคุมหน้าจอรอเปิดโต๊ะ ──────────────────────
+function showWaitingScreen(tableId) {
+    hideAuthScreens();
+    const waitScreen = document.getElementById('waitingStaffScreen');
+    if (waitScreen) {
+        waitScreen.style.display = 'flex';
+        waitScreen.classList.remove('hidden');
+        document.getElementById('waitTableNumber').textContent = tableId;
+    }
+    waitTableIdStr = tableId;
+
+    // ระบบ Auto Refresh คอยแอบเช็คหลังบ้านทุกๆ 3 วินาที
+    if (waitingInterval) clearInterval(waitingInterval);
+    waitingInterval = setInterval(() => {
+        checkTableStatusSilently();
+    }, 3000);
+}
+
+// แอบเช็คแบบเงียบๆ
+async function checkTableStatusSilently() {
+    if (!waitTableIdStr) return;
+    const { data } = await supabaseClient
+        .from('sessions')
+        .select('id, token, is_active')
+        .eq('table_id', waitTableIdStr)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    if (data && data.token) {
+        // ✅ เจอแล้ว! พนักงานเปิดบิลให้แล้ว
+        if (waitingInterval) clearInterval(waitingInterval);
+        
+        const waitScreen = document.getElementById('waitingStaffScreen');
+        if (waitScreen) waitScreen.style.display = 'none';
+        
+        // เด้งเข้าสู่หน้าจอวงกลม Landing UI อัตโนมัติ
+        showLandingUI(waitTableIdStr, data.token);
+    }
+}
+
+// เมื่อลูกค้ากดปุ่มเช็คแบบ Manual
+async function checkTableStatusManual() {
+    const btn = document.getElementById('btnRefreshStatus');
+    btn.disabled = true;
+    btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> <span>กำลังตรวจสอบ...</span>`;
+
+    await checkTableStatusSilently(); // ยิงคำสั่งไปเช็ค 1 รอบ
+
+    // หน่วงเวลาปุ่มนิดหน่อย ให้ลูกค้ารู้สึกว่าระบบกำลังทำงาน
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> <span>ตรวจสอบอีกครั้ง</span>`;
+    }, 800);
+}
+
+// ── Scenario B: ตรวจสอบจาก Token ──────────────────
+async function authenticateViaToken(tableIdHint, token) {
+    try {
+        const { data: sessionRow, error } = await supabaseClient
+            .from('sessions')
+            .select('id, token, is_active, table_id, discount, session_type')
+            .eq('token', token)
+            .eq('is_active', true)
+            .maybeSingle();
+
+        if (error || !sessionRow) {
+            redirectToExpired(); return;
+        }
+
+        // ถ้ามี table param มาด้วย ต้องตรงกับ table_id ของ session นี้
+        if (tableIdHint && sessionRow.table_id && tableIdHint !== sessionRow.table_id) {
+            redirectToExpired(); return;
+        }
+
+        // บันทึกข้อมูลลง SERVER_DATA เพื่อให้ระบบเมนูทำงานต่อ
+        SERVER_DATA.sessionId   = sessionRow.id;
+        SERVER_DATA.token       = sessionRow.token;
+        SERVER_DATA.tableNumber = sessionRow.table_id || tableIdHint || '';
+        SERVER_DATA.discount    = sessionRow.discount || '0';
+
+        // โหลดหน้าแอปสั่งอาหาร
+        hideAuthScreens();
+        parseDiscount(SERVER_DATA.discount);
+        startApp(SERVER_DATA.tableNumber);
+        updateHistoryBadge();
+
+        // 🔌 เปิดระบบ Realtime ดักจับเวลามีของหมด หรือพนักงานปิดโต๊ะ
+        subscribeToSessionExpiration();
+        subscribeToMenuStatusUpdates();
+
+    } catch (err) {
+        console.error("Token Auth Error:", err);
+        redirectToExpired();
+    }
+}
+
+
+function parseDiscount(raw) {
+    if (!raw || raw === '0') {
+        DISCOUNT_PERCENT = 0;
+        DISCOUNT_DISPLAY = 'None';
+        return;
+    }
+    raw = String(raw).replace(/"/g, '').trim();
+    let val = parseFloat(raw);
+    
+    if (raw.includes('%')) {
+        DISCOUNT_PERCENT = val / 100 || 0;
+        DISCOUNT_DISPLAY = raw;
+    } else if (val >= 1) { 
+        // ✅ กรณีใน DB เก็บเป็นเลข 10, 5 ให้ถือว่าเป็น %
+        DISCOUNT_PERCENT = val / 100;
+        DISCOUNT_DISPLAY = val + '%';
+    } else if (val > 0 && val < 1) { 
+        DISCOUNT_PERCENT = val;
+        DISCOUNT_DISPLAY = Math.round(val * 100) + '%';
+    } else {
+        DISCOUNT_PERCENT = 0;
+        DISCOUNT_DISPLAY = 'None';
+    }
+}
+
+function selectStaffDiscount(val, btn) {
+    selectedStaffDiscount = val;
+    document.querySelectorAll('.discount-btn').forEach(b => {
+        b.classList.remove('bg-orange-500', 'text-white', 'border-orange-600');
+        b.classList.add('bg-gray-200');
+    });
+    btn.classList.remove('bg-gray-200');
+    btn.classList.add('bg-orange-500', 'text-white', 'border-orange-600');
+}
+
+function startApp(displayTableNumber) {
+    const cleanTable = String(displayTableNumber).replace(/"/g, '');
+    const tableInput = document.getElementById('tableNumber');
+    const tableDisplay = document.getElementById('table-display-number');
+    if(tableInput) tableInput.value = cleanTable;
+    if(tableDisplay) tableDisplay.textContent = cleanTable;
+
+    handleDiscountDisplay(); 
+    showLoader(true);
+    updateHistoryBadge();
+
+    loadBannersFromServer();
+    loadMenusFromServer();
+    
+    setupEventListeners();
+    setupScrollEffect();
+}
+
+function isTakehomeMode() {
+    if (STAFF_ROLE === 'takehome123') return true;
+    const tableNum = String(SERVER_DATA.tableNumber || '').toUpperCase();
+    const token = String(SERVER_DATA.token || '').toUpperCase();
+    if (tableNum.startsWith('TH') || tableNum.includes('TAKEHOME')) return true;
+    if (token.startsWith('TAKEHOME')) return true;
+    return false;
+}
+
+function setupStaffModal() {
+    const config = STAFF_CONFIG[STAFF_ROLE];
+    if (!config) return;
+
+    const modal = document.getElementById('staffModal');
+    modal.classList.remove('hidden');
+    modal.style.display = "flex"; 
+
+    document.getElementById('staffModalTitle').textContent = config.title;
+    document.getElementById('staffInputLabel1').textContent = config.label;
+    
+    const input1 = document.getElementById('staffInput1');
+    input1.value = ''; 
+    input1.type = config.inputType || 'text';
+
+    const group2 = document.getElementById('staffInputGroup2');
+    const input2 = document.getElementById('staffInput2');
+    input2.value = '';
+    
+    if (config.showStation) {
+        group2.classList.remove('hidden');
+        document.getElementById('staffInputLabel2').textContent = config.label2 || 'ซุ้มอาหาร';
+        input2.placeholder = config.label2 ? 'ระบุชื่อของคุณ' : 'เช่น กระต่าย, ส้มตำ';
+    } else {
+        group2.classList.add('hidden');
+    }
+
+    toggleEl('staffDiscountGroup', config.showDiscount);
+    selectedStaffDiscount = config.fixedDiscount || 0;
+
+    document.getElementById('staffConfirmBtn').onclick = () => {
+         handleStaffSubmit(config);
+    };
+}
+
+async function handleStaffSubmit(config) {
+    let rawVal1 = document.getElementById('staffInput1').value.trim().toUpperCase();
+    
+    // 1. จัดระเบียบข้อมูลเบื้องต้น
+    const tableMatch = rawVal1.match(/^([A-Z]+)(\d+)$/);
+    if (tableMatch) {
+        rawVal1 = tableMatch[1] + tableMatch[2].padStart(2, '0');
+    }
+    const val1 = rawVal1; // สำหรับพนักงาน(Staff) คือ "ชื่อคน" / สำหรับบริกรคือ "เลขโต๊ะ"
+    const val2 = document.getElementById('staffInput2').value.trim(); // สำหรับพนักงานคือ "ซุ้ม" / สำหรับบริกรคือ "ชื่อคน"
+
+    if (!val1) return alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+
+    // 2. แยก Logic การบันทึกตัวแปรตามบทบาท (Role)
+    if (STAFF_ROLE === 'server123') {
+        // --- โหมดบริกรรับออเดอร์ ---
+        SERVER_DATA.tableNumber = val1; // ช่อง 1 คือ เลขโต๊ะ
+        SERVER_DATA.staffName = val2;   // ช่อง 2 คือ ชื่อบริกร
+        
+        console.log("🔍 [DEBUG] โหมดบริกร - กำลังค้นหาบิลของโต๊ะ:", val1);
+        
+        const { data: tableData, error: tErr } = await supabaseClient
+            .from('tables')
+            .select('*, sessions!sessions_table_id_fkey(*)')
+            .eq('id', val1)
+            .maybeSingle();
+
+        if (tErr) console.error("❌ [DEBUG] Query Error:", tErr);
+
+        let activeSess = null;
+        if (tableData && tableData.sessions && tableData.sessions.length > 0) {
+            const actives = tableData.sessions
+                .filter(s => s.is_active)
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            
+            if (actives.length > 0) activeSess = actives[0];
+        }
+
+        if (activeSess) {
+            SERVER_DATA.sessionId = activeSess.id;
+            SERVER_DATA.token = activeSess.token;
+            SERVER_DATA.pax = activeSess.pax || 1;
+            
+            const discValue = parseFloat(activeSess.discount) || 0;
+            DISCOUNT_PERCENT = discValue / 100;
+            DISCOUNT_DISPLAY = discValue > 0 ? `${discValue}%` : 'None';
+            SERVER_DATA.discount = DISCOUNT_DISPLAY;
+        } else {
+            console.warn(`⚠️ ไม่พบบิลที่เปิดอยู่ของโต๊ะ ${val1}`);
+            SERVER_DATA.sessionId = null;
+            SERVER_DATA.token = null;
+            SERVER_DATA.pax = 1;
+            DISCOUNT_PERCENT = 0;
+            DISCOUNT_DISPLAY = 'None';
+            SERVER_DATA.discount = '0';
+        }
+    } 
+    else if (STAFF_ROLE === 'staff123') {
+        // --- โหมดพนักงาน (Staff) ---
+        // ✅ แก้ไข: ช่องแรกคือชื่อคน (val1) และช่องสองคือชื่อซุ้ม (val2)
+        SERVER_DATA.staffName = val1;    // บันทึกชื่อคนลงในฟิลด์ชื่อ
+        SERVER_DATA.staffStation = val2; // บันทึกชื่อซุ้มลงในฟิลด์ซุ้ม
+        SERVER_DATA.tableNumber = 'STAFF';
+        SERVER_DATA.token = `${config.prefix}-${val1}-${val2}-${Date.now()}`;
+        
+        console.log("✅ [DEBUG] โหมดพนักงาน - บันทึกชื่อ:", val1, "ซุ้ม:", val2);
+    }
+    else if (STAFF_ROLE === 'takehome123') {
+        // --- โหมดสั่งกลับบ้าน ---
+        SERVER_DATA.tableNumber = 'TH';
+        SERVER_DATA.thCode = val1;
+        SERVER_DATA.staffName = 'Order Takehome'; 
+        SERVER_DATA.token = `${config.prefix}-${val1}-${Date.now()}`;
+        
+        const discValue = parseFloat(selectedStaffDiscount) || 0;
+        DISCOUNT_PERCENT = discValue;
+        DISCOUNT_DISPLAY = discValue > 0 ? `${Math.round(discValue * 100)}%` : 'None';
+        SERVER_DATA.discount = DISCOUNT_DISPLAY;
+    }
+
+    // 3. อัปเดตการแสดงผลบนหน้าจอ (UI)
+    const tableDisplayEl = document.getElementById('table-display-number');
+    if (tableDisplayEl) {
+        if (STAFF_ROLE === 'server123') {
+            tableDisplayEl.innerHTML = `<span>${SERVER_DATA.tableNumber} ${SERVER_DATA.staffName ? `(${SERVER_DATA.staffName})` : ''}</span>`;
+        } else if (STAFF_ROLE === 'staff123') {
+            tableDisplayEl.innerHTML = `<span>${SERVER_DATA.staffName} (${SERVER_DATA.staffStation})</span>`;
+        } else {
+            tableDisplayEl.innerHTML = `<span>${val1}</span>`;
+        }
+    }
+    
+    if (typeof handleDiscountDisplay === 'function') handleDiscountDisplay();
+    
+    const modal = document.getElementById('staffModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+
+    showLoader(true);
+    if (typeof loadMenusFromServer === 'function') loadMenusFromServer();
+    if (typeof setupEventListeners === 'function') setupEventListeners();
+    if (typeof setupScrollEffect === 'function') setupScrollEffect();
+}
+
+async function loadBannersFromServer() {
+    const { data, error } = await supabaseClient.from('banners').select('*').eq('is_active', true).order('sort_order');
+    if (data) {
+        const formattedBanners = data.map(b => ({ image: b.image_url, title: b.title, action: b.action }));
+        renderBanners(formattedBanners);
+    }
+}
+
+// 🎯 ฟังก์ชันแยกตัวเลือก
+function parseOptionString(optStr, disabledList = []) {
+    if (!optStr) return [];
+    return optStr.split('||').map(groupStr => {
+        const parts = groupStr.split(':');
+        let label = parts[0] ? parts[0].trim() : '';
+        
+        let isMulti = false;
+        if (label.includes('(M)')) {
+            isMulti = true;
+            label = label.replace(/\(M\)/g, '').trim();
+        }
+
+        const choicesRaw = parts[1] ? parts[1].split(',') : [];
+        const choices = choicesRaw.map(c => {
+            c = c.trim();
+            let name = c;
+            let price = 0;
+            
+            // ตัดราคาออกก่อนเพื่อเอาชื่อเพียวๆ ไปเช็ค
+            const match = name.match(/\(\+(\d+)\)$/);
+            if (match) {
+                price = parseInt(match[1]);
+                name = name.slice(0, match.index).trim();
+            }
+
+            // ✅ เช็คว่าชื่อ option นี้อยู่ในรายการที่ถูกปิดจาก KDS (disabled_options) หรือไม่
+            let isOutOfStock = disabledList.includes(name);
+
+            // เผื่อยังพิมพ์ (หมด) แบบแมนนวลอยู่
+            const outOfStockPattern = /[\(\[\{\-]?\s*หมด\s*[\)\]\}]?/i;
+            if (outOfStockPattern.test(name)) {
+                isOutOfStock = true;
+                name = name.replace(outOfStockPattern, '').trim();
+            }
+            
+            return { name: name, price: price, isOutOfStock: isOutOfStock };
+        });
+        
+        return { label: label, allowMultiple: isMulti, choices: choices };
+    });
+}
+
+
+async function loadMenusFromServer() {
+    // 1. โหลดทั้งเมนูและซุ้ม (Stations) พร้อมกันเพื่อนำมาอ้างอิงลำดับ
+    const [menuRes, stationRes] = await Promise.all([
+        supabaseClient.from('menus')
+            .select('*')
+            .neq('status', 'ลบ')
+            .order('sort_order', { ascending: true }),
+        supabaseClient.from('stations')
+            .select('*')
+            .eq('is_active', true)
+            .order('sort_order', { ascending: true })
+    ]);
+
+    if (menuRes.error) {
+        showToast('❌ ไม่สามารถโหลดเมนูได้', 'error');
+        showLoader(false);
+        return;
+    }
+
+    const stationsData = stationRes.data || [];
+    const menusData = menuRes.data || [];
+
+    const grouped = {};
+
+    // 2. สร้างกลุ่มหมวดหมู่ตามลำดับที่ดึงมาจาก stations ก่อน (ทำให้การเรียงซุ้มตรงกับ Admin 100%)
+    stationsData.forEach(st => {
+        grouped[st.station_th] = {
+            name: { th: st.station_th, en: st.station_en || st.station_th, cn: st.station_cn || st.station_th },
+            image: st.cat_image || 'https://via.placeholder.com/150',
+            items: []
+        };
+    });
+
+    // 3. นำเมนูที่เรียงลำดับ sort_order แล้ว มายัดใส่กลุ่ม
+    menusData.forEach(item => {
+        const catName = item.station_th;
+        
+        // เผื่อมีเมนูที่ซุ้มถูกลบไปแล้ว แต่ยังค้างอยู่ ให้สร้างกลุ่มสำรองต่อท้าย
+        if (!grouped[catName]) {
+            grouped[catName] = {
+                name: { th: item.station_th, en: item.station_en || item.station_th, cn: item.station_cn || item.station_th },
+                image: item.cat_image || 'https://via.placeholder.com/150',
+                items: []
+            };
+        }
+
+        const disabledList = Array.isArray(item.disabled_options) ? item.disabled_options : [];
+        let parsedOptions = { th: [], en: [], cn: [] };
+        
+        if (item.option_th) parsedOptions.th = parseOptionString(item.option_th, disabledList);
+        if (item.option_en) parsedOptions.en = parseOptionString(item.option_en, disabledList);
+        if (item.option_cn) parsedOptions.cn = parseOptionString(item.option_cn, disabledList);
+
+        grouped[catName].items.push({
+            item: { th: item.item_th, en: item.item_en || item.item_th, cn: item.item_cn || item.item_th },
+            price: parseFloat(item.price),
+            newPrice: item.new_price ? parseFloat(item.new_price) : null,
+            imageURL: item.image_url,
+            description: { th: item.desc_th, en: item.desc_en, cn: item.desc_cn },
+            status: item.status,
+            optionGroups: parsedOptions,
+            disabled_options: disabledList,
+            db_id: item.id,
+            kds_station: item.kds_station,
+            station: item.station_th
+        });
+    });
+
+    // 4. กรองเอาเฉพาะซุ้มที่มีเมนูอยู่จริงๆ
+    const finalData = Object.values(grouped).filter(cat => cat.items.length > 0);
+
+    onMenuLoaded(finalData);
+}
+
+function onMenuLoaded(data) {
+  menuData = data || [];
+  flatMenu = {};
+
+  menuData.forEach(category => {
+    category.items.forEach(item => {
+        const originalPrice = Number(item.newPrice) || Number(item.price);
+        let priceToDiscount = originalPrice;
+        const displayPrice = (DISCOUNT_PERCENT > 0) ? (priceToDiscount * (1 - DISCOUNT_PERCENT)) : priceToDiscount;
+
+        flatMenu[item.item.th] = { 
+            ...item, 
+            originalPrice: originalPrice,
+            displayPrice: displayPrice
+        };
+    });
+  });
+
+  renderAll();
+  showLoader(false);
+}
+
+function renderAll() { applyTranslations(); renderCategoryNavbar(); renderMenu(); renderCart(); }
+
+function applyTranslations() { 
+    const tableLabelEl = document.getElementById('table-label');
+    if (tableLabelEl) tableLabelEl.innerText = t('table_label');
+
+    const searchInputEl = document.getElementById('searchInput');
+    if (searchInputEl) searchInputEl.placeholder = t('search_placeholder'); 
+    
+    const cartIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+    <path d="M2.25 2.25a.75.75 0 0 0 0 1.5h1.386c.170 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 0 0-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 0 0 0-1.5H5.378A2.25 2.25 0 0 1 7.5 15h11.218a.75.75 0 0 0 .674-.421 60.358 60.358 0 0 0 2.96-7.228.75.75 0 0 0-.525-.965A60.864 60.864 0 0 0 5.68 4.509l-.232-.867A1.875 1.875 0 0 0 3.636 2.25H2.25ZM3.75 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0ZM16.5 20.25a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0Z" />
+    </svg>`;
+    const cartTitleEl = document.getElementById('cart-title');
+    if (cartTitleEl) cartTitleEl.innerHTML = `${cartIconSVG} ${t('your_order')}`;
+
+    const totalLabelEl = document.getElementById('total-label');
+    if (totalLabelEl) totalLabelEl.innerText = t('total'); 
+    
+    const submitBtnEl = document.getElementById('submitBtn');
+    if (submitBtnEl) submitBtnEl.innerText = t('confirm_order'); 
+    
+    const bsOptionsLabelEl = document.getElementById('bs-options-label');
+    if (bsOptionsLabelEl) bsOptionsLabelEl.innerText = t('options');
+    
+    const bsNoteLabelEl = document.getElementById('bs-note-label');
+    if (bsNoteLabelEl) bsNoteLabelEl.innerText = t('note_label'); 
+
+    const ids = {
+        'cart-unit-text': 'unit_items',
+        'cart-header-title': 'cart_header',
+        'cart-header-subtitle': 'cart_subtitle',
+        'cart-total-label': 'total_net',
+        'btn-confirm-text': 'confirm_order_btn'
+    };
+
+    for (const [id, key] of Object.entries(ids)) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = t(key);
+    }
+    
+    const bsAddToCartBtnEl = document.getElementById('bs-addToCartBtn');
+    if (bsAddToCartBtnEl) {
+         const textSpan = bsAddToCartBtnEl.querySelector('span:first-child');
+         if (textSpan) {
+             if (bsAddToCartBtnEl.disabled) {
+                 textSpan.innerText = t('select_options_alert');
+             } else {
+                 textSpan.innerText = t('add_to_cart');
+             }
+         }
+    }
+
+    const discountNoticeTextEl = document.getElementById('discount-notice-text');
+    if (discountNoticeTextEl) discountNoticeTextEl.innerText = t('discount_notice');
+}
+
+let bannerInterval;
+let currentBannerIndex = 0;
+
+function renderBanners(data) {
+    const scrollContainer = document.getElementById('bannerScrollContainer');
+    const dotsContainer = document.getElementById('bannerDotsContainer');
+
+    if (!scrollContainer) return;
+    scrollContainer.innerHTML = '';
+    if (dotsContainer) dotsContainer.innerHTML = ''; 
+    if (bannerInterval) clearInterval(bannerInterval);
+    currentBannerIndex = 0;
+    
+    if (!data || data.length === 0) return;
+
+    data.forEach((banner, index) => {
+        const slide = document.createElement('div');
+        slide.className = "min-w-full w-full h-full relative cursor-pointer group flex-shrink-0 snap-center"; 
+        slide.innerHTML = `
+            <img src="${banner.image}" 
+                 class="w-full h-full object-cover block" 
+                 alt="${banner.title || ''}"
+                 loading="${index === 0 ? 'eager' : 'lazy'}">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none"></div>
+        `;
+        slide.onclick = () => {
+            if (banner.action) {
+                const targetId = `category-${banner.action.trim().replace(/\s+/g, '-')}`;
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) {
+                    const headerOffset = 130; 
+                    const elementPosition = targetEl.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+                }
+            }
+        };
+        scrollContainer.appendChild(slide);
+
+        if (dotsContainer) {
+            const dot = document.createElement('div');
+            dot.className = `h-1.5 rounded-full bg-white transition-all duration-300 shadow-sm flex-shrink-0 ${index === 0 ? 'w-6 opacity-100' : 'w-1.5 opacity-60'}`;
+            dotsContainer.appendChild(dot);
+        }
+    });
+
+    if (data.length > 1) {
+        startBannerAutoScroll(scrollContainer, data.length);
+        scrollContainer.addEventListener('touchstart', () => {
+            if (bannerInterval) clearInterval(bannerInterval);
+        }, { passive: true });
+        scrollContainer.addEventListener('touchend', () => {
+            setTimeout(() => {
+                if (bannerInterval) clearInterval(bannerInterval);
+                startBannerAutoScroll(scrollContainer, data.length);
+            }, 3000);
+        }, { passive: true });
+        scrollContainer.addEventListener('scroll', () => {
+            const scrollLeft = scrollContainer.scrollLeft;
+            const width = scrollContainer.offsetWidth;
+            if (width > 0) {
+                const newIndex = Math.round(scrollLeft / width);
+                if (newIndex !== currentBannerIndex && newIndex < data.length) {
+                    currentBannerIndex = newIndex;
+                    updateBannerDots(currentBannerIndex);
+                }
+            }
+        }, { passive: true });
+    }
+}
+
+function startBannerAutoScroll(container, totalSlides) {
+    if (bannerInterval) clearInterval(bannerInterval);
+    bannerInterval = setInterval(() => {
+        let nextIndex = currentBannerIndex + 1;
+        if (nextIndex >= totalSlides) nextIndex = 0;
+        if(container) {
+            const scrollAmount = container.offsetWidth * nextIndex;
+            container.scrollTo({ left: scrollAmount, behavior: 'smooth' });
+        }
+    }, 3000);
+}
+
+function updateBannerDots(activeIndex) {
+    const dotsContainer = document.getElementById('bannerDotsContainer');
+    if (!dotsContainer) return;
+    const dots = dotsContainer.children;
+    const baseClass = "h-1.5 rounded-full bg-white transition-all duration-300 shadow-sm flex-shrink-0";
+    for (let i = 0; i < dots.length; i++) {
+        if (i === activeIndex) {
+            dots[i].className = `${baseClass} w-6 opacity-100`;
+        } else {
+            dots[i].className = `${baseClass} w-1.5 opacity-60`;
+        }
+    }
+}
+
+function renderCategoryNavbar() { 
+    const navContainer = document.getElementById('categoryNavbar').querySelector('div'); 
+    navContainer.innerHTML = ''; 
+
+    menuData.forEach((category) => { 
+        const categoryName = category.name[currentLang] || category.name.th; 
+        const rawId = (category.name.th).replace(/\s+/g, '-');
+        const anchorId = `#category-${rawId}`; 
+        
+        const navItem = document.createElement('a'); 
+        navItem.href = anchorId; 
+        navItem.id = `nav-btn-${rawId}`;
+        navItem.dataset.target = `category-${rawId}`; 
+        navItem.className = `nav-category-item relative flex-shrink-0 w-auto h-10 px-1 rounded-full overflow-hidden cursor-pointer select-none transition-all duration-300 active:scale-95 border-2 border-transparent hover:border-orange-300`;
+        navItem.style.minWidth = "100px";
+
+        navItem.innerHTML = `
+            <img src="${category.image || placeholderImage}" class="absolute inset-0 w-full h-full object-cover">
+            <div class="nav-overlay absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"></div>
+            <div class="relative z-10 flex items-center justify-center h-full px-4">
+                <span class="text-white font-bold text-sm whitespace-nowrap shadow-sm drop-shadow-md">${categoryName}</span>
+            </div>
+        `; 
+        
+        navItem.onclick = (e) => {
+            e.preventDefault();
+            highlightNavButton(rawId);
+            isClickScrolling = true;
+            const targetElement = document.getElementById(navItem.dataset.target);
+            if (targetElement) {
+                const headerOffset = 140; 
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+                setTimeout(() => { isClickScrolling = false; }, 1000);
+            }
+        };
+        navContainer.appendChild(navItem); 
+    }); 
+    setupScrollSpy();
+}
+
+let isClickScrolling = false; 
+
+function setupScrollSpy() {
+    window.addEventListener('scroll', () => {
+        if (isClickScrolling) return;
+        const checkPoint = window.scrollY + 180; 
+        const sections = document.querySelectorAll('section[id^="category-"]');
+        let currentActiveId = null;
+
+        sections.forEach(section => {
+            const sectionTop = section.offsetTop;
+            const sectionBottom = sectionTop + section.offsetHeight; 
+            if (checkPoint >= sectionTop && checkPoint < sectionBottom) {
+                currentActiveId = section.id.replace('category-', '');
+            }
+        });
+        if (currentActiveId) highlightNavButton(currentActiveId);
+    }, { passive: true });
+}
+
+function animateScrollLeft(element, to, duration) {
+    const start = element.scrollLeft;
+    const change = to - start;
+    const startDate = new Date().getTime();
+    if (Math.abs(change) < 5) { element.scrollLeft = to; return; }
+
+    const animateScroll = function() {
+        const currentDate = new Date().getTime();
+        const currentTime = currentDate - startDate;
+        const easeInOutQuad = function(t, b, c, d) {
+            t /= d / 2;
+            if (t < 1) return c / 2 * t * t + b;
+            t--;
+            return -c / 2 * (t * (t - 2) - 1) + b;
+        };
+        element.scrollLeft = easeInOutQuad(currentTime, start, change, duration);
+        if (currentTime < duration) {
+            requestAnimationFrame(animateScroll);
+        } else {
+            element.scrollLeft = to; 
+        }
+    };
+    animateScroll();
+}
+
+let lastActiveId = null; 
+
+function highlightNavButton(rawId) {
+    document.querySelectorAll('.nav-category-item').forEach(btn => {
+        btn.classList.remove('border-orange-500', 'ring-2', 'ring-orange-200');
+        btn.classList.add('border-transparent');
+        const overlay = btn.querySelector('.nav-overlay');
+        if(overlay) {
+            overlay.classList.remove('bg-opacity-30');
+            overlay.classList.add('bg-opacity-50');
+        }
+    });
+
+    const activeBtn = document.getElementById(`nav-btn-${rawId}`);
+    if (activeBtn) {
+        activeBtn.classList.remove('border-transparent');
+        activeBtn.classList.add('border-orange-500', 'ring-2', 'ring-orange-200');
+        const overlay = activeBtn.querySelector('.nav-overlay');
+        if(overlay) {
+            overlay.classList.remove('bg-opacity-50');
+            overlay.classList.add('bg-opacity-30');
+        }
+
+        const navContainer = document.getElementById('categoryNavbar').querySelector('div');
+        const scrollLeft = activeBtn.offsetLeft - (navContainer.clientWidth / 2) + (activeBtn.clientWidth / 2);
+        
+        if (isClickScrolling) {
+            navContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            lastActiveId = rawId;
+        } else {
+            if (lastActiveId !== rawId) {
+                animateScrollLeft(navContainer, scrollLeft, 150); 
+                lastActiveId = rawId; 
+            }
+        }
+    }
+}
+
+// ✅ ฟังก์ชันตรวจสอบและแสดงจุดแจ้งเตือนสีแดง
+async function updateHistoryBadge() {
+    if (!SERVER_DATA.sessionId) return;
+    
+    try {
+        // ดึงจำนวนออเดอร์ทั้งหมดใน Session นี้จาก Database
+        const { count, error } = await supabaseClient
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('session_id', SERVER_DATA.sessionId);
+
+        if (error) throw error;
+
+        // ดึงจำนวนที่เราเคย "กดดู" ล่าสุดจาก LocalStorage
+        const seenCount = parseInt(localStorage.getItem('vet_history_seen_count') || "0");
+        const badge = document.getElementById('history-badge');
+        
+        if (badge) {
+            // ถ้าจำนวนใน DB มากกว่าที่เคยเห็น ให้แสดงจุดแดง
+            if (count > seenCount) {
+                badge.classList.remove('hidden');
+                badge.style.display = 'block';
+            } else {
+                badge.classList.add('hidden');
+                badge.style.display = 'none';
+            }
+        }
+    } catch (e) {
+        console.error("Badge update error:", e);
+    }
+}
+
+function getBadgeHTML(status) {
+    if (!status) return '';
+    const cleanStatus = String(status).trim();
+    const ignoreList = ['ปกติ', 'Normal', 'Available', 'หมด', 'ไม่พร้อม', 'TH_Only']; 
+    if (ignoreList.includes(cleanStatus)) return '';
+
+    // ==========================================
+    // 1. กรณีเป็นแถบคาดด้านบน (สำหรับ 15m / 30m)
+    // ==========================================
+    if (cleanStatus === '15m' || cleanStatus === '30m') {
+        const is15m = cleanStatus === '15m';
+        
+        // ✅ ย้อมสีกระจกฝ้าให้แตกต่างกันชัดเจน
+        const bgClass = is15m ? 'bg-yellow-50/95 border-yellow-200' : 'bg-red-50/95 border-red-200';
+        const textColor = is15m ? 'text-yellow-700' : 'text-red-600';
+        
+        const labelText = t(cleanStatus);
+        const PATH_CLOCK = 'M1 8a7 7 0 1 1 14 0A7 7 0 0 1 1 8Zm7.75-4.25a.75.75 0 0 0-1.5 0V8c0 .414.336.75.75.75h3.25a.75.75 0 0 0 0-1.5h-2.5v-3.5Z';
+        
+        return `
+            <div class="absolute top-0 left-0 w-full z-10 py-2 flex items-center justify-center gap-1.5 backdrop-blur-md border-b shadow-sm ${bgClass}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 ${textColor}">
+                    <path fill-rule="evenodd" d="${PATH_CLOCK}" clip-rule="evenodd" />
+                </svg>
+                <span class="text-xs font-extrabold uppercase tracking-wide leading-none pt-[1px] ${textColor}">
+                    ${labelText}
+                </span>
+            </div>
+        `;
+    }
+
+    // ==========================================
+    // 2. กรณีป้ายมุมซ้ายบนปกติ (ขายดี / ต้องลอง / ใหม่ / แนะนำ)
+    // ==========================================
+    const PATH_FIRE  = 'M8.074.945A4.993 4.993 0 0 0 6 5v.032c.004.6.114 1.176.311 1.709.16.428-.204.91-.61.7a5.023 5.023 0 0 1-1.868-1.677c-.202-.304-.648-.363-.848-.058a6 6 0 1 0 8.017-1.901l-.004-.007a4.98 4.98 0 0 1-2.18-2.574c-.116-.31-.477-.472-.744-.28Zm.78 6.178a3.001 3.001 0 1 1-3.473 4.341c-.205-.365.215-.694.62-.59a4.008 4.008 0 0 0 1.873.03c.288-.065.413-.386.321-.666A3.997 3.997 0 0 1 8 8.999c0-.585.126-1.14.351-1.641a.42.42 0 0 1 .503-.235Z';
+    const PATH_THUMB = 'M2.09 15a1 1 0 0 0 1-1V8a1 1 0 1 0-2 0v6a1 1 0 0 0 1 1ZM5.765 13H4.09V8c.663 0 1.218-.466 1.556-1.037a4.02 4.02 0 0 1 1.358-1.377c.478-.292.907-.706.989-1.26V4.32a9.03 9.03 0 0 0 0-2.642c-.028-.194.048-.394.224-.479A2 2 0 0 1 11.09 3c0 .812-.08 1.605-.235 2.371a.521.521 0 0 0 .502.629h1.733c1.104 0 2.01.898 1.901 1.997a19.831 19.831 0 0 1-1.081 4.788c-.27.747-.998 1.215-1.793 1.215H9.414c-.215 0-.428-.035-.632-.103l-2.384-.794A2.002 2.002 0 0 0 5.765 13Z';
+    const PATH_NEW   = 'M5 4a.75.75 0 0 1 .738.616l.252 1.388A1.25 1.25 0 0 0 6.996 7.01l1.388.252a.75.75 0 0 1 0 1.476l-1.388.252A1.25 1.25 0 0 0 5.99 9.996l-.252 1.388a.75.75 0 0 1-1.476 0L4.01 9.996A1.25 1.25 0 0 0 3.004 8.99l-1.388-.252a.75.75 0 0 1 0-1.476l1.388-.252A1.25 1.25 0 0 0 4.01 6.004l.252-1.388A.75.75 0 0 1 5 4ZM12 1a.75.75 0 0 1 .721.544l.195.682c.118.415.443.74.858.858l.682.195a.75.75 0 0 1 0 1.442l-.682.195a1.25 1.25 0 0 0-.858.858l-.195.682a.75.75 0 0 1-1.442 0l-.195-.682a1.25 1.25 0 0 0-.858-.858l-.682-.195a.75.75 0 0 1 0-1.442l.682-.195a1.25 1.25 0 0 0 .858-.858l.195-.682A.75.75 0 0 1 12 1ZM10 11a.75.75 0 0 1 .728.568.968.968 0 0 0 .704.704.75.75 0 0 1 0 1.456.968.968 0 0 0-.704.704.75.75 0 0 1-1.456 0 .968.968 0 0 0-.704-.704.75.75 0 0 1 0-1.456.968.968 0 0 0 .704-.704A.75.75 0 0 1 10 11Z';
+
+    let style = { bg: 'from-gray-700 to-gray-900', path: PATH_NEW, text: 'text-white' };
+    let labelKey = ''; 
+
+    if (cleanStatus.includes('ขายดี') || cleanStatus.includes('Best')) {
+        style = { bg: 'from-rose-500 to-orange-600 shadow-orange-500/30', path: PATH_FIRE, text: 'text-white' };
+        labelKey = 'ขายดี';
+    } 
+    else if (cleanStatus.includes('ต้องลอง') || cleanStatus.includes('Try')) {
+        style = { bg: 'from-amber-500 to-orange-500 shadow-orange-500/30', path: PATH_THUMB, text: 'text-white' };
+        labelKey = 'ต้องลอง';
+    }
+    else if (cleanStatus.includes('ใหม่') || cleanStatus.includes('New')) {
+        style = { bg: 'from-emerald-400 to-teal-600 shadow-emerald-500/30', path: PATH_NEW, text: 'text-white' };
+        labelKey = 'ใหม่';
+    }
+    else {
+        style = { bg: 'from-orange-500 to-orange-600 shadow-orange-500/30', path: PATH_THUMB, text: 'text-white' };
+        labelKey = 'แนะนำ'; 
+    }
+
+    const finalLabel = t(labelKey);
+    return `
+        <div class="absolute top-0 left-0 z-10 pt-2.5 pb-1.5 pl-3 pr-4 rounded-tl-[1.5rem] rounded-br-[1.2rem] shadow-lg flex items-center gap-1.5 border-b border-r border-white/20 backdrop-blur-sm bg-gradient-to-br ${style.bg}">
+            <div class="drop-shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-3.5 h-3.5 ${style.text}">
+                    <path fill-rule="evenodd" d="${style.path}" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wider leading-none drop-shadow-sm pb-[1px] ${style.text} whitespace-nowrap">
+                ${finalLabel}
+            </span>
+        </div>
+    `;
+}
+
+function renderMenu() {
+    const container = document.getElementById('menuContainer');
+    container.innerHTML = '';
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+    menuData.forEach(category => {
+        const categoryName = category.name[currentLang] || category.name.th;
+        const categoryId = (category.name.th).replace(/\s+/g, '-');
+        const filteredItems = category.items.filter(item => (item.item[currentLang] || item.item.th).toLowerCase().includes(searchTerm));
+
+        if (filteredItems.length === 0) return;
+
+        const section = document.createElement('section');
+        section.id = `category-${categoryId}`;
+        section.className = 'pt-6 mb-6';
+        section.innerHTML = `<h2 class="text-3xl font-bold mb-4 text-orange-600">${categoryName}</h2>`;
+
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4';
+
+        filteredItems.forEach(item => {
+            if (item.status === 'TH_Only' && !isTakehomeMode()) return; 
+            grid.appendChild(createMenuItemCard(item, category.name.th));
+        });
+
+        if (grid.children.length > 0) {
+            section.appendChild(grid);
+            container.appendChild(section);
+        }
+    });
+}
+
+function createMenuItemCard(item, categoryName) {
+    const itemName = item.item[currentLang] || item.item.th;
+    const itemStatus = item.status || 'ปกติ';
+    const statusConfig = STATUS_MAP[itemStatus] || STATUS_MAP['ปกติ'];
+    let isOrderable = statusConfig.isOrderable;
+    let overlayText = '';
+    let overlayGlassClass = ''; 
+    
+    if (itemStatus === 'TH_Only') {
+        if (isTakehomeMode()) {
+            isOrderable = true;
+        } else {
+            isOrderable = false;
+            overlayText = { th: 'เฉพาะสั่งกลับบ้าน', en: 'Takehome Only', cn: '仅限外带' }[currentLang];
+            overlayGlassClass = 'bg-purple-900/80'; 
+        }
+    }
+    
+    if (!isOrderable) {
+        if (itemStatus === 'ไม่พร้อม') {
+            const textMap = { th: 'ไม่พร้อมชั่วคราว', en: 'Unavailable', cn: '暂停供应' };
+            overlayText = textMap[currentLang] || textMap.th;
+            overlayGlassClass = 'bg-red-600/70'; 
+        } else if(itemStatus !== 'TH_Only') {
+            const textMap = { th: 'สินค้าหมด', en: 'Sold Out', cn: '售罄' };
+            overlayText = textMap[currentLang] || textMap.th;
+            overlayGlassClass = 'bg-gray-800/70'; 
+        }
+    }
+
+    let badgeText = '';
+    if (statusConfig.text && typeof statusConfig.text === 'object') {
+        badgeText = statusConfig.text[currentLang] || statusConfig.text.th;
+    } else {
+        badgeText = statusConfig.text;
+    }
+
+    const originalPrice = parseFloat(String(item.price).trim()) || 0;
+    const rawNewPrice = parseFloat(String(item.newPrice || '').trim());
+    const hasDiscount = (!isNaN(rawNewPrice) && rawNewPrice > 0 && rawNewPrice < originalPrice);
+    const sellingPrice = hasDiscount ? rawNewPrice : originalPrice;
+
+    const card = document.createElement('div');
+    card.className = "group flex flex-col gap-2 relative transition-transform duration-200 active:scale-95"; 
+    
+    if (!isOrderable) {
+        card.classList.add('pointer-events-none'); 
+    } else {
+        card.classList.add('cursor-pointer');
+    }
+
+    const imageSrc = item.imageURL || 'https://via.placeholder.com/300x300?text=No+Image';
+    
+    let badgesHTML = '';
+    if (itemStatus === 'TH_Only' && isOrderable) {
+        const thText = { th: "เฉพาะกลับบ้าน", en: "Takehome Only", cn: "仅限外带" };
+        const label = thText[currentLang] || thText.th;
+        badgesHTML += `<div class="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm z-10 backdrop-blur-md">${label}</div>`;
+    }
+    else if (isOrderable) {
+        badgesHTML += getBadgeHTML(itemStatus);
+    } 
+    else if (statusConfig.badgeClass !== 'hidden' && statusConfig.badgeClass.includes('yellow')) {
+         badgesHTML += `<div class="absolute top-2 left-2 ${statusConfig.badgeClass} text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm z-10 backdrop-blur-md">${badgeText}</div>`;
+    }
+
+    if (hasDiscount) {
+        const percentOff = Math.round(((originalPrice - sellingPrice) / originalPrice) * 100);
+        badgesHTML += `<div class="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm z-10">-${percentOff}%</div>`;
+    }
+
+    let priceHTML = '';
+    if (hasDiscount) {
+        priceHTML = `<div class="flex items-baseline gap-1.5"><span class="text-base font-bold text-red-600">฿${sellingPrice.toLocaleString()}</span><span class="text-xs text-gray-400 line-through">฿${originalPrice.toLocaleString()}</span></div>`;
+    } else {
+        priceHTML = `<span class="text-base font-bold text-orange-600">฿${sellingPrice.toLocaleString()}</span>`;
+    }
+
+    let buttonHTML = '';
+    if (!isOrderable) {
+        buttonHTML = `<div class="absolute inset-0 flex items-center justify-center z-20 bg-black/60 transition-colors duration-300"><span class="text-white font-bold px-6 py-2.5 rounded-full text-sm tracking-wide shadow-2xl ${overlayGlassClass} backdrop-blur-md border border-white/30">${overlayText}</span></div>`;
+    } else {
+        buttonHTML = `<button class="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-orange-600/70 backdrop-blur-md border border-white/40 text-white shadow-lg flex items-center justify-center z-20 hover:bg-orange-600 hover:border-transparent active:scale-90 transition-all duration-300"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg></button>`;
+    }
+
+    card.innerHTML = `
+        <div class="relative w-full pt-[100%] rounded-3xl overflow-hidden bg-gray-100 shadow-sm">
+            <img src="${imageSrc}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${itemName}">
+            ${isOrderable ? '<div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>' : ''}
+            ${badgesHTML}
+            ${buttonHTML}
+        </div>
+        <div class="flex flex-col px-1">
+            <h3 class="font-bold text-gray-900 text-base leading-tight line-clamp-2">${itemName}</h3>
+            <div class="-mt-0.5">${priceHTML}</div>
+        </div>
+    `;
+
+    if (isOrderable) {
+        card.onclick = (e) => {
+            lastClickedImageElement = card.querySelector('img'); 
+            openBottomSheet(item, categoryName);
+            if (navigator.vibrate) navigator.vibrate(10);
+        };
+    }
+    return card;
+}
+
+function openBottomSheet(item, station) {
+    openProductModal({ ...item, station }, 'ADD');
+    setTimeout(() => {
+        const scrollContainer = document.getElementById('bs-scroll-container');
+        if (scrollContainer) {
+            scrollContainer.style.scrollBehavior = 'auto'; 
+            scrollContainer.scrollTop = 0; 
+        }
+    }, 100); 
+}
+
+function renderOptionsHTML(item) {
+    const container = document.getElementById('bs-radio-container');
+    container.innerHTML = ''; 
+    const optionsDiv = document.getElementById('bs-options-container');
+
+    const groupsTH = item.optionGroups?.th || [];
+    const groupsDisplay = item.optionGroups?.[currentLang] || groupsTH;
+
+    if (groupsTH.length === 0) {
+        optionsDiv.style.display = 'none';
+        return;
+    }
+    optionsDiv.style.display = 'block';
+
+    groupsTH.forEach((groupTH, gIdx) => {
+        const isMulti = groupTH.allowMultiple;
+        const type = isMulti ? 'checkbox' : 'radio';
+        
+        const groupDisplayObj = groupsDisplay[gIdx] || groupTH;
+        const reqText = isMulti ? t('options') : t('select_options_alert').replace('กรุณาระบุ', '* ').replace('Please select', '* ').replace('请选择', '* ');
+        const displayReqText = isMulti ? '' : '*';
+        const reqClass = isMulti ? 'hidden' : 'text-red-500 font-bold ml-1';
+
+        let html = `
+            <div class="mb-6 border-b border-gray-100 pb-4 option-group" data-required="${!isMulti}">
+                <div class="flex items-baseline mb-3">
+                    <h4 class="font-bold text-lg text-gray-800">${groupDisplayObj.label}</h4>
+                    <span class="${reqClass}">${displayReqText}</span>
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+        `;
+
+        groupTH.choices.forEach((choiceTH, cIdx) => {
+            const valueTH = choiceTH.name;
+            const price = choiceTH.price || 0;
+            const isOutOfStock = choiceTH.isOutOfStock || false; // ✅ ดึงสถานะหมดสต็อก
+
+            let choiceDisplayObj = groupDisplayObj.choices[cIdx];
+            if (!choiceDisplayObj) choiceDisplayObj = choiceTH;
+            const labelDisplay = typeof choiceDisplayObj === 'object' ? choiceDisplayObj.name : choiceDisplayObj;
+
+            // ✅ ตั้งค่า UI สำหรับของที่หมด
+            const disabledAttr = isOutOfStock ? 'disabled' : '';
+            const opacityClass = isOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer hover:border-orange-300';
+            const textStyle = isOutOfStock ? 'line-through text-gray-400' : 'text-gray-700';
+            const badgeOutOfStock = isOutOfStock ? `<span class="text-[10px] text-red-500 font-bold ml-2 px-1.5 py-0.5 bg-red-100 rounded-md border border-red-200">หมด</span>` : '';
+
+            html += `
+                <label class="relative group option-card rounded-xl border-2 border-gray-200 p-3.5 flex justify-between items-center transition-all ${opacityClass}">
+                    <input type="${type}" name="g_${gIdx}" value="${valueTH}" data-price="${price}" data-ref="${valueTH}" class="peer sr-only" onchange="validateFormAndCalcPrice()" ${disabledAttr}>
+                    <div class="flex items-center gap-3">
+                        <div class="js-icon-circle w-5 h-5 rounded-${isMulti?'md':'full'} border-2 border-gray-300 flex items-center justify-center transition-colors ${isOutOfStock ? 'bg-gray-200' : 'bg-white'}">
+                            <svg class="js-icon-svg w-3.5 h-3.5 text-white opacity-0 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M4.5 12.75l6 6 9-13.5"/></svg>
+                        </div>
+                        <span class="font-medium ${textStyle}">${labelDisplay}${badgeOutOfStock}</span>
+                    </div>
+                    ${price > 0 ? `<span class="font-bold ${isOutOfStock ? 'text-gray-400' : 'text-orange-600'} text-sm">+฿${price}</span>` : ''}
+                </label>
+            `;
+        });
+        html += `</div></div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    });
+}
+
+function openProductModal(item, mode = 'ADD', index = null) {
+    activeMenuItem = item;
+    editingIndex = (mode === 'EDIT') ? index : null;
+
+    document.getElementById('bs-note-label').textContent = t('note_label');
+    document.getElementById('bs-note').placeholder = t('note_placeholder');
+    document.getElementById('bs-validation-message').textContent = t('select_options_alert');
+
+    document.getElementById('bs-image').src = item.imageURL || placeholderImage;
+    document.getElementById('bs-title').textContent = item.item[currentLang] || item.item.th;
+    document.getElementById('bs-desc').textContent = (item.description && (item.description[currentLang] || item.description.th)) || '';
+    
+    const basePrice = parseFloat(item.newPrice) || parseFloat(item.price) || 0;
+    const originalPrice = parseFloat(item.price) || 0;
+    const hasDiscount = (basePrice < originalPrice);
+    
+    const priceHtml = hasDiscount 
+        ? `<div class="flex items-baseline gap-2"><span class="text-3xl font-bold text-red-600">฿${basePrice.toLocaleString()}</span><span class="text-lg text-gray-400 line-through">฿${originalPrice.toLocaleString()}</span></div>` 
+        : `<span class="text-3xl font-bold text-orange-600">฿${basePrice.toLocaleString()}</span>`;
+    document.getElementById('bs-price-display').innerHTML = priceHtml;
+
+    renderOptionsHTML(item);
+
+    if (mode === 'EDIT' && index !== null) {
+        const oldData = cart[index];
+        document.getElementById('bs-qty').textContent = oldData.quantity;
+        document.getElementById('bs-note').value = oldData.note || '';
+
+        if (oldData.options) {
+            oldData.options.forEach(opt => {
+                const targetRef = opt.choice.th; 
+                const inputs = document.querySelectorAll(`#bs-radio-container input[data-ref="${targetRef}"]`);
+                inputs.forEach(inp => inp.checked = true);
+            });
+        }
+    } else {
+        document.getElementById('bs-qty').textContent = 1;
+        document.getElementById('bs-note').value = '';
+    }
+
+    const sheet = document.getElementById('bottomSheet');
+    const scrollContainer = document.getElementById('bs-scroll-container');
+    
+    sheet.style.display = 'block';
+    if (scrollContainer) scrollContainer.scrollTop = 0;
+    document.body.classList.add('overflow-hidden');
+
+    requestAnimationFrame(() => {
+        document.getElementById('bottomSheetContent').style.transform = 'translateY(0)';
+    });
+
+    validateFormAndCalcPrice();
+}
+
+function validateFormAndCalcPrice() {
+    const groups = document.querySelectorAll('.option-group');
+    let isValid = true;
+
+    groups.forEach(group => {
+        group.querySelectorAll('label').forEach(lbl => {
+            const inp = lbl.querySelector('input');
+            const iconContainer = lbl.querySelector('.js-icon-circle'); 
+            const iconSvg = lbl.querySelector('.js-icon-svg');
+
+            if(inp.checked) {
+                lbl.classList.add('border-orange-500', 'bg-orange-50');
+                lbl.classList.remove('border-gray-200');
+                if(iconContainer) {
+                    iconContainer.classList.remove('border-gray-300', 'bg-white');
+                    iconContainer.classList.add('border-orange-500', 'bg-orange-500');
+                }
+                if(iconSvg) {
+                    iconSvg.classList.remove('opacity-0');
+                    iconSvg.classList.add('opacity-100');
+                }
+            } else {
+                lbl.classList.remove('border-orange-500', 'bg-orange-50');
+                lbl.classList.add('border-gray-200');
+                if(iconContainer) {
+                    iconContainer.classList.add('border-gray-300', 'bg-white');
+                    iconContainer.classList.remove('border-orange-500', 'bg-orange-500');
+                }
+                if(iconSvg) {
+                    iconSvg.classList.add('opacity-0');
+                    iconSvg.classList.remove('opacity-100');
+                }
+            }
+        });
+
+        if (group.dataset.required === "true") {
+            if (group.querySelectorAll('input:checked').length === 0) isValid = false;
+        }
+    });
+
+    let totalPrice = 0;
+    const basePrice = activeMenuItem ? (parseFloat(activeMenuItem.newPrice) || parseFloat(activeMenuItem.price) || 0) : 0;
+    totalPrice += basePrice;
+
+    document.querySelectorAll('#bs-radio-container input:checked').forEach(inp => {
+        totalPrice += parseFloat(inp.dataset.price || 0);
+    });
+
+    const qty = parseInt(document.getElementById('bs-qty').textContent) || 1;
+    const finalTotal = totalPrice * qty;
+
+    const btn = document.getElementById('bs-addToCartBtn');
+    const valMsg = document.getElementById('bs-validation-message');
+    if(valMsg) valMsg.classList.add('hidden');
+
+    if(btn) {
+        btn.disabled = !isValid;
+        const priceDisplay = document.getElementById('bs-price-display');
+        const originalPrice = activeMenuItem ? parseFloat(activeMenuItem.price) || 0 : 0;
+        const hasDiscount = (basePrice < originalPrice);
+        
+        if(priceDisplay) {
+            if(hasDiscount) {
+                priceDisplay.innerHTML = `<div class="flex items-baseline gap-2"><span class="text-3xl font-bold text-red-600">฿${basePrice.toLocaleString()}</span><span class="text-lg text-gray-400 line-through">฿${originalPrice.toLocaleString()}</span></div>`;
+            } else {
+                priceDisplay.innerHTML = `<span class="text-3xl font-bold text-orange-600">฿${basePrice.toLocaleString()}</span>`;
+            }
+        }
+
+        btn.className = "w-full font-bold text-lg py-3.5 rounded-2xl shadow-lg transition-all flex items-center";
+
+        if (!isValid) {
+            btn.classList.add('bg-gray-400', 'text-white', 'cursor-not-allowed', 'justify-center');
+            btn.innerHTML = `<span>${t('select_options_alert')}</span>`; 
+        } else {
+            if (editingIndex !== null) {
+                btn.classList.add('bg-green-600', 'text-white', 'shadow-green-200', 'active:scale-95', 'justify-center');
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" /></svg>`;
+            } else {
+                btn.classList.add('bg-orange-600', 'text-white', 'hover:bg-orange-700', 'active:scale-95', 'justify-between', 'px-6');
+                btn.innerHTML = `<span>${t('add_to_cart')}</span><span id="bs-total-price">฿${finalTotal.toLocaleString()}</span>`;
+            }
+        }
+    }
+}
+
+function validateForm() { validateFormAndCalcPrice(); }
+
+function handleCommitTransaction() {
+    const btn = document.getElementById('bs-addToCartBtn');
+    if (btn.disabled || !activeMenuItem) return;
+
+    const optionsToSave = [];
+    let totalOptionPrice = 0;
+    
+    const groupsTH = activeMenuItem.optionGroups?.th || [];
+    const allGroups = activeMenuItem.optionGroups || {};
+    
+    const inputs = document.querySelectorAll('#bs-radio-container input:checked');
+    const tempSelections = {}; 
+
+    inputs.forEach(inp => {
+        const gIndex = inp.name.split('_')[1]; 
+        if(!tempSelections[gIndex]) tempSelections[gIndex] = [];
+        tempSelections[gIndex].push(inp.value);
+        totalOptionPrice += parseFloat(inp.dataset.price);
+    });
+
+    Object.keys(tempSelections).forEach(gIdx => {
+        const selectedThaiNames = tempSelections[gIdx];
+        selectedThaiNames.forEach(thaiName => {
+            const groupMaster = groupsTH[gIdx];
+            const cIdx = groupMaster.choices.findIndex(c => {
+                const cVal = typeof c === 'object' ? c.name : c;
+                return cVal === thaiName;
+            });
+            
+            if (cIdx > -1) {
+                const labelObj = {}, choiceObj = {};
+                ['th','en','cn'].forEach(lang => {
+                    if(allGroups[lang] && allGroups[lang][gIdx]) {
+                        labelObj[lang] = allGroups[lang][gIdx].label;
+                        const cItem = allGroups[lang][gIdx].choices[cIdx];
+                        choiceObj[lang] = typeof cItem === 'object' ? cItem.name : cItem;
+                    }
+                });
+                const p = (typeof groupMaster.choices[cIdx] === 'object') ? (groupMaster.choices[cIdx].price || 0) : 0;
+                optionsToSave.push({ label: labelObj, choice: choiceObj, price: p });
+            }
+        });
+    });
+
+    const qty = parseInt(document.getElementById('bs-qty').textContent);
+    const note = document.getElementById('bs-note').value.trim();
+    const basePrice = parseFloat(activeMenuItem.newPrice) || parseFloat(activeMenuItem.price) || 0;
+    const finalUnitPrice = basePrice + totalOptionPrice;
+    const originalBasePrice = parseFloat(activeMenuItem.price) || 0;
+
+    const uniqueKey = `${activeMenuItem.item.th}|${JSON.stringify(optionsToSave)}|${note}|${finalUnitPrice}`;
+
+    const newItem = {
+        cartKey: uniqueKey, itemKey: activeMenuItem.item.th, quantity: qty,
+        options: optionsToSave, note: note, station: activeMenuItem.station,
+        itemFullPrice: finalUnitPrice, basePrice: originalBasePrice
+    };
+
+    if (editingIndex !== null) {
+        cart[editingIndex] = newItem;
+        showToast("แก้ไขรายการเรียบร้อย!", "success");
+    } else {
+        const exist = cart.find(c => c.cartKey === uniqueKey);
+        if (exist) exist.quantity += qty;
+        else cart.push(newItem);
+        
+        const imgSrc = document.getElementById('bs-image').src;
+        const startEl = lastClickedImageElement || btn;
+        animateAddToCart(startEl, imgSrc);
+    }
+
+    renderCart();
+    updateSmartCartBar();
+    closeBottomSheet();
+    
+    if (editingIndex !== null) {
+        setTimeout(() => openCartSheet(), 350);
+    }
+}
+
+function editCartItem(index) {
+    if(!cart[index]) return;
+    const itemKey = cart[index].itemKey;
+    const menuItem = flatMenu[itemKey];
+    
+    if (menuItem) {
+        closeCartSheet(); 
+        setTimeout(() => {
+            openProductModal(menuItem, 'EDIT', index);
+        }, 300);
+    }
+}
+
+function renderCart() { 
+    var container = document.getElementById('cartItems'); 
+    var footerContainer = document.querySelector('#cartSheetContent .border-t');
+    var NO_DISCOUNT_STATIONS = ["น้ำ"]; 
+    
+    var grandTotalOriginal = 0; 
+    var grandTotalNet = 0;      
+    var totalItems = 0; 
+    var hasExcludedItemInCart = false;
+    var itemsHTML = "";
+
+    var newNoteIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 inline mr-1 flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>';
+    var editIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg>';
+    var trashIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 text-red-500"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.007a1.5 1.5 0 0 1-1.493 1.307H6.559a1.5 1.5 0 0 1-1.493-1.307L4.06 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 0 1 3.369 0c1.603.051 2.816 1.387 2.816 2.951Zm-6.136-1.452a51.196 51.196 0 0 1 3.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 0 0-6 0v-.113c0-.794.609-1.428 1.364-1.452Zm-.385 3.322a.75.75 0 1 0-1.5 0v11.25a.75.75 0 0 0 1.5 0V6.348Zm4.5 0a.75.75 0 1 0-1.5 0v11.25a.75.75 0 0 0 1.5 0V6.348Z" clip-rule="evenodd" /></svg>';
+    var minusIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3 h-3 text-gray-500"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15" /></svg>';
+    var plusIcon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" /></svg>';
+
+    if (cart.length > 0) {
+        for (let index = cart.length - 1; index >= 0; index--) {
+            var cartItem = cart[index];
+            var menuItem = flatMenu[cartItem.itemKey]; 
+            if (!menuItem) continue;
+            
+            var unitPrice = cartItem.itemFullPrice || menuItem.originalPrice || 0;
+            var itemName = menuItem.item[currentLang] || menuItem.item.th; 
+            var imgSrc = menuItem.imageURL || 'https://via.placeholder.com/150?text=No+Image';
+            
+            var isNoDiscount = menuItem.kds_station === 'น้ำ' || menuItem.station === 'น้ำ';
+            if (isNoDiscount) { hasExcludedItemInCart = true; }
+            
+            var unitNetPrice = isNoDiscount ? unitPrice : (unitPrice * (1 - DISCOUNT_PERCENT));
+            var lineOriginalTotal = unitPrice * cartItem.quantity;
+            var lineNetTotal = unitNetPrice * cartItem.quantity;
+            
+            grandTotalOriginal += lineOriginalTotal; grandTotalNet += lineNetTotal; totalItems += cartItem.quantity; 
+            
+            var optionsHTML = '';
+            if (cartItem.options && cartItem.options.length > 0) {
+                var optionLines = '';
+                cartItem.options.forEach(function(opt) {
+                    var name = opt.choice[currentLang] || opt.choice.th;
+                    var priceTag = (opt.price && opt.price > 0) ? ' <span class="text-orange-500 font-bold">(+' + opt.price + ')</span>' : '';
+                    optionLines += '<div class="flex items-start gap-1 text-sm text-gray-500"><div class="w-1.5 h-1.5 rounded-full bg-orange-300 flex-shrink-0 mt-[0.45rem]"></div><span class="leading-snug">' + name + priceTag + '</span></div>';
+                });
+                optionsHTML = '<div class="mt-1.5 pl-1 border-l-2 border-gray-100 flex flex-col space-y-1 ml-1">' + optionLines + '</div>';
+            }
+
+            var noteHTML = '';
+            if (cartItem.note) {
+                noteHTML = '<div class="mt-2"><span class="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-100 flex items-center gap-1 w-fit">' + newNoteIcon + cartItem.note + '</span></div>';
+            }
+
+            itemsHTML += '<div class="flex items-start py-4 border-b border-gray-100 last:border-0 group relative">';
+            itemsHTML += '<div class="flex-grow flex cursor-pointer active:opacity-70 transition-opacity min-w-[0]" onclick="editCartItem(' + index + ')">';
+            itemsHTML += '<div class="flex-shrink-0 mr-4"><img src="' + imgSrc + '" class="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm"></div>';
+            itemsHTML += '<div class="flex-shrink flex-grow-0 min-w-0 pr-2 flex flex-col justify-center">';
+            itemsHTML += '<div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-gray-800 text-base leading-tight truncate max-w-full whitespace-nowrap">' + itemName + '</h4><div class="flex-shrink-0 text-orange-500 bg-orange-50 p-1 rounded-md">' + editIcon + '</div></div>';
+            itemsHTML += optionsHTML + noteHTML;
+            itemsHTML += '</div></div>'; 
+
+            itemsHTML += '<div class="flex flex-col items-end gap-2 flex-shrink-0">';
+            itemsHTML += '<span class="font-bold text-gray-900 text-base">฿' + lineOriginalTotal.toLocaleString() + '</span>';
+            itemsHTML += '<div class="flex items-center bg-white rounded-full border border-gray-200 shadow-sm h-8">';
+            var leftIcon = (cartItem.quantity > 1) ? minusIcon : trashIcon;
+            itemsHTML += '<button class="qty-minus-btn w-8 h-full flex items-center justify-center rounded-l-full hover:bg-gray-100 active:scale-90 transition-transform" data-index="' + index + '">' + leftIcon + '</button>';
+            itemsHTML += '<span class="w-6 text-center font-bold text-gray-800 text-sm select-none">' + cartItem.quantity + '</span>';
+            var plusClass = "qty-plus-btn w-8 h-full flex items-center justify-center rounded-r-full hover:bg-gray-100 text-orange-500 active:scale-90 transition-transform";
+            var plusDisabled = "";
+            if (cartItem.quantity >= 20) {
+                plusClass = "qty-plus-btn w-8 h-full flex items-center justify-center rounded-r-full bg-gray-100 text-gray-300 cursor-not-allowed";
+                plusDisabled = "disabled";
+            }
+            itemsHTML += '<button class="' + plusClass + '" data-index="' + index + '" ' + plusDisabled + '>' + plusIcon + '</button>';
+            itemsHTML += '</div></div></div>';
+        }
+    }
+
+    if (cart.length === 0) {
+        container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-center text-gray-400 opacity-60"><svg class="h-16 w-16 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg><p class="text-lg font-medium">${t('cart_empty_state')}</p></div>`;
+        if (footerContainer) footerContainer.style.display = 'none';
+    } else {
+        container.innerHTML = itemsHTML;
+        if (footerContainer) footerContainer.style.display = 'block';
+    }
+
+    grandTotalNet = Math.ceil(grandTotalNet);
+
+    if (footerContainer && cart.length > 0) {
+        const suggestions = getMissingRecommendations();
+        let recHTML = '';
+
+        if (suggestions.length > 0 && STAFF_ROLE === 'customer') {
+            recHTML += '<div class="px-4 mb-2">';
+            recHTML += `  <div class="text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wide flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3 text-orange-400"><path d="M10 2a.75.75 0 0 1 .75.75v5.59l2.68-2.68a.75.75 0 1 1 1.06 1.06l-4 4a.75.75 0 0 1-1.06 0l-4-4a.75.75 0 0 1 1.06-1.06l2.68 2.68V2.75A.75.75 0 0 1 10 2Z" /></svg> 
+                ${t('recommend_header')}
+            </div>`;
+            recHTML += '  <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1 snap-x snap-mandatory pr-4">';
+            
+            suggestions.forEach(function(s) {
+                var labelDisplay = s.label[currentLang] || s.label.th;
+                var btnDisplay = s.btnText[currentLang] || s.btnText.th;
+                recHTML += '<div onclick="jumpToCategory(\'' + s.targetId + '\')" class="snap-start flex-shrink-0 w-32 h-12 bg-white border border-gray-200 rounded-lg shadow-sm active:scale-95 transition-transform cursor-pointer flex overflow-hidden group hover:border-orange-300 relative">';
+                recHTML += '  <div class="w-12 h-full relative flex-shrink-0"><img src="' + s.imageUrl + '" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="' + labelDisplay + '"></div>';
+                recHTML += '  <div class="flex-1 flex flex-col justify-center px-1.5 min-w-0 bg-white">';
+                recHTML += '    <span class="text-[10px] font-bold text-gray-900 leading-tight whitespace-nowrap overflow-hidden">' + labelDisplay + '</span>';
+                recHTML += '    <div class="flex items-center gap-0.5 mt-0.5"><span class="text-[9px] font-medium text-orange-600 whitespace-nowrap">' + btnDisplay + '</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5 text-orange-400 -mb-px"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg></div>';
+                recHTML += '  </div></div>';
+            });
+            recHTML += '  </div></div>';
+        }
+
+        var summaryHTML = '';
+        if (grandTotalOriginal > grandTotalNet) {
+            var discountAmount = grandTotalOriginal - grandTotalNet;
+            summaryHTML += `<div class="flex justify-between items-center text-gray-500 text-sm"><span>${t('subtotal')}</span><span>฿${grandTotalOriginal.toLocaleString()}</span></div>`;
+            summaryHTML += `<div class="flex justify-between items-center text-red-500 text-sm"><span>${t('discount_label')}</span><span>-฿${discountAmount.toLocaleString()}</span></div>`;
+            if (hasExcludedItemInCart) {
+                summaryHTML += `<div class="text-[10px] text-gray-400 text-right mt-0.5">${t('discount_exclusion_notice')}</div>`;
+            }
+        }
+
+        var footerHTML = recHTML; 
+        footerHTML += `<div id="cartSheetSummary" class="px-2 space-y-1 mb-2">${summaryHTML}</div>`;
+        footerHTML += `<div class="flex justify-between items-end px-2 mb-4 pt-2 border-t border-dashed border-gray-200"><span class="text-gray-500 font-medium text-lg pb-1">${t('total_net')}</span><span class="text-3xl font-bold text-orange-600 tracking-tight leading-none">฿${grandTotalNet.toLocaleString()}</span></div>`;
+        footerHTML += `<button id="submitBtn" onclick="submitOrder()" class="w-full bg-orange-500 text-white font-bold text-xl h-14 rounded-2xl shadow-lg active:scale-95 flex justify-center items-center gap-3"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>${t('confirm_order_btn')}</span></button>`;
+        footerContainer.innerHTML = footerHTML;
+    }
+
+    globalCartTotalQty = totalItems;
+    globalCartTotalPrice = grandTotalNet;
+    if (typeof updateSmartCartBar === 'function') updateSmartCartBar();
+    var discountNoticeTextEl = document.getElementById('discount-notice-text');
+    if (discountNoticeTextEl) discountNoticeTextEl.style.display = 'none';
+
+    document.querySelectorAll('.qty-minus-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            var index = parseInt(e.currentTarget.dataset.index);
+            if (!cart[index]) return renderCart(); 
+            cart[index].quantity--;
+            if (cart[index].quantity <= 0) { cart.splice(index, 1); }
+            renderCart();
+        };
+    });
+    document.querySelectorAll('.qty-plus-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            var index = parseInt(e.currentTarget.dataset.index);
+            if (cart[index] && cart[index].quantity < 20) {
+                cart[index].quantity++;
+                renderCart(); 
+            }
+        };
+    });
+}
+
+function updateSmartCartBar() {
+    const qtyEl = document.getElementById('cart-total-qty');
+    const priceEl = document.getElementById('cart-total-price');
+    const smartBar = document.getElementById('smart-cart-bar');
+
+    if (qtyEl) qtyEl.textContent = globalCartTotalQty;
+    if (priceEl) priceEl.textContent = '฿' + globalCartTotalPrice.toLocaleString();
+
+    if (smartBar) {
+        if (globalCartTotalQty > 0) {
+            smartBar.classList.remove('translate-y-[200%]');
+            smartBar.classList.add('translate-y-0');
+        } else {
+            smartBar.classList.add('translate-y-[200%]');
+            smartBar.classList.remove('translate-y-0');
+        }
+    }
+}
+
+function getMissingRecommendations() {
+    const presentStations = new Set();
+    cart.forEach(c => {
+        const itemObj = flatMenu[c.itemKey];
+        if (itemObj && itemObj.station) presentStations.add(itemObj.station);
+    });
+    return RECOMMEND_CONFIG.filter(conf => !presentStations.has(conf.keyword));
+}
+
+function jumpToCategory(targetId) {
+    closeCartSheet();
+    setTimeout(() => {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+            const headerOffset = 140; 
+            const elementPosition = targetEl.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+            targetEl.classList.add('shake');
+            setTimeout(() => targetEl.classList.remove('shake'), 1000);
+        } else {
+            showToast("ไม่พบหมวดหมู่นี้", "error");
+        }
+    }, 350); 
+}
+
+function submitOrder() { 
+    if (cart.length === 0) return alert("กรุณาเลือกรายการอาหารก่อนสั่งซื้อ");
+    if (globalCartTotalQty > 20) {
+        showModal('จำนวนสินค้าไม่ถูกต้อง', 'รายการสินค้าในตะกร้าเกิน 20 ชิ้น กรุณาแบ่งสั่งเป็นรอบๆ ครับ');
+        return; 
+    }
+
+    document.getElementById('conf-title').textContent = t('confirm_modal_title');
+    document.getElementById('conf-msg').textContent = t('confirm_modal_msg');
+    document.getElementById('conf-btn-cancel').textContent = t('btn_cancel');
+    document.getElementById('conf-btn-yes').textContent = t('btn_confirm');
+    document.getElementById('conf-total-label').textContent = t('total_net');
+    document.getElementById('conf-total').textContent = '฿' + globalCartTotalPrice.toLocaleString();
+
+    const modal = document.getElementById('confirmOrderModal');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex'; 
+}
+
+function closeConfirmModal() {
+    const modal = document.getElementById('confirmOrderModal');
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+}
+
+async function processSubmission() {
+    closeConfirmModal();
+    const btn = document.getElementById('submitBtn'); 
+    
+    // ✅ เปลี่ยนสถานะปุ่มเป็น Loading หมุนๆ และกดซ้ำไม่ได้
+    if (btn) {
+        btn.disabled = true;
+        btn.classList.remove('bg-orange-500');
+        btn.classList.add('bg-orange-400', 'cursor-not-allowed');
+        btn.innerHTML = `<svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>${t('submitting')}</span>`;
+    }
+
+    try {
+        if (typeof preflightValidateOrder === 'function') {
+            const preflight = await preflightValidateOrder();
+            if (!preflight.ok) {
+                if (preflight.reason === 'session_closed') {
+                    showToast(currentLang === 'en' ? 'Session closed.' : 'เซสชั่นถูกปิดแล้ว กรุณาเรียกพนักงาน', 'error');
+                    setTimeout(() => { if (typeof redirectToExpired === 'function') redirectToExpired(); }, 1500);
+                    return; 
+                }
+
+                if (preflight.reason === 'items_unavailable') {
+                    const badIds = new Set(preflight.badItems.map(b => b.id));
+                    cart = cart.filter(c => {
+                        const menuItem = flatMenu[c.itemKey];
+                        return menuItem && !badIds.has(menuItem.db_id);
+                    });
+
+                    const names = preflight.badItems.map(b => b.name).join(', ');
+                    showToast((currentLang === 'en' ? 'Sold out/Changed: ' : 'สินค้าหรือตัวเลือกหมด: ') + names, 'error');
+
+                    if (typeof loadMenusFromServer === 'function') await loadMenusFromServer();
+                    if (typeof renderCart === 'function') renderCart();
+                    if (typeof updateSmartCartBar === 'function') updateSmartCartBar();
+                    return; 
+                }
+                
+                showToast(currentLang === 'en' ? 'Validation failed.' : 'ตรวจสอบไม่ผ่าน กรุณาลองใหม่', 'error');
+                return;
+            }
+        }
+
+        let currentSessionId = SERVER_DATA.sessionId;
+        let currentToken = SERVER_DATA.token;
+        let currentTableId = SERVER_DATA.tableNumber;
+        let orderType = 'dine_in';
+        let staffName = null;
+
+        if (isTakehomeMode() || STAFF_ROLE === 'takehome123') {
+            const { data: thSession, error: thErr } = await supabaseClient.rpc('get_or_create_takehome_session');
+            if (thErr) throw thErr;
+            currentSessionId = thSession[0].session_id;
+            currentToken = thSession[0].token;
+            currentTableId = 'TH';
+            orderType = 'takehome';
+            const thDiscountPct = (typeof selectedStaffDiscount !== 'undefined' && selectedStaffDiscount > 0) ? Math.round(selectedStaffDiscount * 100) : 0;
+            staffName = thDiscountPct > 0 ? `TH_DISC|${thDiscountPct}` : null;
+        } else if (STAFF_ROLE === 'staff123') {
+            const { data: staffSession, error: stErr } = await supabaseClient.rpc('get_or_create_staff_session');
+            if (stErr) throw stErr;
+            currentSessionId = staffSession[0].session_id;
+            currentToken = staffSession[0].token;
+            currentTableId = 'STAFF';
+            orderType = 'staff';
+            const name = SERVER_DATA.staffName || '';
+            const station = SERVER_DATA.staffStation || '';
+            staffName = `STAFF|${name}|${station}`;
+        } else if (!currentSessionId) {
+            if (STAFF_ROLE === 'server123') {
+                const { data: openData, error: openErr } = await supabaseClient.rpc('open_table', { p_table_id: currentTableId, p_pax: 1, p_discount: 0 });
+                if (openErr) throw openErr;
+                currentSessionId = openData[0].session_id;
+                currentToken = openData[0].token;
+                
+                SERVER_DATA.sessionId = currentSessionId;
+                SERVER_DATA.token = currentToken;
+            } else { throw new Error("ยังไม่ได้เปิดโต๊ะ กรุณาให้พนักงานเปิดโต๊ะก่อนสั่งอาหารครับ"); }
+        }
+
+        const orderKey = `ORD-${currentToken}-${Date.now()}`;
+        const { data: orderData, error: orderErr } = await supabaseClient.rpc('create_order_safe', {
+            p_order_key: orderKey, p_session_id: currentSessionId, p_table_id: currentTableId,
+            p_order_type: orderType, p_note: orderType === 'staff' ? staffName : (orderType === 'takehome' && staffName ? staffName : null),
+            p_th_code: orderType === 'takehome' ? (SERVER_DATA.thCode || null) : null, 
+            p_staff_name: SERVER_DATA.staffName || null
+        });
+        if (orderErr) throw orderErr;
+        const newOrderId = orderData[0].order_id;
+
+        const itemsToInsert = cart.flatMap(cartItem => {
+            const menuItem = flatMenu[cartItem.itemKey];
+            const optString = cartItem.options.map(opt => `${opt.label.th || ''}: ${opt.choice.th || ''}${opt.price ? `(+${opt.price})` : ''}`).join(' | ');
+            return Array.from({ length: cartItem.quantity }, () => ({
+                order_id: newOrderId, menu_id: menuItem.db_id, item_name_th: menuItem.item.th,
+                kds_station: menuItem.kds_station || menuItem.station, quantity: 1, unit_price: cartItem.basePrice,
+                total_price: cartItem.itemFullPrice, option: optString || null, note: cartItem.note || null,
+                status: 'pending', session_token: currentToken
+            }));
+        });
+
+        const { error: itemsErr } = await supabaseClient.from('order_items').insert(itemsToInsert);
+        if (itemsErr) throw itemsErr;
+
+        showToast(typeof t === 'function' ? t('toast_success') : 'สั่งอาหารสำเร็จ!', 'success');
+        if (typeof saveOrderToHistory === 'function') saveOrderToHistory(cart);
+        cart = []; renderCart(); 
+        if (typeof closeCartSheet === 'function') closeCartSheet(); 
+
+        updateHistoryBadge(); 
+
+    } catch (err) {
+        console.error("Submission Error:", err);
+        showModal('⚠️ เกิดข้อผิดพลาด', err.message);
+    } finally {
+        // ✅ คืนค่าปุ่มกลับเป็นปกติเมื่อส่งเสร็จ (หรือเกิด Error)
+        if (btn) {
+            btn.disabled = false;
+            btn.classList.remove('bg-orange-400', 'cursor-not-allowed');
+            btn.classList.add('bg-orange-500');
+            btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span>${t('confirm_order_btn')}</span>`;
+        }
+    }
+}
+
+// ==========================================
+// 🔌 REALTIME — Session expiration watcher
+// ==========================================
+let _sessionChannel = null;
+
+function subscribeToSessionExpiration() {
+    if (!SERVER_DATA.sessionId) return;
+    if (_sessionChannel) {
+        try { supabaseClient.removeChannel(_sessionChannel); } catch(_) {}
+    }
+
+    _sessionChannel = supabaseClient
+        .channel(`session-watch-${SERVER_DATA.sessionId}`)
+        .on(
+            'postgres_changes',
+            {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'sessions',
+                filter: `id=eq.${SERVER_DATA.sessionId}`
+            },
+            (payload) => {
+                const newRow = payload.new || {};
+                
+                // ตรวจสอบการปิดโต๊ะ
+                if (newRow.is_active === false) {
+                    redirectToExpired();
+                }
+
+                // ✅ ตรวจสอบการอัปเดตส่วนลดแบบ Real-time
+                if (newRow.discount !== undefined) {
+                    SERVER_DATA.discount = String(newRow.discount);
+                    parseDiscount(SERVER_DATA.discount);
+                    handleDiscountDisplay(); // อัปเดต Badge สีเขียวใน Header
+                    
+                    // รีเฟรชราคาเมนูและตะกร้า
+                    if (menuData.length > 0) onMenuLoaded(menuData);
+                    renderCart();
+                }
+            }
+        )
+        .subscribe();
+}
+
+// ==========================================
+// 🔌 REALTIME — Menu status watcher (Sync with KDS)
+// ==========================================
+let _menuChannel = null;
+
+function subscribeToMenuStatusUpdates() {
+    if (_menuChannel) {
+        try { supabaseClient.removeChannel(_menuChannel); } catch(_) {}
+    }
+
+    _menuChannel = supabaseClient
+        .channel('menu-status-watch')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'menus' }, (payload) => {
+            const updated = payload.new;
+            if (!updated || !updated.id) return;
+
+            const existingKey = Object.keys(flatMenu).find(k => flatMenu[k].db_id === updated.id);
+            let targetMenu = existingKey ? flatMenu[existingKey] : null;
+
+            if (targetMenu) {
+                if (updated.status !== undefined) targetMenu.status = updated.status;
+                if (updated.option_th !== undefined) targetMenu.option_th = updated.option_th;
+                
+                // ✅ รับค่า disabled_options ที่ส่งตรงมาจาก KDS
+                if (updated.disabled_options !== undefined) targetMenu.disabled_options = updated.disabled_options;
+                
+                const disabledList = Array.isArray(targetMenu.disabled_options) ? targetMenu.disabled_options : [];
+
+                targetMenu.optionGroups = { th: [], en: [], cn: [] };
+                if (targetMenu.option_th) targetMenu.optionGroups.th = parseOptionString(targetMenu.option_th, disabledList);
+                if (targetMenu.option_en) targetMenu.optionGroups.en = parseOptionString(targetMenu.option_en, disabledList);
+                if (targetMenu.option_cn) targetMenu.optionGroups.cn = parseOptionString(targetMenu.option_cn, disabledList);
+
+                updated.optionGroups = targetMenu.optionGroups;
+                updated.status = targetMenu.status;
+            }
+
+            if (Array.isArray(menuData)) {
+                for (const station of menuData) {
+                    if (!station.items) continue;
+                    const idx = station.items.findIndex(i => i.db_id === updated.id || i.id === updated.id);
+                    if (idx > -1) {
+                        Object.assign(station.items[idx], updated);
+                        if (targetMenu) {
+                            station.items[idx].optionGroups = targetMenu.optionGroups;
+                            station.items[idx].disabled_options = targetMenu.disabled_options;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (typeof renderMenu === 'function') renderMenu();
+            
+            const isModalOpen = document.getElementById('bottomSheet')?.style.display === 'block';
+            if (isModalOpen && activeMenuItem && (activeMenuItem.db_id === updated.id || activeMenuItem.id === updated.id)) {
+                const checkedInputs = Array.from(document.querySelectorAll('#bs-radio-container input:checked')).map(inp => inp.value);
+                
+                activeMenuItem.status = updated.status;
+                if (targetMenu) {
+                    activeMenuItem.optionGroups = targetMenu.optionGroups;
+                    activeMenuItem.disabled_options = targetMenu.disabled_options;
+                }
+                
+                renderOptionsHTML(activeMenuItem);
+                
+                checkedInputs.forEach(val => {
+                    const safeVal = val.replace(/"/g, '\\"');
+                    const inp = document.querySelector(`#bs-radio-container input[value="${safeVal}"]`);
+                    if (inp && !inp.disabled) inp.checked = true;
+                });
+
+                validateFormAndCalcPrice();
+
+                const status = updated.status;
+                const isUnavailable = (status === 'หมด' || status === 'ไม่พร้อม' || status === 'ลบ');
+                const addBtn = document.getElementById('bs-addToCartBtn');
+
+                if (addBtn && isUnavailable) {
+                    addBtn.disabled = true;
+                    addBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                    addBtn.classList.remove('hover:bg-orange-700', 'active:scale-95', 'bg-orange-600');
+                    addBtn.innerHTML = `<span>${status === 'หมด' ? 'สินค้าหมด' : 'ไม่พร้อมจำหน่าย'}</span>`;
+                }
+            }
+
+            if (Array.isArray(cart) && cart.length) {
+                const before = cart.length;
+                cart = cart.filter(c => {
+                    const menuItem = flatMenu[c.itemKey];
+                    if (menuItem && menuItem.db_id === updated.id) {
+                        if (updated.status === 'หมด' || updated.status === 'ไม่พร้อม' || updated.status === 'ลบ') return false;
+                        
+                        if (c.options && updated.optionGroups && updated.optionGroups.th) {
+                            for (const opt of c.options) {
+                                const selectedThName = opt.choice.th;
+                                let isOptionValid = false;
+                                for (const group of updated.optionGroups.th) {
+                                    const match = group.choices.find(ch => ch.name === selectedThName);
+                                    if (match && !match.isOutOfStock) { isOptionValid = true; break; }
+                                }
+                                if (!isOptionValid) return false; 
+                            }
+                        }
+                    }
+                    return true;
+                });
+
+                if (cart.length !== before) {
+                    if (typeof renderCart === 'function') renderCart();
+                    if (typeof updateSmartCartBar === 'function') updateSmartCartBar();
+                    showToast('มีการเปลี่ยนแปลง! ตัวเลือกที่คุณหยิบใส่ตะกร้าหมดกะทันหัน', 'error');
+                }
+            }
+        }).subscribe();
+}
+
+// ==========================================
+// 🛡️ PRE-FLIGHT — Validate before insert
+// ==========================================
+async function preflightValidateOrder() {
+    const isStaffRole = STAFF_ROLE === 'server123' || STAFF_ROLE === 'takehome123' || STAFF_ROLE === 'staff123';
+    
+    if (!isStaffRole && !SERVER_DATA.sessionId) {
+        return { ok: false, reason: 'no_session' };
+    }
+    
+    if (SERVER_DATA.sessionId) {
+        const { data: sess, error: sErr } = await supabaseClient.from('sessions').select('id, is_active').eq('id', SERVER_DATA.sessionId).maybeSingle();
+        if (sErr || !sess || !sess.is_active) return { ok: false, reason: 'session_closed' };
+    }
+
+    if (!Array.isArray(cart) || cart.length === 0) return { ok: false, reason: 'empty_cart' };
+
+    const menuIds = [...new Set(cart.map(c => flatMenu[c.itemKey]?.db_id).filter(Boolean))];
+    if (menuIds.length === 0) return { ok: false, reason: 'invalid_cart' };
+
+    // ✅ โหลด disabled_options มาตรวจด้วย
+    const { data: menus, error: mErr } = await supabaseClient.from('menus').select('id, status, item_th, option_th, disabled_options').in('id', menuIds);
+    if (mErr || !menus) return { ok: false, reason: 'menu_check_failed' };
+
+    const blockedStatuses = ['หมด', 'ไม่พร้อม', 'ลบ'];
+    let badItems = [];
+
+    for (const c of cart) {
+        const menuItem = flatMenu[c.itemKey];
+        if (!menuItem) continue; 
+
+        const dbMenu = menus.find(m => m.id === menuItem.db_id);
+        if (!dbMenu) {
+            badItems.push({ id: menuItem.db_id, name: c.itemKey, status: 'missing' });
+            continue;
+        }
+
+        if (blockedStatuses.includes(dbMenu.status)) {
+            badItems.push({ id: dbMenu.id, name: dbMenu.item_th, status: dbMenu.status });
+            continue;
+        }
+
+        if (c.options && c.options.length > 0) {
+            // ✅ เอาข้อมูลที่ได้จาก DB มาเช็คชัวร์ๆ ก่อนส่ง
+            const disabledList = Array.isArray(dbMenu.disabled_options) ? dbMenu.disabled_options : [];
+            const latestOptions = parseOptionString(dbMenu.option_th, disabledList);
+            
+            for (const opt of c.options) {
+                const selectedThName = opt.choice.th;
+                let isOptionValid = false;
+
+                for (const group of latestOptions) {
+                    const match = group.choices.find(ch => ch.name === selectedThName);
+                    if (match && !match.isOutOfStock) { isOptionValid = true; break; }
+                }
+
+                if (!isOptionValid) {
+                    badItems.push({ id: dbMenu.id, name: `${dbMenu.item_th} (ตัวเลือกหมด)`, status: 'option_out' });
+                    break;
+                }
+            }
+        }
+    }
+
+    if (badItems.length > 0) {
+        const uniqueBadItems = Array.from(new Map(badItems.map(item => [item.id, item])).values());
+        return { ok: false, reason: 'items_unavailable', badItems: uniqueBadItems };
+    }
+
+    return { ok: true };
+}
+
+function saveOrderToHistory(cartData) {
+    try {
+        const historyKey = 'vet_order_history';
+        let history = JSON.parse(localStorage.getItem(historyKey) || "[]");
+
+        // กำหนด role ตาม mode ปัจจุบัน
+        let currentMode = 'dine_in';
+        if (STAFF_ROLE === 'takehome123' || (typeof isTakehomeMode === 'function' && isTakehomeMode())) {
+            currentMode = 'takehome123';
+        } else if (STAFF_ROLE === 'staff123') {
+            currentMode = 'staff123';
+        }
+
+        const itemsSummary = cartData.map(c => ({
+            name: c.itemKey, qty: c.quantity, options: c.options, note: c.note || ''
+        }));
+
+        const newRecord = {
+            id: `ORD-${Date.now().toString().slice(-6)}`,
+            time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+            date: new Date().toLocaleDateString('th-TH'),
+            timestamp: Date.now(),
+            total: globalCartTotalPrice,
+            items: itemsSummary,
+            role: currentMode   // ← เพิ่ม role
+        };
+
+        history.unshift(newRecord);
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+        history = history.filter(h => h.timestamp > oneDayAgo).slice(0, 20);
+        localStorage.setItem(historyKey, JSON.stringify(history));
+        updateHistoryBadge();
+    } catch (e) {
+        console.error("History Save Error:", e);
+    }
+}
+
+// ✅ 1. ฟังก์ชันดึงประวัติจาก Database ตาม Session ปัจจุบัน
+async function renderHistory() {
+    const container = document.getElementById('historyList');
+
+    // อัปเดตคำแปลภาษาของ Header
+    const titleEl = document.querySelector('[data-translate="history_title"]');
+    if (titleEl) titleEl.textContent = t('history_title');
+
+    // ซ่อนปุ่ม "ล้างประวัติ" เพราะดึงจาก DB แล้ว ลูกค้าไม่ควรลบเองได้
+    const clearBtn = document.querySelector('[data-translate="history_clear"]');
+    if (clearBtn) clearBtn.parentElement.style.display = 'none';
+
+    // ถ้าไม่มี Session ให้แสดงหน้าว่าง
+    if (!SERVER_DATA.sessionId) {
+        showEmptyHistory(container);
+        return;
+    }
+
+    // โชว์ Loading ก่อน
+    container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-center px-6"><svg class="animate-spin h-8 w-8 text-orange-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><p class="text-sm text-gray-500 font-medium">กำลังโหลดประวัติ...</p></div>`;
+
+    try {
+        // ดึงออเดอร์พร้อมเมนูย่อยที่อยู่ใน Session นี้
+        const { data: orders, error } = await supabaseClient
+            .from('orders')
+            .select(`
+                id, created_at, status, 
+                order_items(item_name_th, quantity, total_price, option, note, status)
+            `)
+            .eq('session_id', SERVER_DATA.sessionId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!orders || orders.length === 0) {
+            showEmptyHistory(container);
+            return;
+        }
+
+        let html = '';
+        orders.forEach(order => {
+            // คำนวณยอดรวมเฉพาะรายการที่ไม่ได้ถูกยกเลิก
+            const validItems = order.order_items.filter(i => i.status !== 'cancel');
+            const orderTotal = validItems.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0);
+            
+            const orderDate = new Date(order.created_at);
+            const timeStr = orderDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = orderDate.toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+
+            let itemsHtml = order.order_items.map(i => {
+                // แปลภาษาชื่อเมนู
+                let displayName = i.item_name_th;
+                const menuEntry = Object.values(flatMenu).find(m => m.item.th === i.item_name_th);
+                if (menuEntry && menuEntry.item[currentLang]) {
+                    displayName = menuEntry.item[currentLang];
+                }
+
+                let detailsHtml = '';
+                if (i.option) detailsHtml += `<div class="text-xs text-gray-500 pl-6">└ ${i.option.replace(/\|/g, ', ')}</div>`;
+                if (i.note) detailsHtml += `<div class="text-xs text-orange-500 pl-6 flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" /><path d="M3.5 5.75c0-.69.56-1.25 1.25-1.25H10A.75.75 0 0010 3H4.75A2.75 2.75 0 002 5.75v9.5A2.75 2.75 0 004.75 18h9.5A2.75 2.75 0 0017 15.25V10a.75.75 0 00-1.5 0v5.25c0 .69-.56 1.25-1.25 1.25h-9.5c-.69 0-1.25-.56-1.25-1.25v-9.5z" /></svg>${i.note}</div>`;
+                
+                // ป้ายสถานะ
+                let itemStatusBadge = '';
+                if (i.status === 'served') itemStatusBadge = `<span class="ml-2 text-[10px] bg-green-100 text-green-600 px-1.5 py-0.5 rounded">เสิร์ฟแล้ว</span>`;
+                else if (i.status === 'cancel') itemStatusBadge = `<span class="ml-2 text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">ยกเลิก</span>`;
+                else itemStatusBadge = `<span class="ml-2 text-[10px] bg-yellow-100 text-yellow-600 px-1.5 py-0.5 rounded">กำลังทำ</span>`;
+
+                const itemClass = i.status === 'cancel' ? 'opacity-50 line-through' : '';
+
+                return `<div class="flex flex-col mb-2"><div class="flex justify-between text-sm text-gray-800 ${itemClass}"><span><span class="font-bold">${i.quantity}x</span> ${displayName} ${itemStatusBadge}</span></div>${detailsHtml}</div>`;
+            }).join('');
+
+            const orderStatusText = order.status === 'cancel' ? 'ยกเลิก' : (order.status === 'served' ? 'ครบแล้ว' : 'ส่งแล้ว');
+            const orderStatusColor = order.status === 'cancel' ? 'bg-red-100 text-red-600' : (order.status === 'served' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600');
+
+            html += `
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 ${orderStatusColor} text-[10px] px-2 py-1 rounded-bl-xl font-bold">${orderStatusText}</div>
+                    <div class="flex justify-between items-baseline mb-2 border-b border-gray-50 pb-2">
+                        <span class="font-bold text-gray-900 text-lg">${timeStr}</span>
+                        <span class="text-xs text-gray-400">#${order.id.slice(-6)}</span>
+                    </div>
+                    <div class="space-y-1 mb-3 pl-1 border-l-2 border-gray-200">${itemsHtml}</div>
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-xs text-gray-400">${dateStr}</span>
+                        <span class="font-bold text-orange-600">฿${orderTotal.toLocaleString()}</span>
+                    </div>
+                </div>`;
+        });
+        container.innerHTML = html;
+
+        // อัปเดตจำนวนที่ดูแล้วลง LocalStorage
+        localStorage.setItem('vet_history_seen_count', orders.length);
+        updateHistoryBadge();
+
+    } catch (e) {
+        console.error('History error:', e);
+        container.innerHTML = `<div class="text-center text-red-500 py-10">เกิดข้อผิดพลาดในการดึงข้อมูล<br><span class="text-xs text-gray-400">${e.message}</span></div>`;
+    }
+}
+
+// ฟังก์ชันแยกสำหรับ UI ว่างเปล่า
+function showEmptyHistory(container) {
+    container.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-64 text-center px-6">
+            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" /></svg>
+            </div>
+            <h3 class="text-lg font-bold text-gray-600 mb-2">${t('history_empty')}</h3>
+            <p class="text-sm text-gray-400 leading-relaxed max-w-[250px]">บิลนี้ยังไม่มีการสั่งอาหาร</p>
+        </div>`;
+}
+
+// ✅ เมื่อกดเปิดหน้าประวัติ
+async function openHistorySheet() {
+    // 1. โหลดข้อมูลประวัติมาแสดง (ดึงจาก DB)
+    await renderHistory(); 
+    
+    // 2. ดึงจำนวนออเดอร์ล่าสุดใน DB ณ ตอนที่กดเปิด
+    const { count } = await supabaseClient
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('session_id', SERVER_DATA.sessionId);
+    
+    // 3. บันทึกจำนวนที่เห็นแล้วลงเครื่อง
+    localStorage.setItem('vet_history_seen_count', count || 0);
+    
+    // 4. อัปเดต UI Badge ทันที (เพื่อให้จุดแดงหายไป)
+    updateHistoryBadge();
+
+    // ส่วนเปิด UI (โค้ดเดิมของคุณ)
+    const sheet = document.getElementById('historyContent');
+    const backdrop = document.getElementById('historyBackdrop');
+    const wrapper = document.getElementById('historySheet');
+    
+    document.body.classList.add('overflow-hidden');
+    wrapper.classList.remove('pointer-events-none');
+    backdrop.classList.remove('pointer-events-none', 'opacity-0');
+    backdrop.classList.add('pointer-events-auto', 'opacity-100');
+    
+    requestAnimationFrame(() => {
+        sheet.style.transform = 'translateY(0)';
+    });
+}
+
+function closeHistorySheet() {
+    const sheet = document.getElementById('historyContent');
+    const backdrop = document.getElementById('historyBackdrop');
+    const wrapper = document.getElementById('historySheet');
+
+    document.body.classList.remove('overflow-hidden');
+    sheet.style.transform = 'translateY(100%)';
+    backdrop.classList.remove('opacity-100');
+    backdrop.classList.add('opacity-0');
+    
+    setTimeout(() => {
+        backdrop.classList.remove('pointer-events-auto');
+        backdrop.classList.add('pointer-events-none'); 
+        wrapper.classList.add('pointer-events-none');
+    }, 300);
+}
+
+function clearOrderHistory() {
+    if(confirm(t('history_confirm_clear'))) {
+        localStorage.removeItem('vet_order_history');
+        localStorage.removeItem('vet_history_seen_count');
+        renderHistory();
+        updateHistoryBadge(); 
+    }
+}
+
+function showToast(message, type = 'success') {
+    var serverMessageMap = {
+        'บันทึกออเดอร์เรียบร้อย!': 'toast_success',
+        'การเชื่อมต่อล้มเหลว': 'toast_connection_error'
+    };
+    var displayMessage = serverMessageMap[message] ? t(serverMessageMap[message]) : (translations[message] ? t(message) : message);
+
+    var config = {
+        success: {
+            icon: '<div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-200"><svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg></div>',
+            bg: 'bg-white/95 backdrop-blur-xl border border-white/50'
+        },
+        error: {
+            icon: '<div class="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-200"><svg class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></div>',
+            bg: 'bg-white/95 backdrop-blur-xl border border-white/50'
+        }
+    };
+    
+    var style = config[type] || config.success;
+
+    var container = document.getElementById('toast-container-center');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container-center';
+        container.style.cssText = 'position: fixed; inset: 0; z-index: 9999; pointer-events: none; display: flex; align-items: center; justify-content: center;';
+        document.body.appendChild(container);
+    }
+
+    var oldToast = container.querySelector('.toast-box');
+    if (oldToast) oldToast.remove();
+
+    var toast = document.createElement('div');
+    toast.className = 'toast-box flex flex-col items-center gap-4 p-8 rounded-3xl shadow-2xl pointer-events-auto toast-enter cursor-pointer ' + style.bg;
+    toast.style.minWidth = "220px";
+    toast.style.maxWidth = "80%"; 
+    
+    var htmlContent = '';
+    htmlContent += style.icon;
+    htmlContent += '<span class="text-gray-800 font-bold text-xl text-center leading-snug">' + displayMessage + '</span>';
+    
+    toast.innerHTML = htmlContent;
+    container.appendChild(toast);
+
+    var removeToast = function() {
+        toast.classList.remove('toast-enter');
+        toast.classList.add('toast-exit');
+        setTimeout(function() {
+            if (toast.parentElement) toast.remove();
+        }, 300);
+    };
+
+    toast.onclick = removeToast;
+    setTimeout(removeToast, 2500); 
+}
+
+function showModal(title, message) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    
+    const modalEl = document.getElementById('customModal');
+    const modalContent = document.getElementById('modalContent');
+    
+    modalEl.classList.remove('hidden');
+    
+    setTimeout(() => {
+        modalContent.classList.remove('scale-90');
+    }, 10);
+    
+    document.getElementById('closeModalBtn').onclick = () => {
+        modalContent.classList.add('scale-90');
+        setTimeout(() => {
+            modalEl.classList.add('hidden');
+        }, 300);
+    };
+}
+
+function closeBottomSheet() {
+    const content = document.getElementById('bottomSheetContent');
+    if(content) content.style.transform = 'translateY(100%)';
+    
+    document.body.classList.remove('overflow-hidden'); 
+
+    setTimeout(() => {
+        document.getElementById('bottomSheet').style.display = 'none';
+        if (editingIndex !== null) {
+            openCartSheet();
+            editingIndex = null; 
+        }
+    }, 300);
+}
+
+function openCartSheet() {
+    const smartBar = document.getElementById('smart-cart-bar');
+    const backdrop = document.getElementById('cartBackdrop');
+    const sheet = document.getElementById('cartSheetContent');
+
+    renderCart(); 
+
+    if (smartBar) {
+        smartBar.classList.remove('translate-y-0');
+        smartBar.classList.add('translate-y-[200%]');
+    }
+
+    backdrop.classList.remove('pointer-events-none');
+    backdrop.classList.add('pointer-events-auto');
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            sheet.style.transform = 'translateY(0)';
+        });
+    });
+
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeCartSheet() {
+    const smartBar = document.getElementById('smart-cart-bar');
+    const backdrop = document.getElementById('cartBackdrop');
+    const sheet = document.getElementById('cartSheetContent');
+
+    sheet.style.transform = 'translateY(100%)';
+
+    backdrop.classList.remove('pointer-events-auto', 'opacity-100');
+    backdrop.classList.add('pointer-events-none', 'opacity-0');
+
+    document.body.classList.remove('overflow-hidden');
+
+    setTimeout(() => {
+        if (globalCartTotalQty > 0 && smartBar) {
+            smartBar.classList.remove('translate-y-[200%]');
+            smartBar.classList.add('translate-y-0');
+        }
+    }, 300);
+}
+
+function showLoader(isLoading) { 
+    const loader = document.getElementById('loader'); 
+    if (isLoading) { 
+        if (!loader) { 
+            const loaderHTML = `<div id="loader" style="position:fixed; inset:0; background:rgba(255,255,255,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; font-size:1.5rem; backdrop-filter:blur(5px);"><p>Loading Menu...</p></div>`; 
+            document.body.insertAdjacentHTML('beforeend', loaderHTML); 
+        } 
+    } else if (loader) { 
+        loader.remove(); 
+    } 
+}
+
+function toggleEl(id, show) { 
+    const el = document.getElementById(id); 
+    if (!el) return;
+    if (show) {
+        el.classList.remove('hidden');
+    } else {
+        el.classList.add('hidden');
+    }
+}
+
+function handleDiscountDisplay() {
+    const el = document.getElementById('discount-display');
+    if (!el) return;
+    
+    const icon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+      <path fill-rule="evenodd" d="M11.99 2.243a4.49 4.49 0 0 0-3.398 1.55 4.49 4.49 0 0 0-3.497 1.306 4.491 4.491 0 0 0-1.307 3.498 4.491 4.491 0 0 0-1.548 3.397c0 1.357.6 2.573 1.548 3.397a4.491 4.491 0 0 0 1.307 3.498 4.49 4.49 0 0 0 3.498 1.307 4.49 4.49 0 0 0 3.397 1.549 4.49 4.49 0 0 0 3.397-1.549 4.49 4.49 0 0 0 3.497-1.307 4.491 4.491 0 0 0 1.306-3.497 4.491 4.491 0 0 0 1.55-3.398c0-1.357-.601-2.573-1.549-3.397a4.491 4.491 0 0 0-1.307-3.498 4.49 4.49 0 0 0-3.498-1.307 4.49 4.49 0 0 0-3.396-1.549Zm3.53 7.28a.75.75 0 0 0-1.06-1.06l-6 6a.75.75 0 1 0 1.06 1.06l6-6Zm-5.78-.905a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Zm4.5 4.5a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd" />
+    </svg>`;
+
+    if (typeof DISCOUNT_PERCENT !== 'undefined' && DISCOUNT_PERCENT > 0) {
+        const txt = (typeof DISCOUNT_DISPLAY !== 'undefined') ? DISCOUNT_DISPLAY : '';
+        el.innerHTML = `<div class="flex flex-row items-center gap-1.5">${icon} <span class="leading-none pt-0.5">${txt}</span></div>`;
+        el.classList.remove('hidden');
+    } else {
+        el.classList.add('hidden');
+    }
+}
+
+function t(key) { return translations[key] ? (translations[key][currentLang] || translations[key]['en']) : key; }
+
+function setupScrollEffect() {
+    const stickyHeader = document.querySelector('.sticky'); 
+    if (!stickyHeader) return; 
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 200) {
+            stickyHeader.classList.add('shadow-lg');
+            stickyHeader.classList.remove('shadow-md');
+        } else {
+            stickyHeader.classList.add('shadow-md');
+            stickyHeader.classList.remove('shadow-lg');
+        }
+    }, { passive: true });
+}
+
+function animateAddToCart(startElement, imageUrl) {
+    const bar = document.getElementById('smart-cart-bar');
+    if (bar.classList.contains('translate-y-[200%]')) {
+        bar.classList.remove('translate-y-[200%]');
+        bar.classList.add('translate-y-0');
+    }
+
+    setTimeout(() => {
+        const startRect = startElement.getBoundingClientRect();
+        const targetEl = document.getElementById('cart-icon-target');
+        const targetRect = targetEl.getBoundingClientRect();
+
+        const flyer = document.createElement('img');
+        flyer.src = imageUrl;
+        flyer.style.cssText = `
+            position: fixed; z-index: 100;
+            left: ${startRect.left}px; top: ${startRect.top}px;
+            width: 50px; height: 50px;
+            border-radius: 50%; object-fit: cover;
+            pointer-events: none;
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease-in;
+            will-change: transform, opacity;
+        `;
+        document.body.appendChild(flyer);
+
+        const deltaX = (targetRect.left + targetRect.width/2) - (startRect.left + 25);
+        const deltaY = (targetRect.top + targetRect.height/2) - (startRect.top + 25);
+
+        requestAnimationFrame(() => {
+            flyer.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.2)`;
+            flyer.style.opacity = '0.7';
+        });
+
+        setTimeout(() => {
+            flyer.remove();
+
+            const iconTarget = document.getElementById('cart-icon-target');
+            const barContainer = document.querySelector('#smart-cart-bar > div');
+            const shockwave = document.getElementById('bar-shockwave');
+            const priceEl = document.getElementById('cart-total-price');
+
+            iconTarget.classList.remove('icon-catch-active');
+            barContainer.classList.remove('bar-bounce-active');
+            shockwave.classList.remove('shockwave-active');
+            priceEl.classList.remove('price-flash-active');
+            void barContainer.offsetWidth; 
+
+            iconTarget.classList.add('icon-catch-active');
+            barContainer.classList.add('bar-bounce-active');
+            shockwave.classList.add('shockwave-active');
+            setTimeout(() => priceEl.classList.add('price-flash-active'), 100);
+
+        }, 500); 
+    }, 100);
+}
+
+function setupEventListeners() {
+  const langToggleBtn = document.getElementById('langToggleBtn'); 
+  const langDropdown = document.getElementById('langDropdown');   
+  const langSwitcherContainer = document.getElementById('langSwitcher'); 
+
+  if (langToggleBtn && langDropdown) {
+    langToggleBtn.onclick = (e) => { e.stopPropagation(); langDropdown.classList.toggle('hidden'); };
+    document.addEventListener('click', (e) => {
+      if (!langToggleBtn.contains(e.target) && !langDropdown.contains(e.target)) langDropdown.classList.add('hidden');
+    });
+  }
+
+  if (langSwitcherContainer) {
+    langSwitcherContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.lang-btn');
+      if (btn) {
+        currentLang = btn.dataset.lang;
+        document.querySelectorAll('.lang-btn').forEach(b => {
+          b.classList.remove('bg-orange-50', 'text-orange-600', 'font-bold'); 
+          b.classList.add('text-gray-600', 'font-medium'); 
+        });
+        btn.classList.remove('text-gray-600', 'font-medium');
+        btn.classList.add('bg-orange-50', 'text-orange-600', 'font-bold');
+        renderAll();
+        if (langDropdown) langDropdown.classList.add('hidden');
+      }
+    });
+  }
+
+  const searchInput = document.getElementById('searchInput');
+  let searchTimeout; 
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            renderMenu();
+        }, 300);
+    });
+  }
+
+  const cartBtn = document.getElementById('cartButton');
+  if(cartBtn) cartBtn.onclick = openCartSheet; 
+  
+  const closeCartBtn = document.getElementById('closeCartBtn');
+  if(closeCartBtn) closeCartBtn.onclick = closeCartSheet;
+  
+  const cartSidebar = document.getElementById('cartSidebar');
+  if(cartSidebar) { cartSidebar.onclick = (e) => { if (e.target.id === 'cartSidebar') closeCartSheet(); }; }
+
+  const submitBtn = document.getElementById('submitBtn');
+  if(submitBtn) submitBtn.onclick = submitOrder;
+
+  const bottomSheet = document.getElementById('bottomSheet');
+  if(bottomSheet) { bottomSheet.onclick = (e) => { if (e.target.id === 'bottomSheet') closeBottomSheet(); }; }
+  
+  const bsPlus = document.getElementById('bs-plus');
+  if(bsPlus) {
+      bsPlus.onclick = () => {
+          let el = document.getElementById('bs-qty');
+          let current = parseInt(el.textContent);
+          if (current < 20) {
+              el.textContent = current + 1;
+              validateForm(); 
+          }
+      };
+  }
+  
+  const bsMinus = document.getElementById('bs-minus');
+  if(bsMinus) {
+      bsMinus.onclick = () => {
+          let el = document.getElementById('bs-qty');
+          let current = parseInt(el.textContent);
+          if (current > 1) {
+              el.textContent = current - 1;
+              validateForm(); 
+          }
+      };
+  }
+
+  const bsAddToCartBtn = document.getElementById('bs-addToCartBtn');
+  if (bsAddToCartBtn) {
+      bsAddToCartBtn.onclick = handleCommitTransaction;
+  }
+
+  enableSwipeToClose('cartSheetContent', 'cartItems', closeCartSheet);
+  enableSwipeToClose('bottomSheetContent', 'bs-scroll-container', closeBottomSheet);
+  enableSwipeToClose('historyContent', 'historyList', closeHistorySheet);
+}
+
+function enableSwipeToClose(sheetId, scrollContainerId, closeCallback) {
+    const sheet = document.getElementById(sheetId);
+    const scrollContainer = document.getElementById(scrollContainerId);
+    
+    if (!sheet || !scrollContainer) return;
+
+    let startY = 0;
+    let currentY = 0;
+    let isDragging = false;
+    let animationFrameId = null; 
+    const threshold = 120;
+
+    sheet.addEventListener('touchstart', (e) => {
+        if (scrollContainer.scrollTop > 5) return;
+        startY = e.touches[0].clientY;
+        isDragging = true;
+        sheet.style.transition = 'none';
+    }, { passive: true });
+
+    sheet.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        currentY = e.touches[0].clientY;
+        const diff = currentY - startY;
+
+        if (diff > 0) {
+            e.preventDefault();
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            animationFrameId = requestAnimationFrame(() => {
+                sheet.style.transform = `translateY(${diff}px)`;
+            });
+        }
+    }, { passive: false });
+
+    sheet.addEventListener('touchend', (e) => {
+        if (!isDragging) return;
+        isDragging = false;
+        
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+
+        const diff = currentY - startY;
+        sheet.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
+
+        if (diff > threshold) {
+            closeCallback();
+        } else {
+            sheet.style.transform = 'translateY(0)';
+        }
+        
+        startY = 0;
+        currentY = 0;
+    });
+}
+
+window.onload = initializeApp;
+</script>
+</body>
+</html>

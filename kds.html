@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VETRES | ครัว</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #0f172a; color: white; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* --- Time Aura: ขอบเรืองแสงตามความด่วน --- */
+        .aura-normal { border-color: rgba(255, 255, 255, 0.1); }
+        .aura-warning { 
+            border-color: rgba(245, 158, 11, 0.5); 
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); 
+        }
+        .aura-danger { 
+            border-color: rgba(239, 68, 68, 0.8); 
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.4); 
+            animation: breathing-aura 2s infinite; 
+        }
+
+        @keyframes breathing-aura {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 0 40px rgba(239, 68, 68, 0.5); }
+        }
+        /* --- Item Row & Swipe Design --- */
+        .item-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 1.5rem;
+            background: #141414; /* สีพื้นหลังเมื่อปัดเปิด */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+        }
+
+        .item-foreground {
+            position: relative;
+            z-index: 20;
+            width: 100%;
+            background: #141414;
+            display: flex;
+            align-items: center;
+            padding: 16px 12px 16px 20px;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border-radius: inherit;
+        }
+
+        /* ส่วนเนื้อหาที่เลื่อนได้ */
+        .item-main {
+            flex: 1;
+            padding: 16px 20px;
+            z-index: 10;
+            background: #141414;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .serve-btn-modern {
+            width: 56px; /* ขนาดสี่เหลี่ยมที่พอดีมือ */
+            height: 56px;
+            background-color: #22c55e; /* Green-500 */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            border-radius: 1rem; /* ขอบมนพอดีกับกล่อง */
+            z-index: 20;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+        }
+
+        .serve-btn-modern:active {
+            transform: scale(0.9);
+            background-color: #16a34a;
+        }
+
+        /* ปุ่มยกเลิก (ซ่อนอยู่ข้างหลัง) */
+        .cancel-action-btn {
+            position: absolute;
+            right: 12px; /* วางในตำแหน่งเดียวกับปุ่มเสิร์ฟแต่คนละเลเยอร์ */
+            width: 56px;
+            height: 56px;
+            background-color: #e11d48; /* Rose-600 */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            border-radius: 1rem;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2);
+        }
+
+        .item-info { flex: 1; }
+
+        .serve-btn-modern {
+            width: 56px;
+            height: 56px;
+            background-color: #22c55e;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            border-radius: 1rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+        }
+
+        /* เอฟเฟกต์สำหรับคอมพิวเตอร์ (Hover & Reveal) */
+        @media (hover: hover) {
+            .item-wrapper:hover .item-foreground {
+                transform: translateX(-80px);
+            }
+        }
+        /* --- Header Backgrounds: เปลี่ยนเป็นสีพื้นสไตล์ Flat Modern --- */
+        .header-dinein { 
+            background-color: #1e40af !important; /* Blue-800: น้ำเงินเข้ม สบายตา */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        } 
+        .header-takehome { 
+            background-color: #065f46 !important; /* Emerald-800: เขียวมรกตดูแพง */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        } 
+        .header-staff { 
+            background-color: #5b21b6 !important; /* Purple-800: ม่วงเข้มแบบแอปสมัยใหม่ */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- Note Box: กรอบหมายเหตุแบบพรีเมียม --- */
+        .note-container {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1.5px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-top: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(248, 113, 113, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
+        }
+
+        .item-row { border-bottom: 1px dashed rgba(255,255,255,0.15); }
+        .item-row:last-child { border-bottom: none; }
+
+        /* Sidebar: ต้องทึบและอยู่บนสุด */
+        /* Sidebar: ทึบ 100% และอยู่บนสุด */
+        .sidebar { 
+            position: fixed;
+            top: 0; right: 0; bottom: 0;
+            width: 420px; 
+            background: #0a0a0a !important; /* บังคับให้ทึบ */
+            border-left: 1px solid rgba(255,255,255,0.08); 
+            display: flex !important; 
+            flex-direction: column; 
+            z-index: 100; /* ทับทุกอย่าง */
+            box-shadow: -20px 0 60px rgba(0,0,0,0.8);
+            transform: translateX(100%); 
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Backdrop: เบลอเฉพาะสิ่งที่อยู่หลังมันเท่านั้น */
+        #sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(12px); /* ✅ เบลอหน้าจอหลัก */
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 90; /* อยู่ใต้ sidebar */
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        #sidebar-backdrop.active { opacity: 1; pointer-events: auto; }
+        .sidebar-active { transform: translateX(0); }
+
+        /* ป้องกัน Panel สไลด์ทับกันผิดพลาด */
+        .panel {
+            background: #0a0a0a !important;
+        }
+        
+        /* Drill-down navigation */
+        .panel-stack { position: relative; flex: 1; overflow: hidden; }
+        .panel { position: absolute; inset: 0; display: flex; flex-direction: column; background: #0a0a0a; transition: transform 0.3s cubic-bezier(0.36, 0.66, 0.04, 1); }
+        .panel.slide-out-left { transform: translateX(-100%); }
+        .panel.slide-out-right { transform: translateX(100%); }
+        
+        /* Sidebar header (with back button on detail panels) */
+        .sidebar-header { padding: 18px 20px 14px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .back-btn { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: #cbd5e1; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+        .back-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+        .sidebar-title { font-size: 1.05rem; font-weight: 600; color: #e2e8f0; flex: 1; }
+        
+        /* Menu list rows (level 0) */
+        .nav-row { display: flex; align-items: center; gap: 16px; padding: 18px 20px; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .nav-row:hover { background: rgba(255,255,255,0.03); }
+        .nav-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .nav-icon-sales { background: rgba(34,197,94,0.12); color: #4ade80; }
+        .nav-icon-history { background: rgba(168,85,247,0.12); color: #c084fc; }
+        .nav-icon-menus { background: rgba(251,146,60,0.12); color: #fb923c; }
+        .nav-text { flex: 1; }
+        .nav-title { font-size: 0.95rem; font-weight: 600; color: #e2e8f0; }
+        .nav-subtitle { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+        .nav-arrow { color: #475569; font-size: 0.75rem; }
+
+        /* Sales card */
+        .stat-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 16px; }
+        .stat-value { font-size: 2rem; font-weight: 700; color: #fb923c; line-height: 1.1; }
+        .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; margin-top: 4px; }
+
+        .top-item-row { padding: 10px 14px; background: rgba(255,255,255,0.02); border-radius: 10px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
+        .top-item-row:hover { background: rgba(255,255,255,0.04); }
+        .top-rank { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+        .top-rank-1 { background: #fbbf24; color: #422006; }
+        .top-rank-2 { background: #9ca3af; color: #1f2937; }
+        .top-rank-3 { background: #b45309; color: #fff7ed; }
+        .top-rank-other { background: rgba(255,255,255,0.08); color: #94a3b8; }
+
+        /* History row */
+        .history-row { background: #1a1a1a; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
+
+        /* Menu config row */
+        .menu-row { background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.04); }
+        .menu-row select { background: #1a1a1a; border: 1px solid rgba(255,255,255,0.1); padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; outline: none; color: #cbd5e1; cursor: pointer; }
+        
+        /* Option toggles (ในหน้าแก้ไขเมนู) */
+        .options-section { margin-top: 10px; padding: 10px 12px; background: rgba(0,0,0,0.2); border-radius: 10px; border: 1px solid rgba(255,255,255,0.04); }
+        .options-group-label { font-size: 0.7rem; color: #94a3b8; font-weight: 500; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .choice-toggle { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; background: rgba(74,222,128,0.1); color: #4ade80; border-radius: 8px; font-size: 0.75rem; cursor: pointer; user-select: none; transition: all 0.2s; margin: 2px; border: 1px solid rgba(74,222,128,0.2); }
+        .choice-toggle:hover { background: rgba(74,222,128,0.18); }
+        .choice-toggle.disabled { background: rgba(248,113,113,0.08); color: #f87171; border-color: rgba(248,113,113,0.2); text-decoration: line-through; }
+        .choice-toggle.disabled:hover { background: rgba(248,113,113,0.15); }
+        .choice-toggle .icon { width: 14px; height: 14px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; }
+        
+        .menu-row .options-toggle-btn { font-size: 0.7rem; padding: 4px 10px; border-radius: 8px; background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); cursor: pointer; transition: all 0.2s; }
+        .menu-row .options-toggle-btn:hover { background: rgba(59,130,246,0.2); color: #93c5fd; }
+        .menu-row .options-toggle-btn.expanded { background: rgba(59,130,246,0.25); color: #93c5fd; }
+
+        /* Pax badge */
+        .pax-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 0.75rem; color: #cbd5e1; }
+        
+        /* Option chips (in order card) */
+        .option-chip { display: inline-block; padding: 2px 8px; background: rgba(59,130,246,0.15); color: #93c5fd; border-radius: 6px; font-size: 0.7rem; margin: 2px 4px 2px 0; }
+        
+        /* Header icon button */
+        .icon-btn { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; cursor: pointer; }
+        .icon-btn:hover { transform: translateY(-1px); }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header class="bg-[#0a0a0a] border-b border-white/5 p-8 flex justify-between items-center z-10 shadow-2xl">
+    <div class="flex items-center gap-8">
+        <!-- เปลี่ยนปุ่มย้อนกลับเป็นไอคอนไฟตามที่คุณต้องการ -->
+        <button onclick="window.location.href='index.html'" class="bg-white/5 hover:bg-white/10 w-14 h-14 rounded-2xl flex items-center justify-center transition-all text-white hover:text-white border border-white/5 shadow-[0_0_15px_rgba(249,115,22,0.1)]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
+            <path fill-rule="evenodd" d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+            </svg>
+        </button>
+        <div class="flex items-center gap-4">
+            <!-- เพิ่มไอคอนไฟก่อนหน้าชื่อซุ้ม -->
+            <div class="text-orange-500">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12">
+                    <path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248ZM15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.718Z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <!-- ปรับ tracking-tighter เพื่อให้ตัวหนังสือชิดกันมากขึ้น และ uppercase -->
+            <h1 class="text-6xl font-black tracking-wide uppercase text-slate-200">
+                <span id="stationName" class="drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] leading-none">กำลังโหลด...</span>
+            </h1>
+        </div>
+    </div>
+
+    <div class="flex gap-4 items-center">
+        <!-- ส่วนออเดอร์ค้าง (คงเดิม) -->
+        <div id="activeOrdersCount" class="hidden md:flex items-center gap-4 bg-white/5 px-6 py-3 rounded-2xl border border-white/5 mr-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-white/40">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m7.875 14.25 1.214 1.942a2.25 2.25 0 0 0 1.908 1.058h2.006c.776 0 1.497-.4 1.908-1.058l1.214-1.942M2.41 9h4.636a2.25 2.25 0 0 1 1.872 1.002l.164.246a2.25 2.25 0 0 0 1.872 1.002h2.092a2.25 2.25 0 0 0 1.872-1.002l.164-.246A2.25 2.25 0 0 1 16.954 9h4.636M2.41 9a2.25 2.25 0 0 0-.16.832V12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 12V9.832c0-.287-.055-.57-.16-.832M2.41 9a2.25 2.25 0 0 1 .382-.632l3.285-3.832a2.25 2.25 0 0 1 1.708-.786h8.43c.657 0 1.281.287 1.709.786l3.284 3.832c.163.19.291.404.382.632M4.5 20.25h15A2.25 2.25 0 0 0 21.75 18v-2.625c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125V18a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+            <span class="text-white/40 text-sm font-bold uppercase tracking-wider">ออเดอร์ค้าง:</span>
+            <span id="activeCount" class="font-black text-2xl text-white">0</span>
+        </div>
+        
+        <!-- ส่วนปุ่ม Audio & Sidebar (คงเดิม) -->
+        <button onclick="toggleAudio()" id="btnAudio" class="w-14 h-14 rounded-2xl bg-white/5 text-white/20 flex items-center justify-center transition-all text-xl border border-white/5 hover:bg-white/10">
+            <i class="fas fa-volume-mute"></i>
+        </button>
+        <button onclick="toggleSidebar()" id="btnSidebar" class="w-14 h-14 rounded-2xl bg-white/10 text-white flex items-center justify-center transition-all text-xl border border-white/10 shadow-lg active:scale-95">
+            <i class="fas fa-bars"></i>
+        </button>
+    </div>
+</header>
+
+    <!-- BODY: main board + sidebar -->
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- MAIN BOARD -->
+        <main class="flex-1 p-6 overflow-y-auto bg-[#0a0a0a]">
+            <div id="boardContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
+                <div id="loadingState" class="col-span-full text-center text-slate-500 py-20 text-xl hidden">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-4"></i><br>กำลังดึงออเดอร์...
+                </div>
+                <div id="emptyState" class="col-span-full text-center text-slate-600 py-20 text-xl hidden">
+                    <i class="fas fa-clipboard-check text-6xl mb-4 text-slate-700"></i><br>ไม่มีออเดอร์ค้าง
+                </div>
+            </div>
+        </main>
+
+        <!-- Side Bar -->
+
+        <div id="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+        <aside id="sidebar" class="sidebar">
+            <div class="panel-stack">
+                
+                <div id="panel-home" class="panel">
+                    <div class="sidebar-header">
+                        <div class="sidebar-title flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mr-3 text-blue-400">
+                                <path fill-rule="evenodd" d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z" clip-rule="evenodd" />
+                                <path d="m10.076 8.64-2.201-2.2V4.874a.75.75 0 0 0-.364-.643l-3.75-2.25a.75.75 0 0 0-.916.113l-.75.75a.75.75 0 0 0-.113.916l2.25 3.75a.75.75 0 0 0 .643.364h1.564l2.062 2.062 1.575-1.297Z" />
+                                <path fill-rule="evenodd" d="m12.556 17.329 4.183 4.182a3.375 3.375 0 0 0 4.773-4.773l-3.306-3.305a6.803 6.803 0 0 1-1.53.043c-.394-.034-.682-.006-.867.042a.589.589 0 0 0-.167.063l-3.086 3.748Zm3.414-1.36a.75.75 0 0 1 1.06 0l1.875 1.876a.75.75 0 1 1-1.06 1.06L15.97 17.03a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                            </svg>
+                            เครื่องมือ
+                        </div>
+                        <button onclick="toggleSidebar()" class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-white/40 hover:bg-red-500/20 hover:text-red-400 transition-all">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto no-scrollbar">
+                        <div class="nav-row" onclick="navigateTo('sales')">
+                            <div class="nav-icon nav-icon-sales"><i class="fas fa-chart-pie"></i></div>
+                            <div class="nav-text">
+                                <div class="nav-title">ยอดขาย</div>
+                                <div class="nav-subtitle">รายได้และเมนูขายดีของวันนี้</div>
+                            </div>
+                            <i class="fas fa-chevron-right nav-arrow"></i>
+                        </div>
+                        
+                        <div class="nav-row" onclick="navigateTo('history')">
+                            <div class="nav-icon nav-icon-history"><i class="fas fa-history"></i></div>
+                            <div class="nav-text">
+                                <div class="nav-title">ประวัติออเดอร์</div>
+                                <div class="nav-subtitle">รายการที่เสิร์ฟ/ยกเลิก + ดึงกลับ</div>
+                            </div>
+                            <i class="fas fa-chevron-right nav-arrow"></i>
+                        </div>
+                        
+                        <div class="nav-row" onclick="navigateTo('menus')">
+                            <div class="nav-icon nav-icon-menus"><i class="fas fa-sliders-h"></i></div>
+                            <div class="nav-text">
+                                <div class="nav-title">จัดการเมนู</div>
+                                <div class="nav-subtitle">ปรับสถานะเมนูและตัวเลือก</div>
+                            </div>
+                            <i class="fas fa-chevron-right nav-arrow"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-sales" class="panel slide-out-right">
+                    <div class="sidebar-header">
+                        <div class="back-btn" onclick="navigateBack()"><i class="fas fa-chevron-left"></i></div>
+                        <div class="sidebar-title text-emerald-400">ยอดขายวันนี้</div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto no-scrollbar p-6">
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div class="stat-card">
+                                <div id="todayRevenue" class="stat-value text-2xl font-black text-white">฿0</div>
+                                <div class="stat-label">รายได้รวม</div>
+                            </div>
+                            <div class="stat-card">
+                                <div id="todayOrders" class="stat-value text-2xl font-black text-white">0</div>
+                                <div class="stat-label">จำนวนจาน</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mb-4 text-white/30 text-[10px] font-bold uppercase tracking-widest">
+                            <i class="fas fa-trophy text-xs"></i> 10 อันดับเมนูขายดี
+                        </div>
+                        <div id="topItemsList" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <div id="panel-history" class="panel slide-out-right">
+                    <div class="sidebar-header">
+                        <div class="back-btn" onclick="navigateBack()"><i class="fas fa-chevron-left"></i></div>
+                        <div class="sidebar-title text-purple-400">ประวัติออเดอร์</div>
+                        <button onclick="loadHistoryData()" class="w-9 h-9 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-all">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto no-scrollbar p-5">
+                        <div id="historyList" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <div id="panel-menus" class="panel slide-out-right">
+                    <div class="sidebar-header">
+                        <div class="back-btn" onclick="navigateBack()"><i class="fas fa-chevron-left"></i></div>
+                        <div class="sidebar-title text-orange-400">จัดการเมนู</div>
+                        <button onclick="loadMenusData()" class="w-9 h-9 rounded-lg bg-white/5 text-slate-400 hover:text-white transition-all">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="flex-1 overflow-y-auto no-scrollbar p-5">
+                        <div id="menuList" class="space-y-2"></div>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+    </div>
+
+    <audio id="notiSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+    <script>
+        // ════════════════════════════════════════════════════════
+        // CONFIG
+        // ════════════════════════════════════════════════════════
+        const SUPABASE_URL = 'https://xjosswxrtcanhvpdbrap.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqb3Nzd3hydGNhbmh2cGRicmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjkyODcsImV4cCI6MjA5MjUwNTI4N30.DrtoBXmdL1EN17sVYZIYNVVOOp7UHfeAz1sDImZmYFM';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const currentStation = localStorage.getItem('kds_station');
+        let audioEnabled = true; // default: เปิด — ต้อง user interact ครั้งแรกก่อน browser ถึงจะอนุญาตเล่นเสียง
+        let audioUnlocked = false; // browser อนุญาตให้เล่นเสียงแล้วหรือยัง
+        let ordersData = {};
+
+        // Browser autoplay policy: เสียงต้องเล่นหลังจาก user click ครั้งแรก
+        // จับ first click ทุกที่บนหน้า → unlock audio
+        function unlockAudio() {
+            if (audioUnlocked) return;
+            const sound = document.getElementById('notiSound');
+            sound.volume = 0;
+            sound.play().then(() => {
+                sound.pause();
+                sound.currentTime = 0;
+                sound.volume = 1;
+                audioUnlocked = true;
+                updateAudioBtn();
+            }).catch(() => {
+                // ถ้ายังไม่ได้ก็ปล่อย — ลองใหม่ next click
+            });
+        }
+        document.addEventListener('click', unlockAudio, { once: false });
+
+        if (!currentStation) {
+            alert('กรุณาเลือกซุ้มอาหารก่อนเข้าใช้งาน KDS');
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('stationName').innerText = currentStation;
+            initKDS();
+            // ไม่ load tab default แล้ว — รอ user กดเข้าไปเอง
+        }
+
+        // ════════════════════════════════════════════════════════
+        // HELPER: Get start of today (Bangkok time, ISO string)
+        // ════════════════════════════════════════════════════════
+        function getStartOfTodayBKK() {
+            // Bangkok = UTC+7. Daily reset at 09:00 Bangkok = "วันนี้" starts 09:00 BKK
+            // แต่จริงๆ data ของเมื่อวานยังต้องดูได้จนถึง 09:00 ของวันถัดไป
+            // → คำนิยาม "วันนี้" สำหรับ filter = >= 09:00 BKK ของวันที่ผ่านมา (ถ้าตอนนี้เลย 09:00) 
+            //   หรือ >= 09:00 BKK ของ 2 วันก่อน (ถ้าตอนนี้ก่อน 09:00)
+            const now = new Date();
+            const bkkOffset = 7 * 60; // นาที
+            const localOffset = now.getTimezoneOffset(); // นาที (ค่าลบสำหรับโซนตะวันออก)
+            const bkkNow = new Date(now.getTime() + (bkkOffset + localOffset) * 60000);
+
+            // ถ้าเวลา BKK ตอนนี้ >= 09:00 → today = today @ 09:00
+            // ถ้า < 09:00 → today = yesterday @ 09:00
+            const cutoff = new Date(bkkNow);
+            cutoff.setHours(9, 0, 0, 0);
+            if (bkkNow.getHours() < 9) {
+                cutoff.setDate(cutoff.getDate() - 1);
+            }
+            // แปลงกลับเป็น UTC สำหรับ query
+            return new Date(cutoff.getTime() - (bkkOffset + localOffset) * 60000).toISOString();
+        }
+
+        // ════════════════════════════════════════════════════════
+        // 1. MAIN BOARD
+        // ════════════════════════════════════════════════════════
+        async function initKDS() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            
+            const todayStart = getStartOfTodayBKK();
+            
+            // ✅ เพิ่มการดึง order_type, th_code, staff_name, note และ discount มาด้วย
+            const { data: items, error } = await supabaseClient
+                .from('order_items')
+                .select(`
+                    *,
+                    orders!inner(table_id, order_key, session_id, order_type, th_code, staff_name, note, sessions(pax, discount))
+                `)
+                .eq('kds_station', currentStation)
+                .eq('status', 'pending')
+                .gte('created_at', todayStart)
+                .order('created_at', { ascending: true });
+
+            document.getElementById('loadingState').classList.add('hidden');
+            if (error) { console.error(error); return; }
+            
+            groupAndRenderOrders(items || []);
+        }
+
+        function groupAndRenderOrders(items) {
+            ordersData = {};
+            items.forEach(item => {
+                const orderId = item.order_id;
+                if (!ordersData[orderId]) {
+                    const sessionObj = Array.isArray(item.orders.sessions) ? item.orders.sessions[0] : item.orders.sessions;
+                    
+                    // ✅ เก็บข้อมูลที่ดึงมาใหม่ใส่ใน object
+                    ordersData[orderId] = {
+                        table_id: item.orders.table_id,
+                        order_type: item.orders.order_type,
+                        th_code: item.orders.th_code,
+                        staff_name: item.orders.staff_name,
+                        note: item.orders.note,
+                        pax: sessionObj?.pax || 0,
+                        discount: sessionObj?.discount || 0,
+                        created_at: item.created_at,
+                        items: []
+                    };
+                }
+                ordersData[orderId].items.push(item);
+            });
+            renderBoard();
+            updateActiveCount();
+        }
+
+        function updateActiveCount() {
+            const total = Object.values(ordersData).reduce((sum, o) => sum + o.items.length, 0);
+            document.getElementById('activeCount').innerText = total;
+        }
+
+        function renderBoard() {
+            const container = document.getElementById('boardContainer');
+            const emptyState = document.getElementById('emptyState');
+            
+            document.querySelectorAll('.ticket-card').forEach(el => el.remove());
+
+            const orderKeys = Object.keys(ordersData);
+            if (orderKeys.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+            
+            orderKeys.forEach(orderId => {
+                const order = ordersData[orderId];
+                const elapsedMin = Math.floor((new Date() - new Date(order.created_at)) / 60000);
+                
+                // 1. กำหนดเฉดสีแจ้งเตือนเวลาแบบ Premium
+                let auraClass = 'aura-normal';
+                let timeTextColor = 'text-emerald-400';
+                if (elapsedMin >= 20) { 
+                    auraClass = 'aura-danger'; 
+                    timeTextColor = 'text-rose-500'; 
+                } else if (elapsedMin >= 15) { 
+                    auraClass = 'aura-warning'; 
+                    timeTextColor = 'text-amber-400'; 
+                }
+
+                // 2. จัดการข้อมูล Header
+                let headerClass = 'header-dinein';
+                let headerIcon = '<i class="fas fa-utensils opacity-40 text-white"></i>';
+                let headerTitleText = `โต๊ะ ${order.table_id || '??'}`;
+                let subHeaderInfo = '';
+                let discountPercent = parseFloat(order.discount) || 0;
+
+                if (order.order_type === 'takehome') {
+                    headerClass = 'header-takehome';
+                    headerIcon = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-9 h-9 opacity-40 text-white">
+                        <path fill-rule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" clip-rule="evenodd" />
+                    </svg>`;
+                    const digits = String(order.th_code || '').replace(/\D/g, '');
+                    headerTitleText = digits ? `TH${digits.padStart(2, '0')}` : 'TH??';
+                    if (order.note && String(order.note).startsWith('TH_DISC|')) {
+                        discountPercent = parseFloat(order.note.split('|')[1]) || 0;
+                    }
+                } else if (order.order_type === 'staff') {
+                    headerClass = 'header-staff';
+                    headerIcon = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-9 h-9 opacity-40 text-white">
+                        <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
+                        <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
+                    </svg>`;
+                    let sName = (order.staff_name || 'พนักงาน').trim();
+                    let sStation = '';
+                    if (order.note && String(order.note).startsWith('STAFF|')) {
+                        const parts = order.note.split('|');
+                        sName = (parts[1] || sName).trim();
+                        sStation = (parts[2] || '').trim();
+                    }
+                    headerTitleText = sName;
+                    if (sStation) {
+                        subHeaderInfo = `
+                            <div class="mt-2">
+                                <span class="inline-flex items-center bg-white/15 text-white/90 text-sm px-3 py-1 rounded-xl font-bold uppercase tracking-wider border border-white/10 shadow-sm">
+                                    <i class="fas fa-store text-[10px] mr-2 opacity-50"></i> ซุ้ม: ${sStation}
+                                </span>
+                            </div>`;
+                    }
+                    discountPercent = 10;} else {
+                    // --- โหมด Dine-in (สั่งที่โต๊ะ) ---
+                    headerClass = 'header-dinein';
+                    headerIcon = '<i class="fas fa-utensils opacity-40 text-white"></i>';
+                    headerTitleText = `โต๊ะ ${order.table_id || '??'}`;
+
+                    // ✅ เพิ่มชื่อบริกรกลับมาในรูปแบบ Badge และปรับขนาดให้ใหญ่เท่ากัน (text-sm)
+                    if (order.staff_name) {
+                        subHeaderInfo = `
+                            <div class="mt-2">
+                                <span class="inline-flex items-center bg-white/15 text-white/90 text-sm px-3 py-1 rounded-xl font-bold uppercase tracking-wider border border-white/10 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-2 opacity-50">
+                                        <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                                    </svg>
+                                    บริกร: ${order.staff_name}
+                                </span>
+                            </div>`;
+                    }
+                    discountPercent = parseFloat(order.discount) || 0;
+                }
+                
+
+                const card = document.createElement('div');
+                card.className = `ticket-card ${auraClass} rounded-[2.5rem] border-2 flex flex-col overflow-hidden transition-all shadow-2xl`;
+                
+                card.innerHTML = `
+                    <div class="p-6 ${headerClass} relative">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 text-3xl font-black text-white">
+                                    ${headerIcon} <span>${headerTitleText}</span>
+                                </div>
+                                ${subHeaderInfo}
+                            </div>
+                            <div class="text-right ml-4">
+                                <p class="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">WAITING</p>
+                                <p class="text-4xl ${timeTextColor} font-black leading-none tracking-wide">${elapsedMin}<span class="text-sm ml-1 font-bold">นาที</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 flex-1 flex flex-col gap-3 bg-[#0a0a0a]">
+                        ${order.items.map(item => `
+                            <div class="item-wrapper">
+                                <div class="cancel-action-btn" onclick="updateItemStatus('${item.id}', 'cancel', '${orderId}')">
+                                    <i class="fas fa-trash-alt"></i>
+                                </div>
+
+                                <div class="item-foreground" 
+                                    ontouchstart="handleTouchStart(event)" 
+                                    ontouchmove="handleTouchMove(event, this)">
+                                    
+                                    <div class="item-info">
+                                        <p class="text-xl font-bold text-white leading-tight">${item.item_name_th}</p>
+                                        <div class="mt-1 flex flex-wrap gap-1">${formatOptionChips(item.option)}</div>
+                                        ${item.note ? `
+                                            <div class="note-container">
+                                                <i class="fas fa-pen-to-square text-amber-500 text-sm mt-1"></i>
+                                                <p class="text-sm text-amber-200 leading-snug font-medium">${item.note}</p>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+
+                                    <button onclick="updateItemStatus('${item.id}', 'served', '${orderId}')" class="serve-btn-modern">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+    
+        function handleTouchStart(e) {
+            touchStartX = e.touches[0].clientX;
+        }
+
+        function handleTouchMove(e, element) {
+            const touchX = e.touches[0].clientX;
+            const diff = touchX - touchStartX;
+
+            // ✅ ถ้าปัดไปทางซ้าย (diff < -60) ให้เลื่อนเลเยอร์หน้าออกไปทางซ้าย 80px
+            if (diff < -60) {
+                element.style.transform = 'translateX(-80px)';
+            } 
+            // ✅ ถ้าปัดกลับไปทางขวา (diff > 60) ให้กลับมาที่เดิม
+            else if (diff > 60) {
+                element.style.transform = 'translateX(0)';
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // HELPER: Format option string เป็น HTML chips
+        // รองรับทั้ง 2 format:
+        //   • " | "  (single pipe) — multi-select แต่ละ choice แยกกัน
+        //   • " || " (double pipe) — แยกเป็นกลุ่ม
+        // ตัด "label: " ทิ้ง เหลือเฉพาะ choice name
+        // ════════════════════════════════════════════════════════
+        function formatOptionChips(optionStr) {
+            if (!optionStr || !optionStr.trim()) return '';
+            
+            const parts = optionStr.split(/\s*\|\|\s*|\s*\|\s*/).map(s => s.trim()).filter(Boolean);
+            
+            return parts.map(part => {
+                const colonIdx = part.indexOf(':');
+                const choices = colonIdx >= 0 ? part.slice(colonIdx + 1).trim() : part;
+                
+                return choices.split(',').map(c => c.trim()).filter(Boolean).map(c => 
+                    `<span class="option-chip">${c}</span>`
+                ).join('');
+            }).join('');
+        }
+
+        function renderItemRow(item, orderId) {
+            const optionsHtml = formatOptionChips(item.option);
+
+            return `
+                <div class="item-row p-3 bg-white/5 rounded-xl flex justify-between items-start gap-3">
+                    <div class="flex items-start gap-3 flex-1 min-w-0">
+                        <div class="bg-slate-800 text-white w-8 h-8 rounded-lg flex justify-center items-center font-bold flex-shrink-0 border border-slate-600">${item.quantity}</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-bold text-lg leading-tight text-white">${item.item_name_th}</p>
+                            ${optionsHtml ? `<div class="mt-1.5">${optionsHtml}</div>` : ''}
+                            ${item.note ? `
+                                <div class="mt-2 flex items-start gap-1.5 bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-2">
+                                    <i class="fas fa-comment-dots text-yellow-400 text-xs mt-0.5"></i>
+                                    <p class="text-xs text-yellow-300 leading-snug flex-1">${item.note}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 flex-shrink-0">
+                        <button onclick="updateItemStatus('${item.id}', 'served', '${orderId}')" class="bg-green-600 hover:bg-green-500 w-10 h-10 rounded-lg shadow-lg flex items-center justify-center text-white transition-all" title="เสิร์ฟแล้ว">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button onclick="updateItemStatus('${item.id}', 'cancel', '${orderId}')" class="bg-slate-700 hover:bg-red-600 w-10 h-10 rounded-lg flex items-center justify-center text-white/50 hover:text-white transition-all" title="ยกเลิก">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function updateItemStatus(itemId, newStatus, orderId) {
+            // Optimistic UI
+            if (orderId && ordersData[orderId]) {
+                ordersData[orderId].items = ordersData[orderId].items.filter(i => i.id !== itemId);
+                if (ordersData[orderId].items.length === 0) delete ordersData[orderId];
+                renderBoard();
+                updateActiveCount();
+            }
+
+            const { error } = await supabaseClient.from('order_items')
+                .update({ 
+                    status: newStatus,
+                    served_at: newStatus === 'served' ? new Date().toISOString() : null,
+                    cancelled_at: newStatus === 'cancel' ? new Date().toISOString() : null,
+                    cancelled_by: newStatus === 'cancel' ? 'kitchen' : null
+                })
+                .eq('id', itemId);
+
+            if (error) { alert("เกิดข้อผิดพลาด: " + error.message); initKDS(); }
+            // Reload sales if currently viewing
+            if (currentPanel === 'sales') loadSalesData();
+        }
+
+        // ════════════════════════════════════════════════════════
+        // 2. SIDEBAR — Drill-down navigation
+        // ════════════════════════════════════════════════════════
+        let currentPanel = 'home'; // 'home' | 'sales' | 'history' | 'menus'
+
+        let sidebarOpen = false;
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            const sb = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            
+            // รีเซ็ตตำแหน่ง Panel หน้าแรกทุกครั้งที่เปิด
+            const homePanel = document.getElementById('panel-home');
+
+            if (sidebarOpen) {
+                sb.classList.add('sidebar-active');
+                backdrop.classList.add('active');
+                
+                // มั่นใจว่าหน้าหลักโชว์อยู่
+                homePanel.classList.remove('slide-out-left');
+                homePanel.classList.remove('slide-out-right');
+                
+                // โหลดข้อมูล Dashboard
+                loadSalesData();
+            } else {
+                sb.classList.remove('sidebar-active');
+                backdrop.classList.remove('active');
+            }
+        }
+
+        // ลบโค้ดใน initKDS หรือส่วนล่างสุดที่ไปสั่งโชว์ Sidebar ตอนเริ่มต้นออกด้วย
+        // (ลบตัวแปร sidebarOpen = true; อันเก่าทิ้ง)
+
+        function navigateTo(panel) {
+            const home = document.getElementById('panel-home');
+            const target = document.getElementById('panel-' + panel);
+            if (!target) return;
+
+            // home slide ออกซ้าย, target slide เข้าจากขวา
+            home.classList.add('slide-out-left');
+            target.classList.remove('slide-out-right');
+            currentPanel = panel;
+
+            // Lazy load
+            if (panel === 'sales') loadSalesData();
+            if (panel === 'history') loadHistoryData();
+            if (panel === 'menus') loadMenusData();
+        }
+
+        function navigateBack() {
+            const home = document.getElementById('panel-home');
+            const current = document.getElementById('panel-' + currentPanel);
+            
+            home.classList.remove('slide-out-left');
+            if (current && currentPanel !== 'home') {
+                current.classList.add('slide-out-right');
+            }
+            currentPanel = 'home';
+        }
+
+        // ════════════════════════════════════════════════════════
+        // 3. SALES DATA (sidebar tab)
+        // ════════════════════════════════════════════════════════
+        async function loadSalesData() {
+            const todayStart = getStartOfTodayBKK();
+            
+            const { data: items, error } = await supabaseClient
+                .from('order_items')
+                .select('quantity, total_price, item_name_th, status, created_at')
+                .eq('kds_station', currentStation)
+                .eq('status', 'served')
+                .gte('created_at', todayStart);
+
+            if (error) {
+                console.error(error);
+                return;
+            }
+
+            const list = items || [];
+            const totalRevenue = list.reduce((sum, i) => sum + (parseFloat(i.total_price) || 0), 0);
+            const totalQty = list.reduce((sum, i) => sum + (i.quantity || 0), 0);
+
+            document.getElementById('todayRevenue').innerText = '฿' + totalRevenue.toLocaleString('th-TH', { maximumFractionDigits: 0 });
+            document.getElementById('todayOrders').innerText = totalQty;
+
+            // Top items
+            const tally = {};
+            list.forEach(i => {
+                const key = i.item_name_th;
+                if (!tally[key]) tally[key] = { qty: 0, revenue: 0 };
+                tally[key].qty += i.quantity || 0;
+                tally[key].revenue += parseFloat(i.total_price) || 0;
+            });
+            const tops = Object.entries(tally)
+                .map(([name, v]) => ({ name, ...v }))
+                .sort((a, b) => b.qty - a.qty)
+                .slice(0, 10);
+
+            const topListEl = document.getElementById('topItemsList');
+            if (tops.length === 0) {
+                topListEl.innerHTML = `<div class="text-center text-slate-600 py-6 text-sm">ยังไม่มีรายการที่เสิร์ฟวันนี้</div>`;
+            } else {
+                topListEl.innerHTML = tops.map((t, idx) => {
+                    const rankClass = idx === 0 ? 'top-rank-1' : (idx === 1 ? 'top-rank-2' : (idx === 2 ? 'top-rank-3' : 'top-rank-other'));
+                    return `
+                        <div class="top-item-row">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class="top-rank ${rankClass}">${idx + 1}</div>
+                                <span class="text-sm text-slate-200 truncate">${t.name}</span>
+                            </div>
+                            <div class="text-right flex-shrink-0">
+                                <div class="text-sm font-bold text-white">${t.qty}</div>
+                                <div class="text-xs text-slate-500">฿${t.revenue.toLocaleString('th-TH', { maximumFractionDigits: 0 })}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // 4. HISTORY DATA (sidebar tab)
+        // ════════════════════════════════════════════════════════
+        async function loadHistoryData() {
+            const list = document.getElementById('historyList');
+            list.innerHTML = `<div class="text-center text-slate-500 py-6"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</div>`;
+            
+            const todayStart = getStartOfTodayBKK();
+
+            const { data: historyItems, error } = await supabaseClient
+                .from('order_items')
+                .select('*, orders!inner(table_id)')
+                .eq('kds_station', currentStation)
+                .in('status', ['served', 'cancel'])
+                .gte('created_at', todayStart)
+                .order('created_at', { ascending: false })
+                .limit(30);
+
+            if (error || !historyItems || historyItems.length === 0) {
+                list.innerHTML = `<div class="text-center text-slate-600 py-6 text-sm">ยังไม่มีประวัติวันนี้</div>`;
+                return;
+            }
+
+            const sortedItems = [...historyItems].sort((a, b) => {
+                const timeA = new Date(a.status === 'served' ? a.served_at : a.cancelled_at);
+                const timeB = new Date(b.status === 'served' ? b.served_at : b.cancelled_at);
+                return timeB - timeA; // เอาใหม่ล่าสุดขึ้นก่อน
+            });
+
+            list.innerHTML = sortedItems.map(item => {
+                const isServed = item.status === 'served';
+                const statusBadge = isServed 
+                    ? `<span class="bg-green-500/15 text-green-400 px-2 py-0.5 rounded text-[0.65rem] font-bold"><i class="fas fa-check"></i> เสิร์ฟ</span>`
+                    : `<span class="bg-red-500/15 text-red-400 px-2 py-0.5 rounded text-[0.65rem] font-bold"><i class="fas fa-times"></i> ยกเลิก</span>`;
+
+                const actionTime = isServed ? item.served_at : item.cancelled_at;
+                const timeDiff = actionTime ? Math.floor((new Date() - new Date(actionTime)) / 60000) : 0;
+                const timeText = timeDiff === 0 ? 'เพิ่งดำเนินการ' : (timeDiff < 60 ? `${timeDiff} นาทีที่แล้ว` : `${Math.floor(timeDiff/60)} ชั่วโมงก่อน`);
+
+                return `
+                    <div class="history-row">
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-bold">${item.orders.table_id}</span>
+                                    ${statusBadge}
+                                </div>
+                                <p class="text-sm font-semibold text-white truncate">${item.item_name_th} <span class="text-slate-500 font-normal">x${item.quantity}</span></p>
+                                <p class="text-[0.65rem] text-slate-500 mt-0.5"><i class="far fa-clock"></i> ${timeText}</p>
+                            </div>
+                            <button onclick="reopenTicket('${item.id}', this)" class="bg-blue-600/15 hover:bg-blue-600 text-blue-400 hover:text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 text-xs font-medium transition-all flex-shrink-0">
+                                <i class="fas fa-undo"></i> ดึงกลับ
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function reopenTicket(itemId, btnElement) {
+            btnElement.disabled = true;
+            btnElement.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+
+            const { error } = await supabaseClient.from('order_items')
+                .update({ 
+                    status: 'pending',
+                    served_at: null,
+                    cancelled_at: null,
+                    cancelled_by: null
+                })
+                .eq('id', itemId);
+
+            if (error) {
+                alert('เกิดข้อผิดพลาดในการดึงออเดอร์กลับ');
+                btnElement.disabled = false;
+                btnElement.innerHTML = `<i class="fas fa-undo"></i> ดึงกลับ`;
+                return;
+            }
+
+            initKDS();
+            loadHistoryData();
+        }
+
+        // ════════════════════════════════════════════════════════
+        // 5. MENUS DATA (sidebar tab — status toggle + per-choice deactivation)
+        // ════════════════════════════════════════════════════════
+        let menusCache = []; // เก็บไว้สำหรับ toggle option
+        const expandedMenus = new Set(); // เก็บ menu ids ที่กำลังขยาย options อยู่
+
+        async function loadMenusData() {
+            const list = document.getElementById('menuList');
+            list.innerHTML = `<div class="text-center text-slate-500 py-6"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</div>`;
+
+            const { data: menus, error } = await supabaseClient.from('menus')
+                .select('id, item_th, status, image_url, option_th, disabled_options')
+                .eq('station_th', currentStation)
+                .neq('status', 'ลบ')
+                .order('sort_order');
+
+            if (error || !menus) {
+                list.innerHTML = `<div class="text-center text-red-500 py-6 text-sm">ดึงข้อมูลไม่สำเร็จ</div>`;
+                return;
+            }
+
+            if (menus.length === 0) {
+                list.innerHTML = `<div class="text-center text-slate-600 py-6 text-sm">ยังไม่มีเมนูในซุ้มนี้</div>`;
+                return;
+            }
+
+            menusCache = menus;
+            renderMenuList();
+        }
+
+        function renderMenuList() {
+            const list = document.getElementById('menuList');
+            list.innerHTML = menusCache.map(m => renderMenuRow(m)).join('');
+        }
+
+        function renderMenuRow(m) {
+            const img = m.image_url 
+                ? `<img src="${m.image_url}" class="w-10 h-10 rounded-lg object-cover bg-white/10 flex-shrink-0" onerror="this.style.display='none'">`
+                : `<div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-slate-600 flex-shrink-0"><i class="fas fa-image text-xs"></i></div>`;
+
+            const statusColor = m.status === 'ปกติ' ? 'text-green-400' : (m.status === 'หมด' ? 'text-red-400' : 'text-yellow-400');
+            const hasOptions = m.option_th && m.option_th.trim();
+            const isExpanded = expandedMenus.has(m.id);
+            
+            // นับจำนวน choices ที่ disabled
+            const disabledList = Array.isArray(m.disabled_options) ? m.disabled_options : [];
+            const disabledCount = disabledList.length;
+            const optionsBtnLabel = disabledCount > 0 
+                ? `<i class="fas fa-toggle-off mr-1"></i> ${disabledCount} ปิด`
+                : `<i class="fas fa-toggle-on mr-1"></i> ตัวเลือก`;
+
+            const optionsToggleBtn = hasOptions
+                ? `<button onclick="toggleMenuOptions('${m.id}')" class="options-toggle-btn ${isExpanded ? 'expanded' : ''}">
+                       ${optionsBtnLabel} <i class="fas fa-chevron-${isExpanded ? 'up' : 'down'} ml-1"></i>
+                   </button>`
+                : '';
+
+            const optionsPanel = (hasOptions && isExpanded)
+                ? renderOptionsPanel(m)
+                : '';
+
+            return `
+                <div class="menu-row">
+                    <div class="flex items-center gap-3">
+                        ${img}
+                        <span class="font-medium text-slate-200 text-sm flex-1 truncate">${m.item_th}</span>
+                        <select onchange="updateMenuStatus('${m.id}', this.value)" class="${statusColor}">
+                            <option value="ปกติ" ${m.status === 'ปกติ' ? 'selected' : ''}>✅ พร้อม</option>
+                            <option value="หมด" ${m.status === 'หมด' ? 'selected' : ''}>❌ หมด</option>
+                            <option value="ไม่พร้อม" ${m.status === 'ไม่พร้อม' ? 'selected' : ''}>⚠️ ไม่พร้อม</option>
+                            <option value="15m" ${m.status === '15m' ? 'selected' : ''}>⏳ รอ 15m</option>
+                            <option value="30m" ${m.status === '30m' ? 'selected' : ''}>⏰ รอ 30m</option>
+                        </select>
+                    </div>
+                    ${optionsToggleBtn ? `<div class="mt-2 flex justify-end">${optionsToggleBtn}</div>` : ''}
+                    ${optionsPanel}
+                </div>
+            `;
+        }
+
+        function renderOptionsPanel(m) {
+            // Parse option_th — format: "Group: choice1, choice2(+30) || Group2: ..."
+            const groups = (m.option_th || '').split('||').map(g => g.trim()).filter(Boolean);
+            const disabledList = Array.isArray(m.disabled_options) ? m.disabled_options : [];
+
+            const groupsHtml = groups.map(groupStr => {
+                const parts = groupStr.split(':');
+                if (parts.length < 2) return '';
+                
+                let label = parts[0].trim();
+                // remove (M) marker
+                label = label.replace(/\(M\)/g, '').trim();
+                
+                const choicesRaw = parts[1].split(',').map(c => c.trim()).filter(Boolean);
+                const choicesHtml = choicesRaw.map(c => {
+                    // strip price suffix to get clean name
+                    let cleanName = c.replace(/\s*\(\+\d+\)\s*$/, '').trim();
+                    const isDisabled = disabledList.includes(cleanName);
+                    
+                    const iconHtml = isDisabled 
+                        ? '<span class="icon"><i class="fas fa-times"></i></span>'
+                        : '<span class="icon"><i class="fas fa-check"></i></span>';
+                    
+                    return `<span class="choice-toggle ${isDisabled ? 'disabled' : ''}" onclick="toggleChoiceDisabled('${m.id}', ${JSON.stringify(cleanName).replace(/"/g, '&quot;')})">
+                        ${iconHtml} ${c}
+                    </span>`;
+                }).join('');
+
+                return `
+                    <div class="mb-2 last:mb-0">
+                        <div class="options-group-label">${label}</div>
+                        <div>${choicesHtml}</div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="options-section">
+                    <p class="text-xs text-slate-500 mb-2"><i class="fas fa-info-circle mr-1"></i> กดเพื่อปิด/เปิดตัวเลือก (ลูกค้าจะไม่เห็นตัวเลือกที่ปิด)</p>
+                    ${groupsHtml || '<p class="text-xs text-slate-600 text-center py-2">ไม่มี options</p>'}
+                </div>
+            `;
+        }
+
+        function toggleMenuOptions(menuId) {
+            if (expandedMenus.has(menuId)) {
+                expandedMenus.delete(menuId);
+            } else {
+                expandedMenus.add(menuId);
+            }
+            renderMenuList();
+        }
+
+        async function toggleChoiceDisabled(menuId, choiceName) {
+            const menu = menusCache.find(x => x.id === menuId);
+            if (!menu) return;
+
+            const current = Array.isArray(menu.disabled_options) ? [...menu.disabled_options] : [];
+            const idx = current.indexOf(choiceName);
+            
+            if (idx >= 0) {
+                current.splice(idx, 1); // เปิดกลับ
+            } else {
+                current.push(choiceName); // ปิด
+            }
+
+            // Optimistic update
+            menu.disabled_options = current;
+            renderMenuList();
+
+            const { error } = await supabaseClient.from('menus')
+                .update({ disabled_options: current })
+                .eq('id', menuId);
+            
+            if (error) {
+                alert('บันทึกไม่สำเร็จ: ' + error.message);
+                loadMenusData(); // reload from server
+            }
+        }
+
+        async function updateMenuStatus(menuId, newStatus) {
+            const { error } = await supabaseClient.from('menus').update({ status: newStatus }).eq('id', menuId);
+            if (error) {
+                alert('เปลี่ยนสถานะไม่สำเร็จ');
+                loadMenusData();
+            }
+            // update cache
+            const menu = menusCache.find(x => x.id === menuId);
+            if (menu) menu.status = newStatus;
+        }
+
+        // ════════════════════════════════════════════════════════
+        // 6. AUDIO + REALTIME
+        // ════════════════════════════════════════════════════════
+        function toggleAudio() {
+            audioEnabled = !audioEnabled;
+            if (audioEnabled) {
+                // ถ้ายัง locked → ลอง unlock เลย
+                unlockAudio();
+                // เล่นเสียงทดสอบ
+                const sound = document.getElementById('notiSound');
+                sound.currentTime = 0;
+                sound.play().catch(() => {});
+            }
+            updateAudioBtn();
+        }
+
+        function updateAudioBtn() {
+            const btn = document.getElementById('btnAudio');
+            const icon = btn.querySelector('i');
+            // remove all states
+            btn.classList.remove('bg-slate-800', 'bg-green-900', 'bg-yellow-900');
+            btn.classList.remove('text-slate-400', 'text-green-400', 'text-yellow-400');
+
+            if (!audioEnabled) {
+                btn.classList.add('bg-slate-800', 'text-slate-400');
+                icon.className = 'fas fa-volume-mute';
+                btn.title = 'เปิดเสียงแจ้งเตือน';
+            } else if (!audioUnlocked) {
+                // เปิดแต่ browser ยัง block — รอ user คลิกที่ไหนก็ได้
+                btn.classList.add('bg-yellow-900', 'text-yellow-400');
+                icon.className = 'fas fa-exclamation-triangle';
+                btn.title = 'กดที่ใดก็ได้ในหน้าเพื่อเปิดเสียง';
+            } else {
+                btn.classList.add('bg-green-900', 'text-green-400');
+                icon.className = 'fas fa-volume-up';
+                btn.title = 'เสียงเปิดอยู่ (กดเพื่อปิด)';
+            }
+        }
+        // call once on load
+        updateAudioBtn();
+
+        // Real-time: New order_items in this station
+        supabaseClient.channel('kds_orders')
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'order_items',
+                filter: `kds_station=eq.${currentStation}` 
+            }, () => {
+                if (audioEnabled && audioUnlocked) {
+                    const sound = document.getElementById('notiSound');
+                    sound.currentTime = 0; 
+                    sound.play().catch(() => {});
+                }
+                initKDS();
+            }).subscribe();
+
+        // Real-time: order updates (move table)
+        supabaseClient.channel('kds_table_move')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
+                initKDS();
+            }).subscribe();
+
+        // ════════════════════════════════════════════════════════
+        // 7. TIMERS
+        // ════════════════════════════════════════════════════════
+        // Re-render board every 10s (update timer color)
+        setInterval(renderBoard, 10000);
+        
+        // Update clock
+        setInterval(() => {
+            document.getElementById('currentTime').innerText = new Date().toLocaleTimeString('th-TH');
+        }, 1000);
+        
+        // Auto-refresh sales panel every 60s if visible
+        setInterval(() => {
+            if (currentPanel === 'sales') {
+                loadSalesData();
+            }
+        }, 60000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VETRES | Unified Access</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ────────────────────────────────────────
+           BASE & ZINC THEME
+           ──────────────────────────────────────── */
+        body { 
+            font-family: 'Kanit', sans-serif; 
+            background-color: #09090b; /* Deep Zinc 950 */
+            color: #fafafa; 
+            overflow: hidden; 
+            user-select: none; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .ambient-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70vw; height: 70vh;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.03) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ────────────────────────────────────────
+           PRECISION CARD DESIGN
+           ──────────────────────────────────────── */
+        .portal-card {
+            background: rgba(24, 24, 27, 0.8); /* Zinc 900 */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(12px);
+        }
+
+        .portal-card:hover {
+            background: rgba(39, 39, 42, 0.9); /* Zinc 800 */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transform: translateY(-12px) scale(1.02);
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* หัวข้อหน้าจอ (Header) */
+        /* แก้ไขส่วนนี้ในไฟล์ login.html */
+        .brand-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            background: linear-gradient(to bottom, #ffffff, #d4d4d8);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .profile-label {
+            font-size: 1.25rem; /* ใหญ่ขึ้นชัดเจน[cite: 3] */
+            font-weight: 800;
+            color: #ffffff; /* สีขาวบริสุทธิ์[cite: 3] */
+            text-transform: uppercase;
+            letter-spacing: 0.05em; /* ลดระยะห่างลงให้อ่านเป็นคำง่ายขึ้น[cite: 3] */
+            margin-top: 1.5rem;
+        }
+
+        .brand-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+            font-weight: 500;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+        }
+
+        /* Icon Colors - Minimal & Unified */
+        .icon-accent { color: #52525b; transition: all 0.3s ease; }
+        .portal-card:hover .icon-accent { color: #ffffff; }
+        .portal-card:hover .icon-red { color: #ef4444; }
+
+        /* ────────────────────────────────────────
+           NUMPAD & PIN
+           ──────────────────────────────────────── */
+        .numpad-btn {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.1s ease-out;
+            color: #a1a1aa;
+        }
+        .numpad-btn:active { 
+            background: #ffffff; 
+            color: #000000;
+            transform: scale(0.92); 
+        }
+        
+        .pin-dot { transition: all 0.2s ease; color: #27272a; }
+        .pin-dot.active { 
+            color: #ffffff; 
+            transform: scale(1.4); 
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.5)); 
+        }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .fade-out { animation: fadeOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.98); } }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen relative">
+
+    <div class="ambient-glow"></div>
+
+    <!-- ──────────────── PROFILE SELECTION ──────────────── -->
+    <section id="profileSection" class="w-full flex flex-col items-center justify-center p-6 z-10 fade-in">
+    <header class="text-center mb-16">
+    <!-- ปรับ tracking-wider เพื่อให้ชื่อแบรนด์ดูโปร่งขึ้น -->
+    <h1 class="brand-title uppercase tracking-wider">VET<span class="text-red-600" style="-webkit-text-fill-color: initial;"> RESTAURANT</span></h1>
+    
+    <!-- ปรับ tracking-widest สำหรับตัวหนังสือตัวเล็กเพื่อให้สแกนสายตาง่าย -->
+    <p class="brand-subtitle tracking-[0.3em] uppercase">Select Your Role</p>
+    </header>
+
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl">
+        <!-- Admin -->
+        <div onclick="selectProfile('admin')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
+            <div class="text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
+                    <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <p class="profile-label">Admin</p>
+        </div>
+
+        <!-- Staff -->
+        <div onclick="selectProfile('staff')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
+            <div class="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
+                    <path d="M5.223 2.25c-.497 0-.974.198-1.325.55l-1.3 1.298A3.75 3.75 0 0 0 7.5 9.75c.627.47 1.406.75 2.25.75.844 0 1.624-.28 2.25-.75.626.47 1.406.75 2.25.75.844 0 1.623-.28 2.25-.75a3.75 3.75 0 0 0 4.902-5.652l-1.3-1.299a1.875 1.875 0 0 0-1.325-.549H5.223Z" />
+                    <path fill-rule="evenodd" d="M3 20.25v-8.755c1.42.674 3.08.673 4.5 0A5.234 5.234 0 0 0 9.75 12c.804 0 1.568-.182 2.25-.506a5.234 5.234 0 0 0 2.25.506c.804 0 1.567-.182 2.25-.506 1.42.674 3.08.675 4.5.001v8.755h.75a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1 0-1.5H3Zm3-6a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75v-3Zm8.25-.75a.75.75 0 0 0-.75.75v5.25c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-5.25a.75.75 0 0 0-.75-.75h-3Z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <p class="profile-label">Staff</p>
+        </div>
+
+        <!-- Kitchen -->
+        <div onclick="selectProfile('kitchen')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
+            <div class="text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
+                    <path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248ZM15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.718Z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <p class="profile-label">Kitchen</p>
+        </div>
+
+        <!-- Dashboard -->
+        <div onclick="selectProfile('dashboard')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
+            <div class="text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
+                    <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
+                    <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <p class="profile-label">Dashboard</p>
+        </div>
+    </div>
+</section>
+
+    <!-- ──────────────── PIN ENTRY SECTION ──────────────── -->
+    <section id="pinSection" class="hidden absolute inset-0 w-full h-full p-6 flex flex-col items-center justify-center z-20">
+        <div class="portal-card w-full max-w-sm p-10 flex flex-col items-center">
+            <button onclick="closePinModal()" class="absolute top-8 left-8 text-zinc-500 hover:text-white text-xl transition-colors"><i class="fas fa-arrow-left"></i></button>
+
+            <h2 id="pinTitle" class="text-sm font-bold text-zinc-500 tracking-[0.3em] uppercase mb-12 mt-4 text-center"></h2>
+            
+            <!-- PIN Dots -->
+            <div class="flex justify-center gap-8 mb-16">
+                <i class="pin-dot fas fa-circle text-[10px]" id="dot1"></i>
+                <i class="pin-dot fas fa-circle text-[10px]" id="dot2"></i>
+                <i class="pin-dot fas fa-circle text-[10px]" id="dot3"></i>
+                <i class="pin-dot fas fa-circle text-[10px]" id="dot4"></i>
+            </div>
+            
+            <!-- Numpad -->
+            <div class="grid grid-cols-3 gap-4 w-full">
+                <!-- 1-9 -->
+                <script>
+                    for(let i=1; i<=9; i++) {
+                        document.write(`<button onclick="pressKey('${i}')" class="numpad-btn aspect-square rounded-full text-2xl font-light">${i}</button>`);
+                    }
+                </script>
+                <button onclick="pressKey('clear')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-times"></i></button>
+                <button onclick="pressKey('0')" class="numpad-btn aspect-square rounded-full text-2xl font-light">0</button>
+                <button onclick="pressKey('backspace')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-backspace"></i></button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ──────────────── KDS STATION MODAL ──────────────── -->
+    <div id="stationModal" class="hidden fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/80 backdrop-blur-md">
+        <div class="portal-card p-12 w-full max-w-4xl text-center">
+            <button onclick="closeStationModal()" class="absolute top-8 right-8 text-zinc-500 hover:text-white text-2xl transition-all"><i class="fas fa-times"></i></button>
+            
+            <header class="mb-12">
+                <h2 class="text-4xl font-black text-white tracking-wide uppercase mb-2">ซุ้มอาหาร</h2>
+                <p class="text-zinc-500 text-[15px] uppercase tracking-[0.3em] font-bold">เลือกซุ้มของคุณ</p>
+            </header>
+            
+            <div id="stationGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+        </div>
+    </div>
+
+    <script>
+        const PINS = { admin: "1111", staff: "2222" };
+        const STATIONS = ['โรบินฮู้ด', 'หมูกระทะ', 'ไก่ไวน์', 'ส้มตำ', 'กระต่าย', 'ต้มยำ', 'คอหมูย่าง', 'บาร์บีคิว', 'ไข่เจียว', 'ข้าว', 'น้ำ', 'โอ้เอ๋ว'];
+        
+        let currentRole = "";
+        let currentPinInput = "";
+
+        function selectProfile(role) {
+            currentRole = role;
+            if (role === 'dashboard') { window.location.href = 'dashboard.html'; return; }
+            if (role === 'kitchen') { openStationModal(); return; }
+
+            currentPinInput = "";
+            document.getElementById('pinTitle').innerHTML = `Authorize <span class="text-white">${role}</span>`;
+            resetPinDots();
+            
+            toggleSection('profileSection', 'pinSection', true);
+        }
+
+        function closePinModal() {
+            toggleSection('pinSection', 'profileSection', false);
+        }
+
+        function toggleSection(hideId, showId, isForward) {
+            const hideEl = document.getElementById(hideId);
+            const showEl = document.getElementById(showId);
+            hideEl.classList.add('fade-out');
+            setTimeout(() => {
+                hideEl.classList.add('hidden');
+                hideEl.classList.remove('fade-out');
+                showEl.classList.remove('hidden');
+                showEl.classList.add('fade-in');
+            }, 300);
+        }
+
+        function pressKey(key) {
+            if (key === 'clear') currentPinInput = "";
+            else if (key === 'backspace') currentPinInput = currentPinInput.slice(0, -1);
+            else if (currentPinInput.length < 4) currentPinInput += key;
+            
+            updatePinDots();
+            if (currentPinInput.length === 4) setTimeout(checkPin, 150);
+        }
+
+        function updatePinDots() {
+            resetPinDots();
+            for (let i = 1; i <= currentPinInput.length; i++) {
+                document.getElementById(`dot${i}`).classList.add('active');
+            }
+        }
+
+        function resetPinDots() {
+            for (let i = 1; i <= 4; i++) document.getElementById(`dot${i}`).classList.remove('active');
+        }
+
+        function checkPin() {
+            if (currentPinInput === PINS[currentRole]) {
+                window.location.href = `${currentRole}.html`;
+            } else {
+                const dots = document.querySelectorAll('.pin-dot');
+                dots.forEach(d => d.style.color = '#ef4444'); 
+                document.getElementById('pinSection').querySelector('.portal-card').animate([
+                    { transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }
+                ], { duration: 200, iterations: 2 });
+                setTimeout(() => { currentPinInput = ""; resetPinDots(); dots.forEach(d => d.style.color = ''); }, 400);
+            }
+        }
+
+        function openStationModal() {
+            const grid = document.getElementById('stationGrid');
+            grid.innerHTML = "";
+            STATIONS.forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = "numpad-btn p-6 rounded-2xl font-medium text-zinc-400 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-all";
+                btn.innerText = s;
+                btn.onclick = () => { localStorage.setItem('kds_station', s); window.location.href = 'kds.html'; };
+                grid.appendChild(btn);
+            });
+            document.getElementById('stationModal').classList.remove('hidden');
+        }
+
+        function closeStationModal() { document.getElementById('stationModal').classList.add('hidden'); }
+
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('pinSection').classList.contains('hidden')) {
+                if (e.key >= '0' && e.key <= '9') pressKey(e.key);
+                else if (e.key === 'Backspace') pressKey('backspace');
+                else if (e.key === 'Escape') closePinModal();
+            }
+        });
+    </script>
+</body>
+</html>

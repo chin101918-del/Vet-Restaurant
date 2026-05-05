@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VETRES | Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #050505; color: white; overflow-x: hidden; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        input, select, textarea { background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; outline: none; transition: border 0.3s; }
+        input:focus, select:focus, textarea:focus { border-color: #3b82f6; }
+        .data-row:hover { background-color: rgba(255,255,255,0.02); }
+        
+        /* Section divider ใน form */
+        .form-section { padding: 28px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .form-section:last-child { border-bottom: none; }
+        .section-title { font-size: 0.7rem; letter-spacing: 0.2em; color: #60a5fa; text-transform: uppercase; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 14px; background: #3b82f6; border-radius: 2px; }
+        
+        /* Option group card */
+        .option-group { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+        .option-choice-row { display: grid; grid-template-columns: 1fr 1fr 1fr 80px 40px; gap: 8px; align-items: center; margin-bottom: 6px; }
+        .option-choice-row input { padding: 8px 10px; font-size: 0.85rem; border-radius: 8px; }
+        .option-label-row { display: grid; grid-template-columns: 1fr 1fr 1fr 110px 40px; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .option-label-row input { padding: 8px 10px; font-size: 0.85rem; border-radius: 8px; font-weight: 500; }
+        
+        /* Status selector */
+        .status-chip { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); transition: all 0.2s; }
+        .status-chip:hover { border-color: rgba(255,255,255,0.3); }
+        .status-chip.active { background: #3b82f6; border-color: #60a5fa; color: white; }
+        
+        /* Status badge ในตาราง — สีแยกตาม status */
+        .sb-ปกติ { background: rgba(148,163,184,0.1); color: #cbd5e1; }
+        .sb-ขายดี { background: rgba(249,115,22,0.15); color: #fb923c; }
+        .sb-ต้องลอง { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .sb-ใหม่ { background: rgba(168,85,247,0.15); color: #c084fc; }
+        .sb-15m { background: rgba(234,179,8,0.15); color: #facc15; }
+        .sb-30m { background: rgba(0,0,0,0.6); color: #facc15; border:1px solid rgba(234,179,8,0.3); }
+        .sb-หมด { background: rgba(239,68,68,0.2); color: #f87171; }
+        .sb-ไม่พร้อม { background: rgba(239,68,68,0.1); color: #fca5a5; }
+        .sb-TH_Only { background: rgba(168,85,247,0.1); color: #a855f7; }
+        .sb-ลบ { background: rgba(100,116,139,0.1); color: #64748b; }
+        
+        /* Preview image */
+        .img-preview { width: 100%; aspect-ratio: 16/9; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 0.75rem; }
+        
+        /* Station group header ในตาราง */
+        .station-group-header { background: linear-gradient(90deg, rgba(59,130,246,0.08) 0%, transparent 100%); border-left: 3px solid #3b82f6; }
+        .station-group-header td { padding: 14px 18px !important; }
+        .station-group-header:not(:first-child) td { padding-top: 24px !important; }
+        
+        /* Drag handle */
+        .drag-handle { cursor: grab; color: rgba(255,255,255,0.25); transition: color 0.2s; padding: 4px 8px; }
+        .drag-handle:hover { color: rgba(255,255,255,0.7); }
+        .drag-handle:active { cursor: grabbing; }
+        
+        /* Sortable states */
+        .sortable-ghost { opacity: 0.3; background: rgba(59,130,246,0.1) !important; }
+        .sortable-chosen { background: rgba(59,130,246,0.05) !important; }
+        .sortable-drag { background: #1a1a1a !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        /* View pages */
+        .view-page.hidden { display: none !important; }
+        .view-page { display: flex; }
+        
+        /* TABLES VIEW — Grid circles */
+        .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 14px; }
+        .zone-card { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px 22px; }
+        .zone-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .zone-title { font-size: 0.95rem; font-weight: 600; color: #cbd5e1; padding-left: 12px; border-left: 3px solid #ef4444; }
+        
+        .table-circle {
+            width: 100%; aspect-ratio: 1/1; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            cursor: pointer; font-weight: 600;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.08);
+            color: #cbd5e1;
+            font-size: 0.85rem;
+        }
+        .table-circle:hover { transform: scale(1.1); border-color: #3b82f6; background: rgba(59,130,246,0.1); color: white; }
+        .table-circle .qr-id { font-size: 0.6rem; opacity: 0.5; margin-top: 2px; font-weight: 400; }
+        
+        .add-table-btn {
+            width: 100%; aspect-ratio: 1/1; border-radius: 50%;
+            background: rgba(59,130,246,0.05); border: 2px dashed rgba(59,130,246,0.3);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
+            color: #60a5fa;
+        }
+        .add-table-btn:hover { background: rgba(59,130,246,0.15); border-color: #3b82f6; transform: scale(1.05); }
+        
+        /* BANNERS VIEW — Card grid */
+        .banner-card {
+            background: #111; border: 1px solid rgba(255,255,255,0.06); border-radius: 18px;
+            overflow: hidden; cursor: grab; transition: all 0.2s;
+            display: flex; flex-direction: column;
+        }
+        .banner-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .banner-card:active { cursor: grabbing; }
+        .banner-card.inactive { opacity: 0.5; }
+        .banner-img { width: 100%; aspect-ratio: 16/9; background-size: cover; background-position: center; background-color: rgba(255,255,255,0.03); }
+        .banner-meta { padding: 14px 16px; }
+        .banner-actions { display: flex; gap: 8px; padding: 0 16px 14px; }
+        .banner-action-btn { flex: 1; padding: 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 500; transition: all 0.15s; }
+    </style>
+</head>
+<body class="flex h-screen">
+
+    <aside class="w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col hidden md:flex">
+        <!-- แก้ไขส่วน Header ของ Sidebar -->
+        <div class="p-6 border-b border-white/5">
+            <h1 class="text-2xl font-black tracking-widest text-white uppercase leading-none">
+                VET <span class="text-blue-500">RESTAURANT</span>
+        </div>
+        <nav class="flex-1 p-4 space-y-2">
+            <button data-view="menus" onclick="switchView('menus')" class="nav-btn w-full flex items-center gap-3 bg-blue-600/10 text-blue-500 px-4 py-3 rounded-xl font-bold transition-all">
+                <i class="fas fa-utensils"></i> จัดการเมนูอาหาร
+            </button>
+            <button data-view="tables" onclick="switchView('tables')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all">
+                <i class="fas fa-chair"></i> จัดการโต๊ะ
+            </button>
+            <button data-view="banners" onclick="switchView('banners')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all">
+                <i class="fas fa-image"></i> จัดการ Banners
+            </button>
+        </nav>
+        <div class="p-4 border-t border-white/5">
+            <button onclick="window.location.href='index.html'" class="w-full flex items-center justify-center gap-3 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-3 rounded-xl transition-all group active:scale-95">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 transition-transform group-hover:-translate-x-1">
+                    <path fill-rule="evenodd" d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+                </svg>
+                <span class="font-bold text-sm tracking-wide">กลับหน้าแรก</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <!-- ════════════ VIEW: MENUS ════════════ -->
+        <div id="view-menus" class="view-page flex flex-col h-screen overflow-hidden">
+            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold">จัดการเมนูอาหาร</h2>
+                </div>
+                <div class="flex gap-3">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                        <input type="text" id="searchInput" placeholder="ค้นหาเมนู..." class="pl-10 pr-4 py-3 rounded-xl text-sm w-64" oninput="renderTable()">
+                    </div>
+                    <select id="filterStatus" onchange="renderTable()" class="px-4 py-3 rounded-xl text-sm">
+                        <option value="">ทุกสถานะ</option>
+                        <option value="ปกติ">ปกติ</option>
+                        <option value="ขายดี">ขายดี</option>
+                        <option value="ต้องลอง">ต้องลอง</option>
+                        <option value="ใหม่">ใหม่</option>
+                        <option value="15m">รอ 15m</option>
+                        <option value="30m">รอ 30m</option>
+                        <option value="หมด">หมด</option>
+                        <option value="ไม่พร้อม">ไม่พร้อม</option>
+                        <option value="TH_Only">TH Only</option>
+                    </select>
+                    <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all">
+                        <i class="fas fa-plus"></i> เพิ่มเมนูใหม่
+                    </button>
+                </div>
+            </header>
+
+            <div class="flex-1 p-6 overflow-auto">
+                <div class="bg-[#111] rounded-2xl border border-white/5 overflow-hidden">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-white/5 text-slate-400 text-sm uppercase tracking-wider">
+                                <th class="p-4 font-semibold">รูปภาพ</th>
+                                <th class="p-4 font-semibold">ชื่อเมนู</th>
+                                <th class="p-4 font-semibold">หมวดหมู่</th>
+                                <th class="p-4 font-semibold text-right">ราคา</th>
+                                <th class="p-4 font-semibold text-center">สถานะ</th>
+                                <th class="p-4 font-semibold text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menuTableBody" class="divide-y divide-white/5">
+                            <tr><td colspan="6" class="p-10 text-center text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>กำลังโหลดข้อมูล...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-xs text-slate-600 text-center mt-4"><span id="rowCount">0</span> รายการ</p>
+            </div>
+        </div>
+
+
+        <!-- ════════════ VIEW: TABLES ════════════ -->
+        <div id="view-tables" class="view-page hidden flex-col h-screen overflow-hidden">
+            <!-- ปรับ Header ให้มี min-h เทียบเท่าหน้าจัดการเมนู และใช้ items-center -->
+            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center min-h-[97px]">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-white">จัดการโต๊ะ</h2>
+                    </div>
+                </div>
+                <div class="flex gap-3 items-center">
+                    <div class="bg-white/5 px-4 py-2 rounded-xl border border-white/5">
+                        <span id="tablesCount" class="text-lg font-bold text-blue-400">0 โต๊ะ</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 p-6 overflow-auto">
+                <div id="tablesContainer" class="space-y-6">
+                    <div class="text-center text-slate-500 py-20">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>กำลังโหลด...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- ════════════ VIEW: BANNERS ════════════ -->
+        <div id="view-banners" class="view-page hidden flex-col h-screen overflow-hidden">
+            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold">จัดการ Banners</h2>
+                </div>
+                <button onclick="openBannerModal('add')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all">
+                    <i class="fas fa-plus"></i> เพิ่ม Banner
+                </button>
+            </header>
+
+            <div class="flex-1 p-6 overflow-auto">
+                <div id="bannersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div class="text-center text-slate-500 py-20 col-span-full">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>กำลังโหลด...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ═══════════════════════════════════════════════════════
+         MENU MODAL — Form scrollable แบ่ง section ด้วย divider
+         ═══════════════════════════════════════════════════════ -->
+    <div id="menuModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-[#111] w-full max-w-4xl rounded-3xl border border-white/10 flex flex-col max-h-[92vh] relative">
+            
+            <!-- Header (sticky) -->
+            <div class="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
+                <div>
+                    <h2 id="modalTitle" class="text-2xl font-bold text-blue-400">เพิ่มเมนูใหม่</h2>
+                    <p class="text-xs text-slate-500 mt-1">กรอกข้อมูลให้ครบถ้วน • EN/CN ช่วยลูกค้าต่างชาติ</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Scrollable form body -->
+            <form id="menuForm" onsubmit="saveMenu(event)" class="flex-1 overflow-y-auto px-8 no-scrollbar">
+                <input type="hidden" id="menuId">
+
+                <!-- ─────────── SECTION 1: ข้อมูลพื้นฐาน ─────────── -->
+                <div class="form-section">
+                    <div class="section-title">ข้อมูลพื้นฐาน</div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">ชื่อเมนู (TH) *</label>
+                            <input type="text" id="item_th" required class="w-full p-3 rounded-xl" placeholder="เช่น กระต่ายทอดกระเทียม">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">ชื่อเมนู (EN)</label>
+                            <input type="text" id="item_en" class="w-full p-3 rounded-xl" placeholder="Garlic Fried Rabbit">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">ชื่อเมนู (CN)</label>
+                            <input type="text" id="item_cn" class="w-full p-3 rounded-xl" placeholder="蒜香炸兔肉">
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">ราคาปกติ (฿) *</label>
+                            <input type="number" id="price" required step="0.01" class="w-full p-3 rounded-xl">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">ราคาลด (ถ้ามี)</label>
+                            <input type="number" id="new_price" step="0.01" class="w-full p-3 rounded-xl placeholder-slate-600" placeholder="เว้นว่าง = ไม่ลด">
+                        </div>
+                        <div class="flex items-end">
+                            <p class="text-xs text-slate-500 pb-3"><i class="fas fa-grip-vertical mr-1"></i> ลำดับโชว์: ลากแถวในตารางเพื่อเรียง</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="sort_order" value="99">
+                </div>
+
+                <!-- ─────────── SECTION 2: หมวดหมู่ / ซุ้ม (Station) ─────────── -->
+                <div class="form-section">
+                    <div class="section-title">หมวดหมู่ (Station)</div>
+                    <p class="text-xs text-slate-500 mb-4"><i class="fas fa-info-circle mr-1"></i> เลือกซุ้มที่มีอยู่ — ระบบจะดึงชื่อ EN/CN ให้อัตโนมัติ — KDS station ใช้ชื่อเดียวกัน</p>
+                    
+                    <!-- Hidden actual values (synced from selected station) -->
+                    <input type="hidden" id="station_th" required>
+                    <input type="hidden" id="station_en">
+                    <input type="hidden" id="station_cn">
+                    
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">เลือกซุ้ม *</label>
+                        <select id="stationDropdown" onchange="onStationDropdownChange()" required class="w-full p-3 rounded-xl">
+                            <option value="">-- กรุณาเลือก --</option>
+                            <!-- Populated by populateStationDropdown() -->
+                        </select>
+                    </div>
+
+                    <!-- Display เมื่อเลือกซุ้มแล้ว — แสดงทั้ง 3 ภาษาให้เห็น -->
+                    <div id="stationPreview" class="hidden mt-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <p class="text-xs text-slate-500">ภาษาไทย</p>
+                                <p class="text-white font-medium" id="stationPreview_th">-</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500">English</p>
+                                <p class="text-white font-medium" id="stationPreview_en">-</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500">中文</p>
+                                <p class="text-white font-medium" id="stationPreview_cn">-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─────────── SECTION 3: รูปภาพ ─────────── -->
+                <div class="form-section">
+                    <div class="section-title">รูปภาพ</div>
+                    <p class="text-xs text-slate-500 mb-4"><i class="fas fa-info-circle mr-1"></i> รูป Category Header ของซุ้มจัดการในหน้า "สร้าง/แก้ไขซุ้ม"</p>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">รูปเมนู (URL) *</label>
+                        <input type="url" id="image_url" oninput="updatePreview('image_url','imgPreview')" class="w-full p-3 rounded-xl text-blue-400 text-sm" placeholder="https://...">
+                        <div id="imgPreview" class="img-preview mt-3" style="max-width: 480px;"><span>preview รูปเมนู</span></div>
+                    </div>
+                    <input type="hidden" id="cat_image">
+                </div>
+
+                <!-- ─────────── SECTION 4: คำอธิบาย 3 ภาษา ─────────── -->
+                <div class="form-section">
+                    <div class="section-title">คำอธิบายเมนู</div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">คำอธิบาย (TH)</label>
+                            <textarea id="desc_th" rows="3" class="w-full p-3 rounded-xl text-sm" placeholder="เช่น เนื้อกระต่ายทอดน้ำมันกระเทียม หอมเด็ด เสิร์ฟพร้อมน้ำจิ้ม"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">Description (EN)</label>
+                            <textarea id="desc_en" rows="3" class="w-full p-3 rounded-xl text-sm"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 mb-1 block">描述 (CN)</label>
+                            <textarea id="desc_cn" rows="3" class="w-full p-3 rounded-xl text-sm"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─────────── SECTION 5: Options (Structured Builder) ─────────── -->
+                <div class="form-section">
+                    <div class="section-title">ตัวเลือก (Options)</div>
+                    <p class="text-xs text-slate-500 mb-4">
+                        <i class="fas fa-info-circle mr-1"></i> 
+                        ใช้ปุ่ม + เพื่อเพิ่มกลุ่มตัวเลือกและตัวเลือก (กรอก 3 ภาษาคู่ขนานกัน) — 
+                        <button type="button" onclick="toggleOptionsHelp()" class="text-blue-400 hover:underline">ดูตัวอย่าง</button>
+                    </p>
+                    <div id="optionsHelpBox" class="hidden bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4 text-xs text-slate-300 leading-relaxed">
+                        <p class="font-medium text-blue-400 mb-1">📘 ตัวอย่างการใช้งาน:</p>
+                        <p>• <strong>กลุ่มตัวเลือก</strong> = ประเภท เช่น "ความเผ็ด", "เพิ่มเติม"</p>
+                        <p>• <strong>Multi-Select</strong> = เลือกได้หลายตัวในกลุ่มเดียวกัน (toggle ✓)</p>
+                        <p>• <strong>Choice</strong> = ตัวเลือก + ราคาเพิ่ม (ใส่ 0 ถ้าไม่เพิ่มเงิน)</p>
+                        <p>• ตัวอย่าง: <code class="bg-black/40 px-1 rounded">ความเผ็ด: ไม่เผ็ด(+0), เผ็ด(+0), เผ็ดมาก(+0)</code></p>
+                    </div>
+                    
+                    <div id="optionsBuilder"></div>
+                    <button type="button" onclick="addOptionGroup()" class="w-full mt-3 py-3 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 text-sm font-medium transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i> เพิ่มกลุ่มตัวเลือก
+                    </button>
+                </div>
+
+                <!-- ─────────── SECTION 6: สถานะ ─────────── -->
+                <div class="form-section">
+                    <div class="section-title">สถานะเมนู</div>
+                    <input type="hidden" id="status" value="ปกติ">
+                    <div id="statusSelector" class="flex flex-wrap gap-2">
+                        <!-- status chips generated by JS -->
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3" id="statusHelp">สถานะมีผลกับการแสดงผลหน้าลูกค้า</p>
+                </div>
+
+            </form>
+
+            <!-- Footer (sticky) -->
+            <div class="p-6 border-t border-white/10 flex gap-4 shrink-0 bg-[#111] rounded-b-3xl">
+                <button type="button" onclick="closeModal()" class="flex-1 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
+                <button type="submit" form="menuForm" id="btnSave" class="flex-1 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                    <i class="fas fa-save mr-2"></i> บันทึกข้อมูล
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         STATION MODAL — สร้าง/แก้ไขซุ้ม
+         ═══════════════════════════════════════════════════════ -->
+    <div id="stationModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[55]">
+        <div class="bg-[#111] w-full max-w-2xl rounded-3xl border border-white/10 flex flex-col max-h-[88vh]">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
+                <div>
+                    <h2 id="stationModalTitle" class="text-xl font-bold text-blue-400">สร้างซุ้มใหม่</h2>
+                    <p class="text-xs text-slate-500 mt-1">ซุ้ม = หมวดหมู่อาหารที่แสดงบนเมนูลูกค้า + ส่งไปครัว KDS</p>
+                </div>
+                <button onclick="closeModal('stationModal')" class="text-slate-400 hover:text-white text-2xl"><i class="fas fa-times"></i></button>
+            </div>
+
+            <form id="stationForm" onsubmit="saveStation(event)" class="flex-1 overflow-y-auto p-6 no-scrollbar space-y-4">
+                <input type="hidden" id="stationFormId">
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">ชื่อซุ้ม (TH) *</label>
+                        <input type="text" id="stationFormTh" required class="w-full p-3 rounded-xl" placeholder="กระต่าย">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">Name (EN)</label>
+                        <input type="text" id="stationFormEn" class="w-full p-3 rounded-xl" placeholder="Rabbit">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">名称 (CN)</label>
+                        <input type="text" id="stationFormCn" class="w-full p-3 rounded-xl" placeholder="兔肉">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs text-slate-400 mb-1 block">รูป Category Header (URL)</label>
+                    <input type="url" id="stationFormCatImage" oninput="updatePreview('stationFormCatImage','stationFormCatPreview')" class="w-full p-3 rounded-xl text-blue-400 text-sm" placeholder="https://...">
+                    <div id="stationFormCatPreview" class="img-preview mt-3"><span>preview รูป category header</span></div>
+                </div>
+
+                <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300 leading-relaxed hidden" id="stationEditWarning">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <strong>หมายเหตุ:</strong> เมื่อแก้ไขชื่อซุ้ม EN/CN หรือรูป — ระบบจะ sync ไปยังทุกเมนูในซุ้มนี้อัตโนมัติ
+                </div>
+            </form>
+
+            <div class="p-6 border-t border-white/10 flex gap-3 shrink-0 bg-[#111] rounded-b-3xl">
+                <button type="button" onclick="closeModal('stationModal')" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
+                <button type="submit" form="stationForm" id="btnSaveStation" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                    <i class="fas fa-save mr-2"></i> บันทึก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TABLE MODAL — แก้ไขโต๊ะ
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tableModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[55]">
+        <div class="bg-[#111] w-full max-w-md rounded-3xl border border-white/10 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 id="tableModalTitle" class="text-2xl font-bold text-blue-400">แก้ไขโต๊ะ</h2>
+                    <p class="text-xs text-slate-500 mt-1">รหัสโต๊ะแก้ไม่ได้ — แก้ qr_id ได้</p>
+                </div>
+                <button onclick="closeModal('tableModal')" class="text-slate-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
+            </div>
+
+            <form id="tableForm" onsubmit="saveTable(event)" class="space-y-4">
+                <input type="hidden" id="tableFormId">
+                
+                <div>
+                    <label class="text-xs text-slate-400 mb-1 block">รหัสโต๊ะ</label>
+                    <div id="tableFormIdDisplay" class="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-2xl font-bold text-center text-white"></div>
+                </div>
+
+                <div>
+                    <label class="text-xs text-slate-400 mb-1 block">QR Suffix (2 ตัวอักษร) *</label>
+                    <div class="flex items-center gap-2">
+                        <span id="tableFormQrPrefix" class="text-slate-400 font-mono text-lg"></span>
+                        <span class="text-slate-500">-</span>
+                        <input type="text" id="tableFormQrSuffix" maxlength="2" required pattern="[A-Za-z0-9]{2}" class="flex-1 p-3 rounded-xl text-center text-lg font-mono uppercase tracking-wider" placeholder="AA" oninput="this.value=this.value.toUpperCase()">
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2"><i class="fas fa-info-circle mr-1"></i> ใช้สำหรับ deactivate QR เก่าเมื่อรูป QR หลุดไป — เปลี่ยนค่าใหม่ + print QR ใหม่</p>
+                </div>
+
+                <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300 leading-relaxed">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <strong>ข้อควรระวัง:</strong> เมื่อเปลี่ยน QR Suffix — รูป QR เดิมที่ติดบนโต๊ะจะใช้งานไม่ได้ทันที กรุณาพิมพ์ QR ใหม่ไปติด
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="askDeleteTable()" id="btnDeleteTable" class="flex-1 py-3 rounded-xl bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 font-bold transition-all">
+                        <i class="fas fa-trash mr-1"></i> ลบโต๊ะ
+                    </button>
+                    <button type="submit" id="btnSaveTable" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                        <i class="fas fa-save mr-1"></i> บันทึก
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════════════════
+         BANNER MODAL — เพิ่ม/แก้ไข banner
+         ═══════════════════════════════════════════════════════ -->
+    <div id="bannerModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[55]">
+        <div class="bg-[#111] w-full max-w-xl rounded-3xl border border-white/10 p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="bannerModalTitle" class="text-2xl font-bold text-blue-400">เพิ่ม Banner ใหม่</h2>
+                <button onclick="closeModal('bannerModal')" class="text-slate-400 hover:text-white text-xl"><i class="fas fa-times"></i></button>
+            </div>
+
+            <form id="bannerForm" onsubmit="saveBanner(event)" class="space-y-4">
+                <input type="hidden" id="bannerFormId">
+
+                <div>
+                    <label class="text-xs text-slate-400 mb-1 block">URL รูปภาพ *</label>
+                    <input type="url" id="bannerFormImage" required oninput="updatePreview('bannerFormImage','bannerFormPreview')" class="w-full p-3 rounded-xl text-blue-400 text-sm" placeholder="https://...">
+                    <div id="bannerFormPreview" class="img-preview mt-3"></div>
+                </div>
+
+                <div>
+                    <label class="text-xs text-slate-400 mb-1 block">เมื่อกด Banner ให้ไปที่ซุ้ม (ถ้ามี)</label>
+                    <select id="bannerFormAction" class="w-full p-3 rounded-xl">
+                        <option value="">-- ไม่ทำอะไร --</option>
+                        <!-- populated by populateBannerStations() -->
+                    </select>
+                    <p class="text-xs text-slate-500 mt-2"><i class="fas fa-info-circle mr-1"></i> เมื่อลูกค้ากด banner จะ scroll ไปยังซุ้มที่เลือก (ถ้าเว้นว่าง = banner เป็น decorative)</p>
+                </div>
+
+                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                    <input type="checkbox" id="bannerFormActive" checked class="w-5 h-5 accent-blue-500 cursor-pointer">
+                    <label for="bannerFormActive" class="text-sm cursor-pointer flex-1">แสดง banner นี้ในหน้าลูกค้า (Active)</label>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeModal('bannerModal')" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
+                    <button type="submit" id="btnSaveBanner" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                        <i class="fas fa-save mr-1"></i> บันทึก
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- Delete confirmation modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+        <div class="bg-[#111] w-full max-w-md rounded-3xl border border-white/10 p-8 text-center">
+            <div class="w-16 h-16 rounded-full bg-red-500/10 mx-auto flex items-center justify-center mb-4"><i class="fas fa-trash-alt text-red-500 text-2xl"></i></div>
+            <h3 class="text-xl font-bold mb-2">ลบเมนูนี้?</h3>
+            <p class="text-slate-400 text-sm mb-2" id="deleteItemName"></p>
+            <p class="text-xs text-slate-500 mb-6">เมนูจะถูกซ่อนออกจากหน้าลูกค้า แต่ข้อมูลออเดอร์เก่าจะยังอยู่</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('deleteModal')" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-medium">ยกเลิก</button>
+                <button onclick="confirmDelete()" class="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 font-bold">ยืนยันลบ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast container -->
+    <div id="toast" class="fixed top-6 right-6 z-[100] pointer-events-none"></div>
+
+    <script>
+        // ════════════════════════════════════════════════════════
+        // CONFIG & STATE
+        // ════════════════════════════════════════════════════════
+        const SUPABASE_URL = 'https://xjosswxrtcanhvpdbrap.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqb3Nzd3hydGNhbmh2cGRicmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjkyODcsImV4cCI6MjA5MjUwNTI4N30.DrtoBXmdL1EN17sVYZIYNVVOOp7UHfeAz1sDImZmYFM';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Status configuration (ครบ 10 แบบตาม Blueprint)
+        const STATUS_LIST = [
+            { key: 'ปกติ',     label: 'ปกติ',              desc: 'พร้อมขาย ไม่มี badge' },
+            { key: 'ขายดี',    label: '🔥 ขายดี',           desc: 'ป้ายสีส้ม' },
+            { key: 'ต้องลอง',  label: '✨ ต้องลอง',         desc: 'ป้ายสีเขียว' },
+            { key: 'ใหม่',     label: '🆕 ใหม่',            desc: 'ป้ายสีม่วง' },
+            { key: '15m',      label: '⏳ รอ > 15m',        desc: 'ป้ายสีเหลือง' },
+            { key: '30m',      label: '⏰ รอ > 30m',        desc: 'ป้ายสีดำ ตัวอักษรเหลือง' },
+            { key: 'หมด',      label: '❌ หมด',             desc: 'สั่งไม่ได้' },
+            { key: 'ไม่พร้อม', label: '⚠️ ไม่พร้อม',        desc: 'ชั่วคราว สั่งไม่ได้' },
+            { key: 'TH_Only',  label: '🏠 Takehome เท่านั้น', desc: 'แสดงเฉพาะหน้า takehome' },
+            { key: 'ลบ',       label: '🗑️ ลบ (ซ่อน)',       desc: 'ไม่แสดงในเมนู' }
+        ];
+
+        let menuData = [];
+        let stationsData = [];
+        let currentOptions = { th: [], en: [], cn: [] }; // state ของ options builder
+        let isEditMode = false;
+        let isStationEditMode = false;
+        let deleteTargetId = null;
+        let sortableInstances = [];
+
+        // ════════════════════════════════════════════════════════
+        // TOAST NOTIFICATION
+        // ════════════════════════════════════════════════════════
+        function toast(msg, type = 'success') {
+            const bg = type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
+            const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
+            const el = document.createElement('div');
+            el.className = `${bg} text-white px-5 py-3 rounded-xl shadow-2xl mb-2 flex items-center gap-3 pointer-events-auto font-medium animate-[slideIn_0.3s_ease-out]`;
+            el.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
+            document.getElementById('toast').appendChild(el);
+            setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 2500);
+        }
+
+        // ════════════════════════════════════════════════════════
+        // FETCH (menus + stations พร้อมกัน)
+        // ════════════════════════════════════════════════════════
+        async function fetchAll() {
+            const [menuRes, stationRes] = await Promise.all([
+                supabaseClient.from('menus').select('*').neq('status', 'ลบ').order('station_th').order('sort_order'),
+                supabaseClient.from('stations').select('*').eq('is_active', true).order('sort_order')
+            ]);
+
+            if (menuRes.error) {
+                document.getElementById('menuTableBody').innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">${menuRes.error.message}</td></tr>`;
+                return;
+            }
+            if (stationRes.error) {
+                console.error('Stations error:', stationRes.error);
+                toast('โหลด stations ไม่สำเร็จ — ตรวจว่ารัน T1.5 migration แล้วหรือยัง', 'error');
+            }
+            
+            menuData = menuRes.data || [];
+            stationsData = stationRes.data || [];
+            renderTable();
+            populateStationDropdown();
+        }
+
+        // Backward compat alias
+        const fetchMenus = fetchAll;
+
+        function renderTable() {
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filterStatus = document.getElementById('filterStatus').value;
+            let filtered = menuData;
+            
+            if (search) {
+                filtered = filtered.filter(m => 
+                    (m.item_th || '').toLowerCase().includes(search) ||
+                    (m.item_en || '').toLowerCase().includes(search) ||
+                    (m.station_th || '').toLowerCase().includes(search)
+                );
+            }
+            if (filterStatus) {
+                filtered = filtered.filter(m => m.status === filterStatus);
+            }
+
+            document.getElementById('rowCount').innerText = filtered.length;
+            const tbody = document.getElementById('menuTableBody');
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-500">ไม่พบข้อมูลที่ค้นหา</td></tr>`;
+                destroyAllSortables();
+                return;
+            }
+
+            // Group by station_th — เรียงตาม sort_order ของ station
+            const grouped = {};
+            filtered.forEach(m => {
+                const key = m.station_th || '(ไม่ระบุ)';
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(m);
+            });
+
+            // เรียงซุ้มตาม stations.sort_order
+            const stationOrder = stationsData.reduce((acc, s, i) => { acc[s.station_th] = s.sort_order; return acc; }, {});
+            const sortedStationKeys = Object.keys(grouped).sort((a, b) => {
+                return (stationOrder[a] ?? 9999) - (stationOrder[b] ?? 9999);
+            });
+
+            const isFiltered = search || filterStatus;
+            
+            // ใช้ tbody เดียว แต่แบ่ง row ด้วย class — Sortable จะจัดการกลุ่มผ่าน group config
+            tbody.innerHTML = sortedStationKeys.map(stationKey => {
+                const items = grouped[stationKey];
+                const station = stationsData.find(s => s.station_th === stationKey);
+                const editBtn = station 
+                    ? `<button onclick="openStationModal('edit', '${station.id}')" class="ml-3 text-blue-400 hover:text-blue-300 text-xs font-medium"><i class="fas fa-edit mr-1"></i>แก้ไขซุ้ม</button>`
+                    : `<span class="ml-3 text-yellow-400 text-xs"><i class="fas fa-exclamation-triangle mr-1"></i>ซุ้มนี้ยังไม่อยู่ใน stations table</span>`;
+                
+                const rowsHTML = items.map(m => {
+                    const img = m.image_url 
+                        ? `<img src="${m.image_url}" class="w-12 h-12 rounded-lg object-cover bg-white/10" onerror="this.style.display='none'">`
+                        : `<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center text-slate-600"><i class="fas fa-image"></i></div>`;
+                    const priceDisplay = m.new_price 
+                        ? `<span class="line-through text-slate-500 text-xs mr-2">฿${m.price}</span><span class="text-green-400 font-bold">฿${m.new_price}</span>` 
+                        : `<span class="font-bold">฿${m.price}</span>`;
+                    const statusClass = 'sb-' + (m.status || 'ปกติ');
+                    const dragHandle = isFiltered ? '' : `<span class="drag-handle inline-block" title="ลากเพื่อเรียงลำดับ"><i class="fas fa-grip-vertical"></i></span>`;
+
+                    return `
+                        <tr class="data-row sortable-row transition-all" data-id="${m.id}" data-station="${stationKey}">
+                            <td class="p-4"><div class="flex items-center gap-2">${dragHandle}${img}</div></td>
+                            <td class="p-4">
+                                <p class="font-bold text-white">${m.item_th}</p>
+                            </td>
+                            <td class="p-4">
+                                <p class="text-sm"><i class="fas fa-folder text-slate-500 mr-2"></i>${m.station_th}</p>
+                            </td>
+                            <td class="p-4 text-right">${priceDisplay}</td>
+                            <td class="p-4 text-center"><span class="${statusClass} px-3 py-1 rounded-full text-xs font-bold">${m.status}</span></td>
+                            <td class="p-4 text-center">
+                                <button onclick="openModal('edit', '${m.id}')" class="text-blue-400 hover:text-blue-300 mx-2 transition-all" title="แก้ไข"><i class="fas fa-edit"></i></button>
+                                <button onclick="askDelete('${m.id}')" class="text-red-500 hover:text-red-400 mx-2 transition-all" title="ลบ"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+
+                return `
+                    <tr class="station-group-header non-draggable" data-station-header="${stationKey}">
+                        <td colspan="6" class="text-blue-300 text-sm font-bold">
+                            <i class="fas fa-folder-open mr-2"></i> ${stationKey}
+                            <span class="text-slate-500 font-normal ml-2">(${items.length} เมนู)</span>
+                            ${editBtn}
+                        </td>
+                    </tr>
+                    ${rowsHTML}
+                `;
+            }).join('');
+
+            // Init Sortable (ทำงานทั้ง tbody) — แต่ลากได้เฉพาะภายในซุ้มเดียวกัน (validate ตอน onMove)
+            destroyAllSortables();
+            if (!isFiltered) initSortables();
+        }
+
+        // ════════════════════════════════════════════════════════
+        // DRAG & DROP (within station only)
+        // ════════════════════════════════════════════════════════
+        function destroyAllSortables() {
+            sortableInstances.forEach(s => { try { s.destroy(); } catch(e){} });
+            sortableInstances = [];
+        }
+
+        function initSortables() {
+            const tbody = document.getElementById('menuTableBody');
+            if (!tbody) return;
+            
+            const inst = Sortable.create(tbody, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                draggable: 'tr.sortable-row',  // ห้ามลาก station-group-header
+                
+                // Validate: ห้ามลากข้ามซุ้ม
+                onMove: (evt) => {
+                    const dragging = evt.dragged;
+                    const target = evt.related;
+                    
+                    // ถ้า target เป็น header — ไม่ให้วาง (return false จะ block)
+                    if (target.classList.contains('station-group-header')) return false;
+                    
+                    // ถ้า dragging กับ target อยู่คนละ station — ไม่อนุญาต
+                    if (dragging.dataset.station && target.dataset.station 
+                        && dragging.dataset.station !== target.dataset.station) {
+                        return false;
+                    }
+                    return true;
+                },
+                
+                onEnd: async (evt) => {
+                    if (evt.oldIndex === evt.newIndex) return;
+                    const stationKey = evt.item.dataset.station;
+                    if (!stationKey) return;
+                    await persistSortOrder(stationKey);
+                }
+            });
+            sortableInstances.push(inst);
+        }
+
+        async function persistSortOrder(stationKey) {
+            // หาแถวทั้งหมดที่อยู่ใน station เดียวกัน ตามลำดับใหม่ใน DOM
+            const rows = Array.from(document.querySelectorAll(`tr.sortable-row[data-station="${CSS.escape(stationKey)}"]`));
+            const updates = rows.map((row, idx) => ({
+                id: row.dataset.id,
+                sort_order: (idx + 1) * 10
+            }));
+
+            // Update local state immediately (optimistic)
+            updates.forEach(u => {
+                const m = menuData.find(x => x.id === u.id);
+                if (m) m.sort_order = u.sort_order;
+            });
+
+            // Batch update — Supabase ไม่มี bulk update by id, ใช้ Promise.all
+            try {
+                await Promise.all(updates.map(u => 
+                    supabaseClient.from('menus').update({ sort_order: u.sort_order }).eq('id', u.id)
+                ));
+                toast(`เรียงลำดับซุ้ม "${stationKey}" เรียบร้อย`, 'success');
+            } catch (e) {
+                toast('บันทึกลำดับไม่สำเร็จ — โปรดรีเฟรช', 'error');
+                fetchAll();
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // STATION DROPDOWN & MODAL (Section 2 ใน menu form)
+        // ════════════════════════════════════════════════════════
+        function populateStationDropdown() {
+            const dd = document.getElementById('stationDropdown');
+            if (!dd) return;
+            
+            const sorted = [...stationsData].sort((a,b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+            
+            dd.innerHTML = `
+                <option value="">-- กรุณาเลือก --</option>
+                ${sorted.map(s => `<option value="${s.id}" data-th="${s.station_th}">${s.station_th}${s.station_en ? ' / '+s.station_en : ''}</option>`).join('')}
+                <option value="__NEW__" class="text-blue-400">＋ สร้างซุ้มใหม่...</option>
+            `;
+        }
+
+        function onStationDropdownChange() {
+            const dd = document.getElementById('stationDropdown');
+            const val = dd.value;
+            
+            if (val === '__NEW__') {
+                dd.value = ''; // รีเซ็ตก่อน เพราะจะเปิด modal
+                openStationModal('add');
+                return;
+            }
+
+            const preview = document.getElementById('stationPreview');
+            
+            if (!val) {
+                preview.classList.add('hidden');
+                document.getElementById('station_th').value = '';
+                document.getElementById('station_en').value = '';
+                document.getElementById('station_cn').value = '';
+                document.getElementById('cat_image').value = '';
+                return;
+            }
+
+            const station = stationsData.find(s => s.id === val);
+            if (!station) return;
+
+            // Sync ค่าไปยัง hidden inputs (snapshot จะถูกเก็บใน menu)
+            document.getElementById('station_th').value = station.station_th || '';
+            document.getElementById('station_en').value = station.station_en || '';
+            document.getElementById('station_cn').value = station.station_cn || '';
+            document.getElementById('cat_image').value = station.cat_image || '';
+
+            // Show preview
+            preview.classList.remove('hidden');
+            document.getElementById('stationPreview_th').innerText = station.station_th || '-';
+            document.getElementById('stationPreview_en').innerText = station.station_en || '(ยังไม่ได้กรอก)';
+            document.getElementById('stationPreview_cn').innerText = station.station_cn || '(ยังไม่ได้กรอก)';
+        }
+
+        // Set dropdown ตอน edit menu — match by station_th (ของเก่าก่อน T1.5 อาจไม่ match station id)
+        function setStationDropdownByTh(stationTh) {
+            const station = stationsData.find(s => s.station_th === stationTh);
+            const dd = document.getElementById('stationDropdown');
+            if (station) {
+                dd.value = station.id;
+                onStationDropdownChange();
+            } else if (stationTh) {
+                // ซุ้มเก่าที่ยังไม่ได้สร้างใน stations table — แสดง warning + suggest สร้างใหม่
+                dd.value = '';
+                document.getElementById('stationPreview').classList.remove('hidden');
+                document.getElementById('stationPreview').innerHTML = `
+                    <p class="text-yellow-400 text-sm">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        ซุ้ม "<strong>${stationTh}</strong>" ยังไม่อยู่ใน stations table — 
+                        <button type="button" onclick="quickAddStation('${stationTh}')" class="text-blue-400 hover:underline">สร้างเดี๋ยวนี้</button>
+                    </p>
+                `;
+            }
+        }
+
+        function quickAddStation(stationTh) {
+            openStationModal('add', null, stationTh);
+        }
+
+        function openStationModal(mode, id = null, prefillTh = '') {
+            isStationEditMode = (mode === 'edit');
+            document.getElementById('stationModalTitle').innerText = isStationEditMode ? 'แก้ไขซุ้ม' : 'สร้างซุ้มใหม่';
+            document.getElementById('stationForm').reset();
+            document.getElementById('stationFormId').value = '';
+            document.getElementById('stationEditWarning').classList.toggle('hidden', !isStationEditMode);
+            updatePreview('stationFormCatImage', 'stationFormCatPreview');
+
+            if (isStationEditMode && id) {
+                const s = stationsData.find(x => x.id === id);
+                if (s) {
+                    document.getElementById('stationFormId').value = s.id;
+                    document.getElementById('stationFormTh').value = s.station_th || '';
+                    document.getElementById('stationFormEn').value = s.station_en || '';
+                    document.getElementById('stationFormCn').value = s.station_cn || '';
+                    document.getElementById('stationFormCatImage').value = s.cat_image || '';
+                    updatePreview('stationFormCatImage', 'stationFormCatPreview');
+                }
+            } else if (prefillTh) {
+                document.getElementById('stationFormTh').value = prefillTh;
+            }
+            document.getElementById('stationModal').classList.remove('hidden');
+        }
+
+        async function saveStation(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSaveStation');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+
+            const id = document.getElementById('stationFormId').value;
+            const payload = {
+                station_th: document.getElementById('stationFormTh').value.trim(),
+                station_en: document.getElementById('stationFormEn').value.trim() || null,
+                station_cn: document.getElementById('stationFormCn').value.trim() || null,
+                cat_image:  document.getElementById('stationFormCatImage').value.trim() || null
+            };
+
+            try {
+                let savedStation;
+                if (isStationEditMode) {
+                    const oldStation = stationsData.find(s => s.id === id);
+                    const { data, error } = await supabaseClient.from('stations').update(payload).eq('id', id).select().single();
+                    if (error) throw error;
+                    savedStation = data;
+
+                    // ⚡ SYNC ไปยัง menus ทุกแถวในซุ้มนี้ (ถ้าชื่อ TH เปลี่ยน ต้องใช้ชื่อเก่าค้นหา)
+                    const lookupTh = oldStation ? oldStation.station_th : payload.station_th;
+                    const { error: syncErr } = await supabaseClient.from('menus').update({
+                        station_th: payload.station_th,
+                        station_en: payload.station_en,
+                        station_cn: payload.station_cn,
+                        cat_image:  payload.cat_image
+                    }).eq('station_th', lookupTh);
+                    if (syncErr) console.warn('Sync menus warning:', syncErr);
+                    
+                    toast(`อัปเดตซุ้ม "${payload.station_th}" + sync เมนูเรียบร้อย`);
+                } else {
+                    // Insert ใหม่ — sort_order = max + 10
+                    const maxOrder = stationsData.reduce((m, s) => Math.max(m, s.sort_order ?? 0), 0);
+                    payload.sort_order = maxOrder + 10;
+                    const { data, error } = await supabaseClient.from('stations').insert([payload]).select().single();
+                    if (error) throw error;
+                    savedStation = data;
+                    toast(`สร้างซุ้ม "${payload.station_th}" เรียบร้อย`);
+                }
+
+                closeModal('stationModal');
+                await fetchAll(); // โหลดใหม่ทั้งหมด
+                
+                // ถ้ากำลังเปิด menu modal อยู่ — auto-select ซุ้มที่เพิ่งสร้าง
+                if (!document.getElementById('menuModal').classList.contains('hidden') && savedStation) {
+                    document.getElementById('stationDropdown').value = savedStation.id;
+                    onStationDropdownChange();
+                }
+            } catch (error) {
+                toast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึก`;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // STATUS SELECTOR
+        // ════════════════════════════════════════════════════════
+        function renderStatusSelector() {
+            document.getElementById('statusSelector').innerHTML = STATUS_LIST.map(s => 
+                `<div class="status-chip" data-status="${s.key}" onclick="selectStatus('${s.key}')" title="${s.desc}">${s.label}</div>`
+            ).join('');
+        }
+
+        function selectStatus(key) {
+            document.getElementById('status').value = key;
+            document.querySelectorAll('.status-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.dataset.status === key);
+            });
+            const found = STATUS_LIST.find(s => s.key === key);
+            document.getElementById('statusHelp').innerText = found ? found.desc : '';
+        }
+
+        // ════════════════════════════════════════════════════════
+        // OPTIONS BUILDER (structured, 3-language parallel)
+        // ════════════════════════════════════════════════════════
+        function renderOptionsBuilder() {
+            const container = document.getElementById('optionsBuilder');
+            if (currentOptions.th.length === 0) {
+                container.innerHTML = '<p class="text-center text-slate-600 text-xs py-4">ยังไม่มีตัวเลือก — กด "เพิ่มกลุ่มตัวเลือก" เพื่อเริ่ม</p>';
+                return;
+            }
+
+            container.innerHTML = currentOptions.th.map((group, gi) => {
+                const enGroup = currentOptions.en[gi] || { label: '', choices: [] };
+                const cnGroup = currentOptions.cn[gi] || { label: '', choices: [] };
+                const isMulti = group.allowMultiple || false;
+
+                const choicesHTML = group.choices.map((choice, ci) => {
+                    const enChoice = enGroup.choices[ci] || { name: '', price: 0 };
+                    const cnChoice = cnGroup.choices[ci] || { name: '', price: 0 };
+                    return `
+                        <div class="option-choice-row">
+                            <input type="text" value="${choice.name || ''}" placeholder="ตัวเลือก TH" oninput="updateChoice(${gi}, ${ci}, 'th', 'name', this.value)">
+                            <input type="text" value="${enChoice.name || ''}" placeholder="EN" oninput="updateChoice(${gi}, ${ci}, 'en', 'name', this.value)">
+                            <input type="text" value="${cnChoice.name || ''}" placeholder="CN" oninput="updateChoice(${gi}, ${ci}, 'cn', 'name', this.value)">
+                            <input type="number" value="${choice.price || 0}" placeholder="+฿" oninput="updateChoicePrice(${gi}, ${ci}, this.value)">
+                            <button type="button" onclick="removeChoice(${gi}, ${ci})" class="text-red-500 hover:text-red-400 w-10 h-10 rounded-lg hover:bg-red-500/10 transition-all" title="ลบตัวเลือก">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="option-group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="text-xs text-blue-400 font-medium"><i class="fas fa-layer-group mr-1"></i> กลุ่มที่ ${gi + 1}</span>
+                            <div class="flex items-center gap-2">
+                                <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
+                                    <input type="checkbox" ${isMulti ? 'checked' : ''} onchange="toggleMulti(${gi}, this.checked)" class="accent-blue-500">
+                                    Multi-Select
+                                </label>
+                                <button type="button" onclick="removeGroup(${gi})" class="text-red-500 hover:text-red-400 w-8 h-8 rounded-lg hover:bg-red-500/10 transition-all" title="ลบกลุ่ม">
+                                    <i class="fas fa-trash text-sm"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="option-label-row">
+                            <input type="text" value="${group.label || ''}" placeholder="ชื่อกลุ่ม TH (เช่น ความเผ็ด)" oninput="updateGroupLabel(${gi}, 'th', this.value)">
+                            <input type="text" value="${enGroup.label || ''}" placeholder="EN (e.g. Spice level)" oninput="updateGroupLabel(${gi}, 'en', this.value)">
+                            <input type="text" value="${cnGroup.label || ''}" placeholder="CN (如 辣度)" oninput="updateGroupLabel(${gi}, 'cn', this.value)">
+                            <span class="text-xs text-slate-500 text-center">ราคา (+)</span>
+                            <span></span>
+                        </div>
+                        ${choicesHTML}
+                        <button type="button" onclick="addChoice(${gi})" class="w-full mt-2 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium transition-all">
+                            <i class="fas fa-plus mr-1"></i> เพิ่มตัวเลือก
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addOptionGroup() {
+            currentOptions.th.push({ label: '', allowMultiple: false, choices: [{ name: '', price: 0 }] });
+            currentOptions.en.push({ label: '', choices: [{ name: '', price: 0 }] });
+            currentOptions.cn.push({ label: '', choices: [{ name: '', price: 0 }] });
+            renderOptionsBuilder();
+        }
+
+        function removeGroup(gi) {
+            currentOptions.th.splice(gi, 1);
+            currentOptions.en.splice(gi, 1);
+            currentOptions.cn.splice(gi, 1);
+            renderOptionsBuilder();
+        }
+
+        function toggleMulti(gi, checked) {
+            currentOptions.th[gi].allowMultiple = checked;
+        }
+
+        function updateGroupLabel(gi, lang, value) {
+            if (!currentOptions[lang][gi]) return;
+            currentOptions[lang][gi].label = value;
+        }
+
+        function addChoice(gi) {
+            ['th', 'en', 'cn'].forEach(lang => {
+                if (!currentOptions[lang][gi].choices) currentOptions[lang][gi].choices = [];
+                currentOptions[lang][gi].choices.push({ name: '', price: 0 });
+            });
+            renderOptionsBuilder();
+        }
+
+        function removeChoice(gi, ci) {
+            ['th', 'en', 'cn'].forEach(lang => {
+                if (currentOptions[lang][gi] && currentOptions[lang][gi].choices) {
+                    currentOptions[lang][gi].choices.splice(ci, 1);
+                }
+            });
+            renderOptionsBuilder();
+        }
+
+        function updateChoice(gi, ci, lang, field, value) {
+            if (!currentOptions[lang][gi] || !currentOptions[lang][gi].choices[ci]) return;
+            currentOptions[lang][gi].choices[ci][field] = value;
+        }
+
+        function updateChoicePrice(gi, ci, value) {
+            const price = parseInt(value) || 0;
+            ['th', 'en', 'cn'].forEach(lang => {
+                if (currentOptions[lang][gi] && currentOptions[lang][gi].choices[ci]) {
+                    currentOptions[lang][gi].choices[ci].price = price;
+                }
+            });
+        }
+
+        function toggleOptionsHelp() {
+            document.getElementById('optionsHelpBox').classList.toggle('hidden');
+        }
+
+        // ════════════════════════════════════════════════════════
+        // OPTIONS: compile from state → string, parse string → state
+        // ════════════════════════════════════════════════════════
+        // Format: "กลุ่ม(M): choice1(+0), choice2(+30) || กลุ่ม2: a, b"
+        function compileOptions(lang) {
+            const groups = currentOptions[lang];
+            if (!groups || groups.length === 0) return null;
+            
+            const thGroups = currentOptions.th; // ใช้ TH เป็น master (multi flag อยู่ที่ TH)
+            
+            return groups.map((g, gi) => {
+                const label = (g.label || '').trim();
+                const isMulti = thGroups[gi] && thGroups[gi].allowMultiple ? '(M)' : '';
+                if (!label && (!g.choices || g.choices.length === 0)) return '';
+                
+                const choices = (g.choices || []).map((c, ci) => {
+                    const name = (c.name || '').trim();
+                    const price = thGroups[gi].choices[ci] ? (thGroups[gi].choices[ci].price || 0) : 0;
+                    if (!name) return '';
+                    return price > 0 ? `${name}(+${price})` : name;
+                }).filter(Boolean).join(', ');
+
+                return `${label}${isMulti}: ${choices}`;
+            }).filter(Boolean).join(' || ') || null;
+        }
+
+        function parseOptionsFromDB(optStrTh, optStrEn, optStrCn) {
+            // parse ทั้ง 3 ภาษามา sync เข้า structure เดียวกัน
+            function parseOne(str) {
+                if (!str) return [];
+                return str.split('||').map(groupStr => {
+                    const parts = groupStr.split(':');
+                    let label = (parts[0] || '').trim();
+                    let isMulti = false;
+                    if (label.includes('(M)')) { isMulti = true; label = label.replace(/\(M\)/g, '').trim(); }
+                    
+                    const choicesRaw = parts[1] ? parts[1].split(',') : [];
+                    const choices = choicesRaw.map(c => {
+                        c = c.trim();
+                        let name = c, price = 0;
+                        const match = c.match(/\(\+(\d+)\)$/);
+                        if (match) { price = parseInt(match[1]); name = c.slice(0, match.index).trim(); }
+                        return { name, price };
+                    });
+                    return { label, allowMultiple: isMulti, choices };
+                });
+            }
+
+            return {
+                th: parseOne(optStrTh),
+                en: parseOne(optStrEn),
+                cn: parseOne(optStrCn)
+            };
+        }
+
+        // ════════════════════════════════════════════════════════
+        // IMAGE PREVIEW
+        // ════════════════════════════════════════════════════════
+        function updatePreview(inputId, previewId) {
+            const url = document.getElementById(inputId).value.trim();
+            const preview = document.getElementById(previewId);
+            if (url) {
+                preview.style.backgroundImage = `url('${url}')`;
+                preview.innerHTML = '';
+            } else {
+                preview.style.backgroundImage = '';
+                preview.innerHTML = `<span>ยังไม่มีรูป</span>`;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // MODAL (Open/Close/Save)
+        // ════════════════════════════════════════════════════════
+        function openModal(mode, id = null) {
+            isEditMode = (mode === 'edit');
+            document.getElementById('modalTitle').innerText = isEditMode ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่';
+            
+            // Reset
+            document.getElementById('menuForm').reset();
+            document.getElementById('menuId').value = '';
+            currentOptions = { th: [], en: [], cn: [] };
+            renderStatusSelector();
+            selectStatus('ปกติ');
+            updatePreview('image_url', 'imgPreview');
+            
+            // Reset station preview
+            document.getElementById('stationPreview').classList.add('hidden');
+            populateStationDropdown();
+            document.getElementById('stationDropdown').value = '';
+            document.getElementById('station_th').value = '';
+            document.getElementById('station_en').value = '';
+            document.getElementById('station_cn').value = '';
+            document.getElementById('cat_image').value = '';
+
+            if (isEditMode) {
+                const item = menuData.find(m => m.id === id);
+                if (item) {
+                    document.getElementById('menuId').value = item.id;
+                    document.getElementById('item_th').value = item.item_th || '';
+                    document.getElementById('item_en').value = item.item_en || '';
+                    document.getElementById('item_cn').value = item.item_cn || '';
+                    document.getElementById('price').value = item.price || '';
+                    document.getElementById('new_price').value = item.new_price || '';
+                    document.getElementById('sort_order').value = item.sort_order || 99;
+                    document.getElementById('image_url').value = item.image_url || '';
+                    document.getElementById('desc_th').value = item.desc_th || '';
+                    document.getElementById('desc_en').value = item.desc_en || '';
+                    document.getElementById('desc_cn').value = item.desc_cn || '';
+                    
+                    selectStatus(item.status || 'ปกติ');
+                    currentOptions = parseOptionsFromDB(item.option_th, item.option_en, item.option_cn);
+                    updatePreview('image_url', 'imgPreview');
+                    
+                    // Set station dropdown by station_th (snapshot)
+                    setStationDropdownByTh(item.station_th);
+                }
+            }
+            
+            renderOptionsBuilder();
+            document.getElementById('menuModal').classList.remove('hidden');
+        }
+
+        function closeModal(id = 'menuModal') {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        async function saveMenu(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+
+            // Validate ซุ้ม
+            if (!document.getElementById('station_th').value.trim()) {
+                toast('กรุณาเลือกซุ้ม', 'error');
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึกข้อมูล`;
+                return;
+            }
+
+            const id = document.getElementById('menuId').value;
+            const stationTh = document.getElementById('station_th').value.trim();
+            
+            // ถ้าเพิ่มใหม่ — sort_order = ท้ายสุดของซุ้มนั้น + 10
+            let sortOrder = parseInt(document.getElementById('sort_order').value) || 99;
+            if (!isEditMode) {
+                const inStation = menuData.filter(m => m.station_th === stationTh);
+                const maxOrder = inStation.reduce((m, x) => Math.max(m, x.sort_order || 0), 0);
+                sortOrder = maxOrder + 10;
+            }
+
+            const payload = {
+                item_th: document.getElementById('item_th').value.trim(),
+                item_en: document.getElementById('item_en').value.trim() || null,
+                item_cn: document.getElementById('item_cn').value.trim() || null,
+                price: parseFloat(document.getElementById('price').value),
+                new_price: document.getElementById('new_price').value ? parseFloat(document.getElementById('new_price').value) : null,
+                station_th: stationTh,
+                station_en: document.getElementById('station_en').value.trim() || null,
+                station_cn: document.getElementById('station_cn').value.trim() || null,
+                status: document.getElementById('status').value,
+                sort_order: sortOrder,
+                image_url: document.getElementById('image_url').value.trim() || null,
+                cat_image: document.getElementById('cat_image').value.trim() || null,
+                desc_th: document.getElementById('desc_th').value.trim() || null,
+                desc_en: document.getElementById('desc_en').value.trim() || null,
+                desc_cn: document.getElementById('desc_cn').value.trim() || null,
+                option_th: compileOptions('th'),
+                option_en: compileOptions('en'),
+                option_cn: compileOptions('cn')
+            };
+
+            try {
+                if (isEditMode) {
+                    const { error } = await supabaseClient.from('menus').update(payload).eq('id', id);
+                    if (error) throw error;
+                    toast('บันทึกข้อมูลเรียบร้อย');
+                } else {
+                    const { error } = await supabaseClient.from('menus').insert([payload]);
+                    if (error) throw error;
+                    toast('เพิ่มเมนูใหม่เรียบร้อย');
+                }
+                closeModal();
+                fetchAll();
+            } catch (error) {
+                toast('เกิดข้อผิดพลาด: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึกข้อมูล`;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // DELETE (soft delete — set status = 'ลบ')
+        // ════════════════════════════════════════════════════════
+        function askDelete(id) {
+            deleteTargetId = id;
+            const item = menuData.find(m => m.id === id);
+            document.getElementById('deleteItemName').innerText = item ? `"${item.item_th}"` : '';
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        async function confirmDelete() {
+            if (!deleteTargetId) return;
+            const { error } = await supabaseClient.from('menus').update({ status: 'ลบ' }).eq('id', deleteTargetId);
+            closeModal('deleteModal');
+            if (error) {
+                toast('เกิดข้อผิดพลาดในการลบ', 'error');
+            } else {
+                toast('ลบเมนูเรียบร้อย');
+                fetchAll();
+            }
+            deleteTargetId = null;
+        }
+
+        // ════════════════════════════════════════════════════════
+        // VIEW SWITCHING (SPA navigation)
+        // ════════════════════════════════════════════════════════
+        let currentView = 'menus';
+        
+        function switchView(view) {
+            currentView = view;
+            
+            // Hide all views
+            document.querySelectorAll('.view-page').forEach(el => el.classList.add('hidden'));
+            // Show target view
+            const target = document.getElementById('view-' + view);
+            if (target) target.classList.remove('hidden');
+            
+            // Update nav button styles
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                const isActive = btn.dataset.view === view;
+                btn.classList.toggle('bg-blue-600/10', isActive);
+                btn.classList.toggle('text-blue-500', isActive);
+                btn.classList.toggle('text-slate-400', !isActive);
+            });
+
+            // Lazy-load data ของ view ที่ยังไม่โหลด
+            if (view === 'tables' && tablesData.length === 0) fetchTables();
+            if (view === 'banners' && bannersData.length === 0) fetchBanners();
+        }
+
+
+        // ════════════════════════════════════════════════════════
+        // ════════════════ TABLES MANAGEMENT ═════════════════════
+        // ════════════════════════════════════════════════════════
+        let tablesData = [];
+        const ZONE_ORDER = ['A', 'B', 'C', 'D', 'W', 'Y'];
+        const ZONE_LABELS = {
+            'A': 'Zone A', 'B': 'Zone B', 'C': 'Zone C',
+            'D': 'Zone D', 'W': 'Zone W', 'Y': 'Zone Y'
+        };
+
+        async function fetchTables() {
+            const { data, error } = await supabaseClient.from('tables')
+                .select('*')
+                .eq('is_active', true)
+                .not('id', 'in', '("TH","STAFF")')
+                .order('zone').order('sort_order').order('id');
+
+            if (error) {
+                document.getElementById('tablesContainer').innerHTML = `<div class="text-center text-red-500 py-10">Error: ${error.message}</div>`;
+                return;
+            }
+            tablesData = data || [];
+            document.getElementById('tablesCount').innerText = `${tablesData.length} โต๊ะ`;
+            renderTablesView();
+        }
+
+        function renderTablesView() {
+            const container = document.getElementById('tablesContainer');
+            
+            // Group by zone
+            const grouped = {};
+            tablesData.forEach(t => {
+                if (!grouped[t.zone]) grouped[t.zone] = [];
+                grouped[t.zone].push(t);
+            });
+
+            const allZones = [
+                ...ZONE_ORDER.filter(z => grouped[z]),
+                ...Object.keys(grouped).filter(z => !ZONE_ORDER.includes(z))
+            ];
+
+            if (allZones.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20">
+                        <i class="fas fa-th-large text-6xl text-slate-700 mb-4"></i>
+                        <p class="text-slate-500 mb-6">ยังไม่มีโต๊ะในระบบ</p>
+                        <button onclick="askAddZone()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                            <i class="fas fa-plus mr-2"></i> เพิ่ม Zone แรก
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allZones.map(zone => {
+                const tables = grouped[zone] || [];
+                const tablesHTML = tables.map(t => `
+                    <div class="table-circle" onclick="openTableModal('${t.id}')" title="${t.id} • QR: ${t.qr_id || 'ไม่มี'}">
+                        <span>${t.id}</span>
+                        ${t.qr_id ? `<span class="qr-id">${t.qr_id.split('-').slice(-1)[0]}</span>` : ''}
+                    </div>
+                `).join('');
+                
+                return `
+                    <div class="zone-card">
+                        <div class="zone-header">
+                            <div class="zone-title">${ZONE_LABELS[zone] || 'Zone ' + zone} <span class="text-slate-500 font-normal text-sm ml-2">(${tables.length})</span></div>
+                        </div>
+                        <div class="table-grid">
+                            ${tablesHTML}
+                            <div class="add-table-btn" onclick="askAddTable('${zone}')" title="เพิ่มโต๊ะใหม่ในโซนนี้">
+                                <i class="fas fa-plus text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('') + `
+                <div class="text-center pt-4">
+                    <button onclick="askAddZone()" class="bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white px-5 py-2 rounded-lg text-sm transition-all">
+                        <i class="fas fa-plus-circle mr-2"></i> เพิ่ม Zone ใหม่
+                    </button>
+                </div>
+            `;
+        }
+
+        function askAddTable(zone = null) {
+            if (!zone) {
+                zone = prompt('กรุณาใส่ตัวอักษร Zone (เช่น A, B, C):', '');
+                if (!zone) return;
+                zone = zone.trim().toUpperCase();
+                if (!zone || !/^[A-Z]$/.test(zone)) {
+                    toast('Zone ต้องเป็นตัวอักษร 1 ตัว A-Z', 'error');
+                    return;
+                }
+            }
+
+            const inZone = tablesData.filter(t => t.zone === zone);
+            const numbers = inZone.map(t => {
+                const m = t.id.match(/^[A-Z]+(\d+)$/);
+                return m ? parseInt(m[1]) : 0;
+            });
+            const nextNum = (numbers.length === 0) ? 1 : (Math.max(...numbers) + 1);
+            const newId = `${zone}${String(nextNum).padStart(2, '0')}`;
+
+            const qrSuffix = Math.random().toString(36).substring(2, 4).toUpperCase();
+            const qrId = `${newId}-${qrSuffix}`;
+
+            if (!confirm(`สร้างโต๊ะ ${newId} ใน Zone ${zone}?\nQR ID: ${qrId}`)) return;
+
+            createTable(newId, zone, qrId);
+        }
+
+        function askAddZone() {
+            askAddTable();
+        }
+
+        async function createTable(id, zone, qrId) {
+            const maxOrder = (tablesData.filter(t => t.zone === zone).reduce((m, t) => Math.max(m, t.sort_order || 0), 0)) + 10;
+            const { error } = await supabaseClient.from('tables').insert([{
+                id: id, zone: zone, qr_id: qrId,
+                status: 'available', is_active: true, sort_order: maxOrder
+            }]);
+
+            if (error) {
+                toast('สร้างโต๊ะไม่สำเร็จ: ' + error.message, 'error');
+                return;
+            }
+            toast(`สร้างโต๊ะ ${id} เรียบร้อย`);
+            fetchTables();
+        }
+
+        let editingTableId = null;
+
+        function openTableModal(tableId) {
+            const t = tablesData.find(x => x.id === tableId);
+            if (!t) return;
+
+            editingTableId = tableId;
+            document.getElementById('tableFormId').value = tableId;
+            document.getElementById('tableFormIdDisplay').innerText = tableId;
+            document.getElementById('tableFormQrPrefix').innerText = tableId;
+            
+            const suffix = (t.qr_id || '').split('-').slice(-1)[0] || '';
+            document.getElementById('tableFormQrSuffix').value = suffix;
+            
+            document.getElementById('tableModal').classList.remove('hidden');
+        }
+
+        async function saveTable(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSaveTable');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...`;
+
+            const tableId = document.getElementById('tableFormId').value;
+            const suffix = document.getElementById('tableFormQrSuffix').value.trim().toUpperCase();
+            const newQrId = `${tableId}-${suffix}`;
+
+            try {
+                const { error } = await supabaseClient.from('tables')
+                    .update({ qr_id: newQrId })
+                    .eq('id', tableId);
+                if (error) throw error;
+                
+                toast(`อัปเดต QR ของโต๊ะ ${tableId} เรียบร้อย`);
+                closeModal('tableModal');
+                fetchTables();
+            } catch (e) {
+                toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-1"></i> บันทึก`;
+            }
+        }
+
+        function askDeleteTable() {
+            if (!editingTableId) return;
+            const t = tablesData.find(x => x.id === editingTableId);
+            if (!t) return;
+            
+            if (t.status === 'occupied') {
+                toast(`โต๊ะ ${editingTableId} กำลังถูกใช้งานอยู่ — ปิดบิลก่อนค่อยลบ`, 'error');
+                return;
+            }
+            
+            if (!confirm(`ลบโต๊ะ ${editingTableId}?\nระบบจะ soft-delete (ข้อมูลออเดอร์เก่ายังอยู่)`)) return;
+            deleteTable();
+        }
+
+        async function deleteTable() {
+            const { error } = await supabaseClient.from('tables')
+                .update({ is_active: false })
+                .eq('id', editingTableId);
+            
+            if (error) {
+                toast('ลบไม่สำเร็จ: ' + error.message, 'error');
+                return;
+            }
+            toast(`ลบโต๊ะ ${editingTableId} เรียบร้อย`);
+            closeModal('tableModal');
+            fetchTables();
+        }
+
+
+        // ════════════════════════════════════════════════════════
+        // ════════════════ BANNERS MANAGEMENT ════════════════════
+        // ════════════════════════════════════════════════════════
+        let bannersData = [];
+        let bannerSortable = null;
+
+        async function fetchBanners() {
+            const { data, error } = await supabaseClient.from('banners')
+                .select('*')
+                .order('sort_order');
+            
+            if (error) {
+                document.getElementById('bannersContainer').innerHTML = `<div class="col-span-full text-center text-red-500 py-10">Error: ${error.message}</div>`;
+                return;
+            }
+            bannersData = data || [];
+            renderBannersView();
+        }
+
+        function renderBannersView() {
+            const container = document.getElementById('bannersContainer');
+            
+            if (bannersData.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-20">
+                        <i class="fas fa-image text-6xl text-slate-700 mb-4"></i>
+                        <p class="text-slate-500">ยังไม่มี banner ในระบบ</p>
+                    </div>
+                `;
+                if (bannerSortable) { try { bannerSortable.destroy(); } catch(e){} bannerSortable = null; }
+                return;
+            }
+
+            container.innerHTML = bannersData.map((b, idx) => {
+                const stationName = b.action || '';
+                const actionBadge = stationName 
+                    ? `<span class="text-xs text-blue-400"><i class="fas fa-link mr-1"></i> ${stationName}</span>`
+                    : `<span class="text-xs text-slate-500">ไม่มีลิงก์</span>`;
+                
+                return `
+                    <div class="banner-card ${b.is_active ? '' : 'inactive'}" data-id="${b.id}">
+                        <div class="banner-img" style="background-image: url('${b.image_url}');"></div>
+                        <div class="banner-meta flex items-center justify-between">
+                            <div>
+                                <div class="text-xs text-slate-500 mb-1">ลำดับ #${idx + 1}</div>
+                                ${actionBadge}
+                            </div>
+                            ${b.is_active 
+                                ? `<span class="text-xs bg-green-500/15 text-green-400 px-2 py-1 rounded-full">Active</span>`
+                                : `<span class="text-xs bg-slate-500/15 text-slate-400 px-2 py-1 rounded-full">Inactive</span>`}
+                        </div>
+                        <div class="banner-actions">
+                            <button onclick="toggleBannerActive('${b.id}', ${!b.is_active})" class="banner-action-btn ${b.is_active ? 'bg-yellow-600/10 text-yellow-400 hover:bg-yellow-600 hover:text-white border border-yellow-500/30' : 'bg-green-600/10 text-green-400 hover:bg-green-600 hover:text-white border border-green-500/30'}">
+                                <i class="fas fa-${b.is_active ? 'eye-slash' : 'eye'} mr-1"></i> ${b.is_active ? 'ปิด' : 'เปิด'}
+                            </button>
+                            <button onclick="openBannerModal('edit', '${b.id}')" class="banner-action-btn bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30">
+                                <i class="fas fa-edit mr-1"></i> แก้ไข
+                            </button>
+                            <button onclick="askDeleteBanner('${b.id}')" class="banner-action-btn bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30">
+                                <i class="fas fa-trash mr-1"></i> ลบ
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (bannerSortable) { try { bannerSortable.destroy(); } catch(e){} }
+            bannerSortable = Sortable.create(container, {
+                animation: 200,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                dragClass: 'sortable-drag',
+                onEnd: async (evt) => {
+                    if (evt.oldIndex === evt.newIndex) return;
+                    await persistBannerOrder();
+                }
+            });
+        }
+
+        async function persistBannerOrder() {
+            const cards = Array.from(document.querySelectorAll('#bannersContainer .banner-card'));
+            const updates = cards.map((c, idx) => ({
+                id: c.dataset.id,
+                sort_order: (idx + 1) * 10
+            }));
+
+            updates.forEach(u => {
+                const b = bannersData.find(x => x.id === u.id);
+                if (b) b.sort_order = u.sort_order;
+            });
+            bannersData.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+            try {
+                await Promise.all(updates.map(u => 
+                    supabaseClient.from('banners').update({ sort_order: u.sort_order }).eq('id', u.id)
+                ));
+                toast('เรียงลำดับ banner เรียบร้อย');
+                renderBannersView();
+            } catch (e) {
+                toast('บันทึกลำดับไม่สำเร็จ', 'error');
+                fetchBanners();
+            }
+        }
+
+        function populateBannerStations() {
+            const sel = document.getElementById('bannerFormAction');
+            const sorted = [...stationsData].sort((a,b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+            sel.innerHTML = `<option value="">-- ไม่ทำอะไร --</option>` +
+                sorted.map(s => `<option value="${s.station_th}">${s.station_th}${s.station_en ? ' / ' + s.station_en : ''}</option>`).join('');
+        }
+
+        let editingBannerId = null;
+
+        function openBannerModal(mode, id = null) {
+            editingBannerId = (mode === 'edit') ? id : null;
+            document.getElementById('bannerModalTitle').innerText = (mode === 'edit') ? 'แก้ไข Banner' : 'เพิ่ม Banner ใหม่';
+            document.getElementById('bannerForm').reset();
+            document.getElementById('bannerFormId').value = '';
+            document.getElementById('bannerFormActive').checked = true;
+            updatePreview('bannerFormImage', 'bannerFormPreview');
+            populateBannerStations();
+            
+            if (mode === 'edit' && id) {
+                const b = bannersData.find(x => x.id === id);
+                if (b) {
+                    document.getElementById('bannerFormId').value = b.id;
+                    document.getElementById('bannerFormImage').value = b.image_url || '';
+                    document.getElementById('bannerFormAction').value = b.action || '';
+                    document.getElementById('bannerFormActive').checked = b.is_active;
+                    updatePreview('bannerFormImage', 'bannerFormPreview');
+                }
+            }
+            document.getElementById('bannerModal').classList.remove('hidden');
+        }
+
+        async function saveBanner(event) {
+            event.preventDefault();
+            const btn = document.getElementById('btnSaveBanner');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-1"></i> กำลังบันทึก...`;
+
+            const id = document.getElementById('bannerFormId').value;
+            const payload = {
+                image_url: document.getElementById('bannerFormImage').value.trim(),
+                action: document.getElementById('bannerFormAction').value || null,
+                is_active: document.getElementById('bannerFormActive').checked
+            };
+
+            try {
+                if (id) {
+                    const { error } = await supabaseClient.from('banners').update(payload).eq('id', id);
+                    if (error) throw error;
+                    toast('อัปเดต banner เรียบร้อย');
+                } else {
+                    const maxOrder = bannersData.reduce((m, b) => Math.max(m, b.sort_order || 0), 0);
+                    payload.sort_order = maxOrder + 10;
+                    const { error } = await supabaseClient.from('banners').insert([payload]);
+                    if (error) throw error;
+                    toast('เพิ่ม banner เรียบร้อย');
+                }
+                closeModal('bannerModal');
+                fetchBanners();
+            } catch (e) {
+                toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-1"></i> บันทึก`;
+            }
+        }
+
+        async function toggleBannerActive(id, newState) {
+            const { error } = await supabaseClient.from('banners').update({ is_active: newState }).eq('id', id);
+            if (error) {
+                toast('เปลี่ยนสถานะไม่สำเร็จ', 'error');
+                return;
+            }
+            toast(newState ? 'เปิด banner' : 'ปิด banner');
+            fetchBanners();
+        }
+
+        function askDeleteBanner(id) {
+            if (!confirm('ลบ banner นี้? (ลบถาวร)')) return;
+            deleteBanner(id);
+        }
+
+        async function deleteBanner(id) {
+            const { error } = await supabaseClient.from('banners').delete().eq('id', id);
+            if (error) {
+                toast('ลบไม่สำเร็จ: ' + error.message, 'error');
+                return;
+            }
+            toast('ลบ banner เรียบร้อย');
+            fetchBanners();
+        }
+
+
+        // ════════════════════════════════════════════════════════
+        // INIT
+        // ════════════════════════════════════════════════════════
+        fetchAll();
+        
+        // CSS keyframe สำหรับ toast
+        const style = document.createElement('style');
+        style.textContent = `@keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
