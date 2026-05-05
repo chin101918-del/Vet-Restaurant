@@ -78,29 +78,55 @@
         }
         
         /* TABLES VIEW — Grid circles */
-        .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 14px; }
+        .table-grid { 
+            display: grid; 
+            /* แก้ไข: กำหนดขนาดช่อง Grid ให้คงที่ (ระหว่าง 70px ถึง 90px) 
+               ไม่ใช้ 1fr เพื่อป้องกันวงกลมขยายใหญ่เกินไปบน iPad */
+            grid-template-columns: repeat(auto-fill, minmax(75px, 95px)); 
+            gap: 20px; 
+            /* เพิ่ม: ให้ข้อมูลเริ่มจากซ้ายเสมอ ไม่กระจายตัวกว้างเกินไป */
+            justify-content: start; 
+        }
         .zone-card { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px 22px; }
         .zone-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .zone-title { font-size: 0.95rem; font-weight: 600; color: #cbd5e1; padding-left: 12px; border-left: 3px solid #ef4444; }
         
         .table-circle {
-            width: 100%; aspect-ratio: 1/1; border-radius: 50%;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            cursor: pointer; font-weight: 600;
+            /* แก้ไข: ใช้ขนาดที่แน่นอนเพื่อความสม่ำเสมอ */
+            width: 85px; 
+            height: 85px; 
+            border-radius: 50%;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            font-weight: 600;
             transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.04); 
+            border: 2px solid rgba(255,255,255,0.08);
             color: #cbd5e1;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            /* ป้องกันการซูมและช่วยให้สัมผัสแม่นยำบน iPad */
+            touch-action: manipulation; 
         }
         .table-circle:hover { transform: scale(1.1); border-color: #3b82f6; background: rgba(59,130,246,0.1); color: white; }
         .table-circle .qr-id { font-size: 0.6rem; opacity: 0.5; margin-top: 2px; font-weight: 400; }
         
         .add-table-btn {
-            width: 100%; aspect-ratio: 1/1; border-radius: 50%;
-            background: rgba(59,130,246,0.05); border: 2px dashed rgba(59,130,246,0.3);
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: all 0.2s;
+            /* ปรับปุ่มเพิ่มโต๊ะให้มีขนาดเท่ากับวงกลมโต๊ะ */
+            width: 85px; 
+            height: 85px; 
+            border-radius: 50%;
+            background: rgba(59,130,246,0.05); 
+            border: 2px dashed rgba(59,130,246,0.3);
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer; 
+            transition: all 0.2s;
             color: #60a5fa;
+            touch-action: manipulation;
         }
         .add-table-btn:hover { background: rgba(59,130,246,0.15); border-color: #3b82f6; transform: scale(1.05); }
         
