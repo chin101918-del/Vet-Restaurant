@@ -114,32 +114,40 @@
 </head>
 <body class="flex h-screen">
 
-    <aside class="w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col hidden md:flex">
-        <!-- แก้ไขส่วน Header ของ Sidebar -->
-        <div class="p-6 border-b border-white/5">
-            <h1 class="text-2xl font-black tracking-widest text-white uppercase leading-none">
-                VET <span class="text-blue-500">RESTAURANT</span>
-        </div>
-        <nav class="flex-1 p-4 space-y-2">
-            <button data-view="menus" onclick="switchView('menus')" class="nav-btn w-full flex items-center gap-3 bg-blue-600/10 text-blue-500 px-4 py-3 rounded-xl font-bold transition-all">
-                <i class="fas fa-utensils"></i> จัดการเมนูอาหาร
-            </button>
-            <button data-view="tables" onclick="switchView('tables')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all">
-                <i class="fas fa-chair"></i> จัดการโต๊ะ
-            </button>
-            <button data-view="banners" onclick="switchView('banners')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all">
-                <i class="fas fa-image"></i> จัดการ Banners
-            </button>
-        </nav>
-        <div class="p-4 border-t border-white/5">
-            <button onclick="window.location.href='index.html'" class="w-full flex items-center justify-center gap-3 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-3 rounded-xl transition-all group active:scale-95">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 transition-transform group-hover:-translate-x-1">
-                    <path fill-rule="evenodd" d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
-                </svg>
-                <span class="font-bold text-sm tracking-wide">กลับหน้าแรก</span>
-            </button>
-        </div>
-    </aside>
+    <aside class="w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col h-screen sticky top-0 shrink-0 hidden md:flex">
+    
+    <!-- 1. Header Sidebar: ตรึงอยู่กับที่ -->
+    <div class="p-6 border-b border-white/5 shrink-0">
+        <h1 class="text-2xl font-black tracking-widest text-white uppercase leading-none">
+            VET <span class="text-blue-500">RESTAURANT</span>
+        </h1>
+    </div>
+
+    <!-- 2. Navigation: ส่วนนี้จะเลื่อนขึ้น-ลงได้เองหากเมนูเยอะ โดยไม่ดันปุ่มด้านล่างตกจอ -->
+    <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
+        <button data-view="menus" onclick="switchView('menus')" class="nav-btn w-full flex items-center gap-3 bg-blue-600/10 text-blue-500 px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
+            <i class="fas fa-utensils"></i> จัดการเมนูอาหาร
+        </button>
+        <button data-view="tables" onclick="switchView('tables')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
+            <i class="fas fa-chair"></i> จัดการโต๊ะ
+        </button>
+        <button data-view="banners" onclick="switchView('banners')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
+            <i class="fas fa-image"></i> จัดการ Banners
+        </button>
+        
+        <!-- คุณสามารถเพิ่มเมนูอื่นๆ ตรงนี้ได้ โดยไม่กระทบกับ Layout หลัก -->
+    </nav>
+
+    <!-- 3. Footer Sidebar: ตรึงปุ่มกลับหน้าแรกไว้ที่ขอบล่างเสมอ ไม่ว่าจะเปิดใน iPad หรือคอม -->
+    <div class="p-4 border-t border-white/5 shrink-0 bg-[#0a0a0a]">
+        <button onclick="window.location.href='index.html'" class="w-full flex items-center justify-center gap-3 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-3 rounded-xl transition-all group active:scale-95 touch-manipulation">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 transition-transform group-hover:-translate-x-1">
+                <path fill-rule="evenodd" d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+            </svg>
+            <span class="font-bold text-sm tracking-wide">กลับหน้าแรก</span>
+        </button>
+    </div>
+</aside>
 
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
         
