@@ -548,7 +548,8 @@
 
     </header>
 
-<audio id="notiSound" src="https://notifications-sounds.com/storage/sounds/notifications-sound-705.mp3" preload="auto"></audio>
+    <audio id="notiSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
     <!-- ────── 3-Channel Layout ────── -->
     <div class="channel-shell">
 
@@ -842,19 +843,10 @@
         function toggleAudio() {
             audioEnabled = !audioEnabled;
             if (audioEnabled) {
-                // หากยังไม่ได้ปลดล็อก ให้ลองปลดล็อกทันทีที่กดปุ่ม
-                if (!audioUnlocked) {
-                    const sound = document.getElementById('notiSound');
-                    // สำคัญ: ต้องสั่ง .play() ภายใน Event Handler ของปุ่มที่ถูกกดโดยตรง
-                    sound.play().then(() => {
-                        sound.pause();
-                        sound.currentTime = 0;
-                        audioUnlocked = true;
-                        updateAudioBtn(); // ปุ่มจะเปลี่ยนเป็นสีเขียวทันทีที่ปลดล็อกสำเร็จ
-                    }).catch(err => {
-                        console.error("iPad บล็อกการเล่นเสียง:", err);
-                    });
-                }
+                unlockAudio();
+                const sound = document.getElementById('notiSound');
+                sound.currentTime = 0;
+                sound.play().catch(() => {});
             }
             updateAudioBtn();
         }
