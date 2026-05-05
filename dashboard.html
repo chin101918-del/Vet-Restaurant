@@ -1004,7 +1004,7 @@
                     if (isHidden) el.classList.remove('hidden');
                     
                     // รอให้กราฟ Render (สำคัญมากสำหรับ iPad)
-                    await new Promise(r => setTimeout(resolve, 500));
+                    await new Promise(r => setTimeout(r, 500));
         
                     const canvas = await html2canvas(el, {
                         scale: 2, // เพิ่มความชัด
