@@ -982,55 +982,76 @@
         // ════════════════════════════════════════════════
 
         async function exportToPDF() {
-            const exportBtn = event.currentTarget; // ปุ่มที่ถูกกด
+            const exportBtn = event.currentTarget;
             const originalText = exportBtn.innerHTML;
             
-            // เปลี่ยนสถานะปุ่มเป็นกำลังโหลด
-            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้าง PDF...';
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้างรูปภาพรวม...';
             exportBtn.disabled = true;
-
+        
             try {
-                // อ้างอิงถึงพื้นที่หลักที่จะแคปหน้าจอ (หน้า Overview หรือ Analytics)
-                const targetArea = document.querySelector('main');
                 const selectedDate = document.getElementById('datePicker').value;
-
-                // ใช้ html2canvas ถ่ายภาพพื้นที่เป้าหมาย
-                const canvas = await html2canvas(targetArea, {
-                    scale: 2, // เพิ่มความคมชัด
-                    backgroundColor: '#050505', // ตั้งสีพื้นหลังให้ตรงกับเว็บ
-                    logging: false,
-                    useCORS: true // อนุญาตให้โหลดรูปภาพข้ามโดเมนได้ (ถ้ามี)
-                });
-
-                // แปลงภาพที่ได้เป็นข้อมูล URL
-                const imgData = canvas.toDataURL('image/png');
-
-                // ตั้งค่าขนาดหน้า PDF เป็นแนวตั้ง (A4)
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                const viewIds = ['view-overview', 'view-stations', 'view-analytics'];
+                const capturedCanvases = [];
                 
-                // คำนวณขนาดเพื่อให้ภาพพอดีกับกระดาษ A4
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-                // ใส่หัวข้อรายงานและวันที่
-                pdf.setFontSize(16);
-                pdf.setTextColor(0, 0, 0); // สีดำ
-                pdf.text(`VETRES Dashboard Report`, 10, 15);
-                pdf.setFontSize(10);
-                pdf.text(`Exported Date: ${selectedDate}`, 10, 22);
-
-                // แปะภาพลงใน PDF (เว้นระยะขอบบนไว้ 30mm สำหรับหัวข้อ)
-                pdf.addImage(imgData, 'PNG', 0, 30, pdfWidth, pdfHeight);
-
-                // สั่งเซฟไฟล์
-                pdf.save(`VETRES_Dashboard_${selectedDate}.pdf`);
-
+                // เก็บสถานะปัจจุบันไว้เพื่อคืนค่าตอนท้าย
+                const currentActiveViewId = document.querySelector('.dashboard-view:not(.hidden)').id;
+        
+                // 1. วนลูปแคปภาพทีละส่วน
+                for (const id of viewIds) {
+                    const el = document.getElementById(id);
+                    const isHidden = el.classList.contains('hidden');
+        
+                    if (isHidden) el.classList.remove('hidden');
+                    
+                    // รอให้กราฟ Render (สำคัญมากสำหรับ iPad)
+                    await new Promise(r => setTimeout(resolve, 500));
+        
+                    const canvas = await html2canvas(el, {
+                        scale: 2, // เพิ่มความชัด
+                        backgroundColor: '#050505',
+                        useCORS: true,
+                        logging: false,
+                        // ปรับขอบเขตการแคปให้พอดีเนื้อหา
+                        width: el.offsetWidth,
+                        height: el.offsetHeight
+                    });
+        
+                    capturedCanvases.push(canvas);
+        
+                    if (isHidden) el.classList.add('hidden');
+                }
+        
+                // 2. คำนวณขนาด Master Canvas (ความกว้างสูงสุด และ ความสูงรวมกัน)
+                const totalWidth = Math.max(...capturedCanvases.map(c => c.width));
+                const totalHeight = capturedCanvases.reduce((sum, c) => sum + c.height, 0);
+        
+                // 3. สร้าง Canvas กลางเพื่อนำภาพมาต่อกัน
+                const masterCanvas = document.createElement('canvas');
+                masterCanvas.width = totalWidth;
+                masterCanvas.height = totalHeight;
+                const ctx = masterCanvas.getContext('2d');
+        
+                // 4. วาดภาพลงบน Master Canvas ทีละส่วนต่อกันในแนวตั้ง
+                let currentY = 0;
+                capturedCanvases.forEach(canvas => {
+                    ctx.drawImage(canvas, 0, currentY);
+                    currentY += canvas.height;
+                });
+        
+                // 5. บันทึกและดาวน์โหลดเป็นไฟล์ PNG
+                const imgData = masterCanvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = `VETRES_Full_Dashboard_${selectedDate}.png`;
+                link.href = imgData;
+                link.click();
+        
+                // 6. คืนค่าหน้าจอเดิม
+                switchView(currentActiveViewId.replace('view-', ''));
+        
             } catch (error) {
-                console.error("PDF Export Error:", error);
-                alert("เกิดข้อผิดพลาดในการสร้าง PDF");
+                console.error("Image Export Error:", error);
+                alert("เกิดข้อผิดพลาดในการสร้างรูปภาพรวม");
             } finally {
-                // คืนสถานะปุ่มกลับมาเหมือนเดิม
                 exportBtn.innerHTML = originalText;
                 exportBtn.disabled = false;
             }
