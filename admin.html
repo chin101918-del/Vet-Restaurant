@@ -297,7 +297,7 @@
             <div class="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
                 <div>
                     <h2 id="modalTitle" class="text-2xl font-bold text-blue-400">เพิ่มเมนูใหม่</h2>
-                    <p class="text-xs text-slate-500 mt-1">กรอกข้อมูลให้ครบถ้วน • EN/CN ช่วยลูกค้าต่างชาติ</p>
+                    <p class="text-xs text-slate-500 mt-1">กรอกข้อมูลให้ครบถ้วน</p>
                 </div>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white text-2xl"><i class="fas fa-times"></i></button>
             </div>
@@ -308,7 +308,7 @@
 
                 <!-- ─────────── SECTION 1: ข้อมูลพื้นฐาน ─────────── -->
                 <div class="form-section">
-                    <div class="section-title">ข้อมูลพื้นฐาน</div>
+                    <div class="text-lg section-title">ข้อมูลพื้นฐาน</div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">ชื่อเมนู (TH) *</label>
@@ -326,7 +326,7 @@
                     
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                         <div>
-                            <label class="text-xs text-slate-400 mb-1 block">ราคาปกติ (฿) *</label>
+                            <label class="text-xs text-slate-400 mb-1 block">ราคาปกติ *</label>
                             <input type="number" id="price" required step="0.01" class="w-full p-3 rounded-xl">
                         </div>
                         <div>
@@ -334,7 +334,7 @@
                             <input type="number" id="new_price" step="0.01" class="w-full p-3 rounded-xl placeholder-slate-600" placeholder="เว้นว่าง = ไม่ลด">
                         </div>
                         <div class="flex items-end">
-                            <p class="text-xs text-slate-500 pb-3"><i class="fas fa-grip-vertical mr-1"></i> ลำดับโชว์: ลากแถวในตารางเพื่อเรียง</p>
+                            <p class="text-xs text-slate-500 pb-3"><i class="fas fa-grip-vertical mr-1"></i> ลากแถวเพื่อเรียงลำดับ</p>
                         </div>
                     </div>
                     <input type="hidden" id="sort_order" value="99">
@@ -342,9 +342,7 @@
 
                 <!-- ─────────── SECTION 2: หมวดหมู่ / ซุ้ม (Station) ─────────── -->
                 <div class="form-section">
-                    <div class="section-title">หมวดหมู่ (Station)</div>
-                    <p class="text-xs text-slate-500 mb-4"><i class="fas fa-info-circle mr-1"></i> เลือกซุ้มที่มีอยู่ — ระบบจะดึงชื่อ EN/CN ให้อัตโนมัติ — KDS station ใช้ชื่อเดียวกัน</p>
-                    
+                    <div class="text-lg section-title">ซุ้ม</div>
                     <!-- Hidden actual values (synced from selected station) -->
                     <input type="hidden" id="station_th" required>
                     <input type="hidden" id="station_en">
@@ -379,8 +377,7 @@
 
                 <!-- ─────────── SECTION 3: รูปภาพ ─────────── -->
                 <div class="form-section">
-                    <div class="section-title">รูปภาพ</div>
-                    <p class="text-xs text-slate-500 mb-4"><i class="fas fa-info-circle mr-1"></i> รูป Category Header ของซุ้มจัดการในหน้า "สร้าง/แก้ไขซุ้ม"</p>
+                    <div class="section-title text-lg">รูปภาพ</div>
                     <div>
                         <label class="text-xs text-slate-400 mb-1 block">รูปเมนู (URL) *</label>
                         <input type="url" id="image_url" oninput="updatePreview('image_url','imgPreview')" class="w-full p-3 rounded-xl text-blue-400 text-sm" placeholder="https://...">
@@ -391,18 +388,18 @@
 
                 <!-- ─────────── SECTION 4: คำอธิบาย 3 ภาษา ─────────── -->
                 <div class="form-section">
-                    <div class="section-title">คำอธิบายเมนู</div>
+                    <div class="section-title text-lg">คำอธิบายเมนู</div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">คำอธิบาย (TH)</label>
                             <textarea id="desc_th" rows="3" class="w-full p-3 rounded-xl text-sm" placeholder="เช่น เนื้อกระต่ายทอดน้ำมันกระเทียม หอมเด็ด เสิร์ฟพร้อมน้ำจิ้ม"></textarea>
                         </div>
                         <div>
-                            <label class="text-xs text-slate-400 mb-1 block">Description (EN)</label>
+                            <label class="text-xs text-slate-400 mb-1 block">คำอธิบาย (EN)</label>
                             <textarea id="desc_en" rows="3" class="w-full p-3 rounded-xl text-sm"></textarea>
                         </div>
                         <div>
-                            <label class="text-xs text-slate-400 mb-1 block">描述 (CN)</label>
+                            <label class="text-xs text-slate-400 mb-1 block">คำอธิบาย (CN)</label>
                             <textarea id="desc_cn" rows="3" class="w-full p-3 rounded-xl text-sm"></textarea>
                         </div>
                     </div>
@@ -410,7 +407,7 @@
 
                 <!-- ─────────── SECTION 5: Options (Structured Builder) ─────────── -->
                 <div class="form-section">
-                    <div class="section-title">ตัวเลือก (Options)</div>
+                    <div class="section-title">ตัวเลือก</div>
                     <p class="text-xs text-slate-500 mb-4">
                         <i class="fas fa-info-circle mr-1"></i> 
                         ใช้ปุ่ม + เพื่อเพิ่มกลุ่มตัวเลือกและตัวเลือก (กรอก 3 ภาษาคู่ขนานกัน) — 
@@ -432,7 +429,7 @@
 
                 <!-- ─────────── SECTION 6: สถานะ ─────────── -->
                 <div class="form-section">
-                    <div class="section-title">สถานะเมนู</div>
+                    <div class="section-title text-lg">สถานะเมนู</div>
                     <input type="hidden" id="status" value="ปกติ">
                     <div id="statusSelector" class="flex flex-wrap gap-2">
                         <!-- status chips generated by JS -->
