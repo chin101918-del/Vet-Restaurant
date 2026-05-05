@@ -91,11 +91,14 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.1s ease-out;
             color: #a1a1aa;
+            /* แก้ไข: ป้องกันการซูมบน iPad */
+            touch-action: manipulation; 
         }
-        .numpad-btn:active { 
-            background: #ffffff; 
-            color: #000000;
-            transform: scale(0.92); 
+        
+        /* เพิ่มขนาดตัวเลขให้ใหญ่และหนาขึ้น */
+        .numpad-btn-text {
+            font-size: 2.25rem; /* เทียบเท่า text-4xl */
+            font-weight: 600;
         }
         
         .pin-dot { transition: all 0.2s ease; color: #27272a; }
@@ -172,10 +175,13 @@
 </section>
 
     <!-- ──────────────── PIN ENTRY SECTION ──────────────── -->
-    <section id="pinSection" class="hidden absolute inset-0 w-full h-full p-6 flex flex-col items-center justify-center z-20">
-        <div class="portal-card w-full max-w-sm p-10 flex flex-col items-center">
-            <button onclick="closePinModal()" class="absolute top-8 left-8 text-zinc-500 hover:text-white text-xl transition-colors"><i class="fas fa-arrow-left"></i></button>
-
+        <section id="pinSection" class="hidden absolute inset-0 w-full h-full p-6 flex flex-col items-center justify-center z-20">
+        <!-- ปรับความกว้างให้กระชับขึ้นจาก max-w-sm เป็น max-w-[340px] -->
+        <div class="portal-card w-full max-w-[340px] p-10 flex flex-col items-center relative">
+            <button onclick="closePinModal()" class="absolute top-8 left-8 text-zinc-500 hover:text-white text-xl transition-colors">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+    
             <h2 id="pinTitle" class="text-sm font-bold text-zinc-500 tracking-[0.3em] uppercase mb-12 mt-4 text-center"></h2>
             
             <!-- PIN Dots -->
@@ -188,15 +194,19 @@
             
             <!-- Numpad -->
             <div class="grid grid-cols-3 gap-4 w-full">
-                <!-- 1-9 -->
                 <script>
+                    // แก้ไข: ปรับขนาดฟอนต์ให้ใหญ่ขึ้น (text-4xl) และเพิ่มความหนา (font-semibold)
                     for(let i=1; i<=9; i++) {
-                        document.write(`<button onclick="pressKey('${i}')" class="numpad-btn aspect-square rounded-full text-2xl font-light">${i}</button>`);
+                        document.write(`
+                            <button onclick="pressKey('${i}')" class="numpad-btn aspect-square rounded-full text-4xl font-semibold">
+                                ${i}
+                            </button>
+                        `);
                     }
                 </script>
-                <button onclick="pressKey('clear')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-times"></i></button>
-                <button onclick="pressKey('0')" class="numpad-btn aspect-square rounded-full text-2xl font-light">0</button>
-                <button onclick="pressKey('backspace')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-backspace"></i></button>
+                <button onclick="pressKey('clear')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-times text-xl"></i></button>
+                <button onclick="pressKey('0')" class="numpad-btn aspect-square rounded-full text-4xl font-semibold">0</button>
+                <button onclick="pressKey('backspace')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-backspace text-xl"></i></button>
             </div>
         </div>
     </section>
