@@ -842,10 +842,19 @@
         function toggleAudio() {
             audioEnabled = !audioEnabled;
             if (audioEnabled) {
-                unlockAudio();
-                const sound = document.getElementById('notiSound');
-                sound.currentTime = 0;
-                sound.play().catch(() => {});
+                // หากยังไม่ได้ปลดล็อก ให้ลองปลดล็อกทันทีที่กดปุ่ม
+                if (!audioUnlocked) {
+                    const sound = document.getElementById('notiSound');
+                    // สำคัญ: ต้องสั่ง .play() ภายใน Event Handler ของปุ่มที่ถูกกดโดยตรง
+                    sound.play().then(() => {
+                        sound.pause();
+                        sound.currentTime = 0;
+                        audioUnlocked = true;
+                        updateAudioBtn(); // ปุ่มจะเปลี่ยนเป็นสีเขียวทันทีที่ปลดล็อกสำเร็จ
+                    }).catch(err => {
+                        console.error("iPad บล็อกการเล่นเสียง:", err);
+                    });
+                }
             }
             updateAudioBtn();
         }
