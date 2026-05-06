@@ -662,7 +662,7 @@
                     <div class="p-4 flex-1 flex flex-col gap-3 bg-[#0a0a0a]">
                         ${order.items.map(item => `
                             <div class="item-wrapper">
-                                <div class="cancel-action-btn" onclick="updateItemStatus('${item.id}', 'cancel', '${orderId}')">
+                                <div class="cancel-action-btn" onclick="openCancelModal('${item.id}', '${orderId}')">
                                     <i class="fas fa-trash-alt"></i>
                                 </div>
 
@@ -691,6 +691,25 @@
                 `;
                 container.appendChild(card);
             });
+        }
+
+        function openCancelModal(itemId, orderId) {
+            pendingCancelData = { itemId, orderId };
+            const modal = document.getElementById('cancelModal');
+            modal.classList.remove('hidden');
+            
+            // ตั้งค่าปุ่มยืนยันให้ทำงานกับ ID ที่ส่งมา
+            document.getElementById('confirmCancelBtn').onclick = function() {
+                if (pendingCancelData) {
+                    updateItemStatus(pendingCancelData.itemId, 'cancel', pendingCancelData.orderId);
+                    closeCancelModal();
+                }
+            };
+        }
+        
+        function closeCancelModal() {
+            document.getElementById('cancelModal').classList.add('hidden');
+            pendingCancelData = null;
         }
 
     
@@ -1243,5 +1262,34 @@
             }
         }, 60000);
     </script>
+    <!-- CANCEL CONFIRMATION MODAL -->
+<div id="cancelModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-md"></div>
+    
+    <!-- Modal Card -->
+    <div class="relative bg-[#141414] border border-white/10 w-full max-w-sm rounded-[2rem] p-8 shadow-2xl transform transition-all">
+        <div class="flex flex-col items-center text-center">
+            <!-- Warning Icon -->
+            <div class="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center text-rose-500 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10">
+                    <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-white mb-2">ยืนยันการยกเลิก?</h3>
+            <p class="text-zinc-400 mb-8 leading-relaxed">คุณแน่ใจใช่ไหมว่าต้องการยกเลิกรายการนี้? ออเดอร์จะถูกย้ายไปที่ประวัติการยกเลิกทันที</p>
+            
+            <div class="flex gap-3 w-full">
+                <button onclick="closeCancelModal()" class="flex-1 py-4 rounded-2xl bg-white/5 text-zinc-400 font-bold hover:bg-white/10 transition-all uppercase tracking-widest text-xs">
+                    ไม่ ยกเลิก
+                </button>
+                <button id="confirmCancelBtn" class="flex-1 py-4 rounded-2xl bg-rose-600 text-white font-black hover:bg-rose-500 transition-all shadow-[0_4px_20px_rgba(225,29,72,0.3)] uppercase tracking-widest text-xs">
+                    ยืนยัน ยกเลิก
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
