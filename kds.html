@@ -426,7 +426,8 @@
         </aside>
     </div>
 
-    <audio id="notiSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
+    <audio id="notiSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
     <script>
         // ════════════════════════════════════════════════════════
         // CONFIG
@@ -667,8 +668,7 @@
 
                                 <div class="item-foreground" 
                                     ontouchstart="handleTouchStart(event)" 
-                                    ontouchmove="handleTouchMove(event, this)"
-                                    ontouchend="handleTouchEnd(event, this)">
+                                    ontouchmove="handleTouchMove(event, this)">
                                     
                                     <div class="item-info">
                                         <p class="text-xl font-bold text-white leading-tight">${item.item_name_th}</p>
@@ -694,40 +694,22 @@
         }
 
     
-        let touchStartX = 0;
-        let currentDeltaX = 0;
-        
         function handleTouchStart(e) {
             touchStartX = e.touches[0].clientX;
-            // ปิด transition เพื่อให้ขยับตามนิ้วทันทีแบบไม่มี delay (ติดนิ้ว)
-            e.currentTarget.style.transition = 'none'; 
         }
 
         function handleTouchMove(e, element) {
             const touchX = e.touches[0].clientX;
-            let diff = touchX - touchStartX;
-        
-            // จำกัดให้ปัดได้เฉพาะทางซ้าย (ค่าติดลบ) และไม่เกิน 100px (เพื่อให้เห็นปุ่มยกเลิก)
-            if (diff > 0) diff = 0; // ปัดขวาไม่ได้
-            if (diff < -100) diff = -100; // ปัดซ้ายได้สูงสุด 100px
-        
-            currentDeltaX = diff;
-            element.style.transform = `translateX(${diff}px)`;
-        }
+            const diff = touchX - touchStartX;
 
-        function handleTouchEnd(e, element) {
-            // เปิดการใช้ transition กลับมาเพื่อให้ตอน "ดีดกลับ" หรือ "ดีดไปสุด" ดูนุ่มนวล
-            element.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-        
-            // ตัดสินใจว่าจะ "เปิดค้างไว้" หรือ "ดีดกลับ" (ถ้าปัดเกิน 50px ให้เปิดค้าง)
-            if (currentDeltaX < -50) {
+            // ✅ ถ้าปัดไปทางซ้าย (diff < -60) ให้เลื่อนเลเยอร์หน้าออกไปทางซ้าย 80px
+            if (diff < -60) {
                 element.style.transform = 'translateX(-80px)';
-            } else {
+            } 
+            // ✅ ถ้าปัดกลับไปทางขวา (diff > 60) ให้กลับมาที่เดิม
+            else if (diff > 60) {
                 element.style.transform = 'translateX(0)';
             }
-            
-            // รีเซ็ตค่าเพื่อเตรียมรับการปัดครั้งถัดไป
-            currentDeltaX = 0;
         }
 
         // ════════════════════════════════════════════════════════
