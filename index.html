@@ -204,7 +204,11 @@
                         `);
                     }
                 </script>
-                <button onclick="pressKey('clear')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-2xl font-bold text-zinc-500 hover:text-white transition-colors">Clear</button>
+                <button onclick="pressKey('clear')" class="numpad-btn aspect-square rounded-full flex items-center justify-center transition-colors group">
+                    <span class="text-[11px] font-light text-zinc-500 uppercase tracking-wider group-hover:text-white transition-colors">
+                        Clear
+                    </span>
+                </button>
                 <button onclick="pressKey('0')" class="numpad-btn aspect-square rounded-full text-4xl font-semibold">0</button>
                 <button onclick="pressKey('backspace')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-backspace text-xl"></i></button>
             </div>
