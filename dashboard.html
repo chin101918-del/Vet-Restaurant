@@ -516,6 +516,22 @@
                 .subscribe();
         };
 
+        (function checkAccess() {
+            const sessionRaw = sessionStorage.getItem('vetres_session');
+            if (!sessionRaw) {
+                window.location.href = 'index.html';
+                return;
+            }
+        
+            const session = JSON.parse(sessionRaw);
+        
+            // ยอมรับทั้ง dashboard (ตัวเลขสถิติ) และ admin
+            if (session.role !== 'dashboard' && session.role !== 'admin') {
+                alert('เฉพาะผู้จัดการและส่วนงานสถิติที่เข้าถึงข้อมูลนี้ได้');
+                window.location.href = 'index.html';
+            }
+        })();
+
         function switchView(viewId) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             const activeTab = document.getElementById(`tab-${viewId}`);
