@@ -612,15 +612,16 @@
 
             <div class="bg-[#1a1a1a] p-5 rounded-2xl border border-white/5">
                 <div class="flex justify-between text-slate-400 mb-2 font-light"><span>ยอดรวม</span><span id="billSubtotal">฿0.00</span></div>
+
                 <div class="flex justify-between text-red-400 mb-4 text-sm font-medium">
-                    <span id="billDiscountLabel" class="flex items-center gap-2">
-                        ส่วนลด (${disc}%)
-                        <button onclick="changeTableDiscount()" class="text-white/40 hover:text-white transition-colors">
-                            <i class="fas fa-edit text-xs"></i>
-                        </button>
+                    <span id="billDiscountLabel" class="flex items-center gap-2 cursor-pointer group" onclick="openChangeDiscountModal()">
+                        ส่วนลด (0%)
+                        <i class="fas fa-edit text-[10px] opacity-40 group-hover:opacity-100 transition-opacity"></i>
                     </span>
-                    <span id="billDiscountAmount">- ฿${discAmt.toLocaleString()}</span>
+                    <span id="billDiscountAmount">- ฿0</span>
                 </div>
+                
+                <div class="flex justify-between text-white text-3xl font-bold mb-6"><span>ยอดสุทธิ</span><span id="billTotal">฿0</span></div>
                 <div class="flex justify-between text-white text-3xl font-bold mb-6"><span>ยอดสุทธิ</span><span id="billTotal">฿0.00</span></div>
                 
                 <!-- ปรับปรุงกลุ่มปุ่ม Action ใหม่: 3 ปุ่มรองบน + 1 ปุ่มหลักล่าง -->
@@ -816,6 +817,23 @@
             <span class="nav-label">กลับบ้าน (<span id="cntTH">0</span>)</span>
         </div>
     </nav>
+
+    <div id="changeDiscountModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[130]">
+        <div class="bg-[#1c1c1c] w-full max-w-xs rounded-[32px] border border-white/10 p-6 shadow-2xl glass-card">
+            <div class="text-center mb-6">
+                <h3 class="text-xl font-bold text-white mb-1">เปลี่ยนส่วนลด</h3>
+                <p id="discountModalTableId" class="text-slate-400 text-sm">โต๊ะ A01</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-3 mb-6">
+                <button onclick="updateSessionDiscount(0)" class="py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 text-white font-bold transition-all">0% (ไม่มีส่วนลด)</button>
+                <button onclick="updateSessionDiscount(5)" class="py-3 rounded-2xl bg-white/5 hover:bg-purple-600 border border-white/5 text-white font-bold transition-all">5%</button>
+                <button onclick="updateSessionDiscount(10)" class="py-3 rounded-2xl bg-white/5 hover:bg-red-600 border border-white/5 text-white font-bold transition-all">10%</button>
+            </div>
+    
+            <button onclick="closeModal('changeDiscountModal')" class="w-full py-3 text-slate-500 font-medium hover:text-slate-300 transition-colors">ยกเลิก</button>
+        </div>
+    </div>
 
     <div id="toastContainer" class="fixed bottom-8 right-8 z-[150] pointer-events-none"></div>
 
@@ -1177,17 +1195,23 @@
                 `;
             }).join('');
 
-            // ส่วนคำนวณราคาสรุปด้านล่าง (คงไว้ตามเดิม)[cite: 2]
+
             const disc = activeSessionData.discount || 0;
             const validItems = items.filter(i => i.status !== 'cancel');
             const sub = validItems.reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
             const discountableSub = validItems.filter(i => i.kds_station !== 'น้ำ').reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
+            
+            // ✅ ตรรกะปัดส่วนลดลง (Floor Discount)
             const discAmt = Math.floor(discountableSub * (disc / 100));
-
-            document.getElementById('billSubtotal').innerText = `฿${sub.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
-            document.getElementById('billDiscountLabel').innerText = `ส่วนลด (${disc}%)`;
-            document.getElementById('billDiscountAmount').innerText = `- ฿${discAmt.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
-            document.getElementById('billTotal').innerText = `฿${(sub - discAmt).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+            const finalTotal = sub - discAmt;
+            
+            // ✅ แสดงผลเป็นเลขกลม (ลบ minimumFractionDigits ออก)
+            document.getElementById('billSubtotal').innerText = `฿${sub.toLocaleString()}`;
+            document.getElementById('billDiscountLabel').innerHTML = `
+                ส่วนลด (${disc}%) 
+                <i class="fas fa-edit text-[10px] opacity-40 group-hover:opacity-100 transition-opacity ml-1"></i>`;
+            document.getElementById('billDiscountAmount').innerText = `- ฿${discAmt.toLocaleString()}`;
+            document.getElementById('billTotal').innerText = `฿${finalTotal.toLocaleString()}`;
 
             seenData[activeSessionData.id] = maxTime;
             localStorage.setItem('vetres_seen_orders', JSON.stringify(seenData));
@@ -1468,6 +1492,43 @@
             } catch (err) {
                 console.error("Change Discount Error:", err);
                 Notify.toast("ไม่สามารถเปลี่ยนส่วนลดได้", "error");
+            }
+        }
+
+        // ฟังก์ชันเปิด Modal
+        function openChangeDiscountModal() {
+            if (!activeSessionData) return;
+            document.getElementById('discountModalTableId').innerText = `โต๊ะ ${selectedTableId}`;
+            document.getElementById('changeDiscountModal').classList.remove('hidden');
+        }
+        
+        // ฟังก์ชันอัปเดตส่วนลดลง Database
+        async function updateSessionDiscount(newVal) {
+            if (!activeSessionData) return;
+        
+            try {
+                const { error } = await supabaseClient
+                    .from('sessions')
+                    .update({ discount: newVal })
+                    .eq('id', activeSessionData.id);
+        
+                if (error) throw error;
+        
+                // 1. อัปเดตข้อมูลในตัวแปร local
+                activeSessionData.discount = newVal;
+                
+                // 2. ปิด Modal
+                closeModal('changeDiscountModal');
+                
+                // 3. แจ้งเตือน
+                Notify.toast(`เปลี่ยนเป็นส่วนลด ${newVal}% แล้ว`);
+        
+                // 4. โหลดข้อมูลใน Order Detail Modal ใหม่เพื่อให้คำนวณเลขกลมๆ ใหม่ทันที
+                openOrderDetails({ id: selectedTableId }, activeSessionData);
+        
+            } catch (err) {
+                console.error("Update Discount Error:", err);
+                Notify.toast("เกิดข้อผิดพลาดในการเปลี่ยนส่วนลด", "error");
             }
         }
 
