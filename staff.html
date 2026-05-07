@@ -1788,9 +1788,14 @@
             
             const totalGross = servedItems.reduce((sum, i) => sum + (parseFloat(i.total_price) || 0), 0);
             
-            // ✅ ลดราคาเฉพาะค่าอาหาร 10%
+            // ✅ 1. คำนวณยอดรวมเฉพาะรายการที่ลดราคาได้ (ยกเว้นน้ำ)
             const discountableGross = servedItems.filter(i => i.kds_station !== 'น้ำ').reduce((sum, i) => sum + (parseFloat(i.total_price) || 0), 0);
-            const totalNet = totalGross - (discountableGross * 0.10); 
+            
+            // ✅ 2. คำนวณส่วนลด 10% แล้ว "ปัดเศษทศนิยมทิ้ง" ให้เหลือเป็นจำนวนเต็ม
+            const discountAmount = Math.floor(discountableGross * 0.10);
+            
+            // ✅ 3. นำยอดรวมทั้งหมด มาลบกับส่วนลดที่เป็นเลขกลมๆ ยอดสุทธิก็จะกลมตาม
+            const totalNet = totalGross - discountAmount;
 
             document.getElementById('cntStaff').innerText = (orders || []).length;
             renderKdsCards('staffContainer', orders || [], 'staff');
@@ -1897,7 +1902,7 @@
                 const totalGross = validItems.reduce((s, i) => s + (parseFloat(i.total_price) || 0), 0);
                 const discountableGross = validItems.filter(i => i.kds_station !== 'น้ำ').reduce((s, i) => s + (parseFloat(i.total_price) || 0), 0);
                 
-                const discountAmount = discountableGross * (discountPercent / 100);
+                const discountAmount = Math.floor(discountableGross * (discountPercent / 100));
                 const totalNet = totalGross - discountAmount;
                 
                 // จัดรูปแบบ HTML (ถอดราคาเดิมที่ขีดฆ่าให้เห็นด้วยถ้ามีส่วนลด)
