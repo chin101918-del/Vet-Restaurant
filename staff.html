@@ -1507,10 +1507,8 @@
             document.getElementById('changeDiscountModal').classList.remove('hidden');
         }
         
-        // ฟังก์ชันอัปเดตส่วนลดลง Database
         async function updateSessionDiscount(newVal) {
             if (!activeSessionData) return;
-        
             try {
                 const { error } = await supabaseClient
                     .from('sessions')
@@ -1519,21 +1517,26 @@
         
                 if (error) throw error;
         
-                // 1. อัปเดตข้อมูลในตัวแปร local
                 activeSessionData.discount = newVal;
-                
-                // 2. ปิด Modal
                 closeModal('changeDiscountModal');
-                
-                // 3. แจ้งเตือน
                 Notify.toast(`เปลี่ยนเป็นส่วนลด ${newVal}% แล้ว`);
-        
-                // 4. โหลดข้อมูลใน Order Detail Modal ใหม่เพื่อให้คำนวณเลขกลมๆ ใหม่ทันที
-                openOrderDetails({ id: selectedTableId }, activeSessionData);
+                
+                // ✅ ตรวจสอบว่าต้อง Refresh หน้าไหน
+                if (window._currentDiscountSource === 'takehome') {
+                    fetchTakehomeOrders();
+                } else if (window._currentDiscountSource === 'staff') {
+                    fetchStaffOrders();
+                } else {
+                    // กรณีปกติ (Dine-in) ให้โหลด Modal รายละเอียดออเดอร์ใหม่
+                    openOrderDetails({ id: selectedTableId }, activeSessionData);
+                }
+                
+                // ล้างค่า Source
+                window._currentDiscountSource = null;
         
             } catch (err) {
-                console.error("Update Discount Error:", err);
-                Notify.toast("เกิดข้อผิดพลาดในการเปลี่ยนส่วนลด", "error");
+                console.error("Discount Update Error:", err);
+                Notify.toast("เปลี่ยนส่วนลดไม่สำเร็จ", "error");
             }
         }
 
@@ -1950,9 +1953,15 @@
                         discountPercent = parseFloat(sessionObj?.discount || 0) || 0;
                     }
 
-                    if (discountPercent > 0) {
-                        discountBadge = `<span class="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full border border-red-500/30 ml-2 whitespace-nowrap">ลด ${discountPercent}%</span>`;
-                    }
+                    const badgeColor = discountPercent > 0 ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-white/5 text-slate-500 border-white/10';
+                    const badgeText = discountPercent > 0 ? `ลด ${discountPercent}%` : 'เพิ่มส่วนลด';
+                    
+                    discountBadge = `
+                        <span onclick="prepareDiscountFromCard('${order.id}', '${headerTitle}', ${discountPercent}, '${channelType}')" 
+                              class="${badgeColor} text-[10px] px-2 py-0.5 rounded-full border ml-2 whitespace-nowrap cursor-pointer hover:scale-110 active:scale-95 transition-all">
+                            ${badgeText} <i class="fas fa-edit ml-1 opacity-50"></i>
+                        </span>
+                    `;
                 } else {
                     let staffName = order.staff_name || 'Unknown';
                     let staffStation = '';
@@ -2059,6 +2068,20 @@
             }).join('');
 
             container.innerHTML = `<div class="kds-grid">${cardsHtml}</div>`;
+        }
+
+        function prepareDiscountFromCard(sessionId, displayId, currentDisc, channel) {
+            // ล้าง Tag HTML ออกจากชื่อ (เผื่อกรณีชื่อ Staff ที่มี span ซุ้มติดมา)
+            const cleanId = displayId.replace(/<[^>]*>?/gm, '');
+            
+            // ตั้งค่า Context เหมือนตอนกดจากหน้าโต๊ะ
+            activeSessionData = { id: sessionId, discount: currentDisc };
+            selectedTableId = cleanId;
+            
+            // บันทึกไว้ว่ามาจากหน้า Channel ไหน (takehome หรือ staff)
+            window._currentDiscountSource = channel;
+        
+            openChangeDiscountModal();
         }
 
         // อัปเดต status item — ใช้ทั้ง TH + Staff
