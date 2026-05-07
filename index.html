@@ -398,15 +398,32 @@
                     input_hash: hashedInput
                 });
         
+                if (error) throw error;
+        
                 if (data.success) {
-                    // สำเร็จ: ล้าง Error และไปหน้าถัดไป
+                    // 1. ออกตั๋วผ่านทาง (Session)
+                    const sessionData = {
+                        role: currentRole,
+                        timestamp: Date.now()
+                    };
+                    sessionStorage.setItem('vetres_session', JSON.stringify(sessionData));
+        
+                    // 2. ล้าง Error ก่อนย้ายหน้า
                     errorMsg.classList.remove('show-error');
-                    window.location.href = `${currentRole}.html`;
+        
+                    // 3. ตรวจสอบเงื่อนไขการย้ายหน้า
+                    if (currentRole === 'kds') {
+                        // ✅ ถ้าเป็น KDS: ให้ปิดหน้า PIN แล้วเปิด Modal เลือกซุ้ม (ไม่ย้ายหน้าทันที)
+                        document.getElementById('pinSection').classList.add('hidden');
+                        openStationModal(); 
+                    } else {
+                        // ✅ ถ้าเป็นตำแหน่งอื่น: ไปที่หน้า admin.html, staff.html, หรือ dashboard.html
+                        window.location.href = `${currentRole}.html`;
+                    }
                 } else {
-                    // ไม่สำเร็จ: ใส่เอฟเฟกต์ Apple Shake
+                    // กรณีรหัสผิด: ใส่เอฟเฟกต์ Apple Shake
                     dotContainer.classList.add('shake');
                     
-                    // แสดงข้อความแจ้งเตือน
                     if (data.is_locked) {
                         errorMsg.innerText = "ระบบถูกล็อคชั่วคราว กรุณารอสักครู่";
                     } else {
@@ -422,8 +439,13 @@
                     }, 400);
                 }
             } catch (err) {
+                console.error("Connection Error:", err);
                 errorMsg.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อ";
                 errorMsg.classList.add('show-error');
+                
+                // ล้างค่าเพื่อให้กดใหม่ได้
+                currentPinInput = "";
+                resetPinDots();
             }
         }
 
