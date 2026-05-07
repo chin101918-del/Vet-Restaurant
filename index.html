@@ -434,7 +434,6 @@
             headerContainer.innerHTML = `<h2 class="station-header uppercase">เลือกซุ้มของคุณ</h2>`;
             
             grid.innerHTML = "";
-            // ใช้ 4 คอลัมน์ แต่ลด Gap ลงให้ดูเกาะกลุ่มกันมากขึ้น
             grid.className = "grid grid-cols-2 md:grid-cols-4 gap-4";
 
             STATIONS.forEach(s => {
@@ -442,26 +441,29 @@
                 btn.className = "station-option";
                 btn.innerText = s;
                 
-                // ภายในฟังก์ชัน openStationModal
                 btn.onclick = (e) => { 
                     e.stopPropagation();
                     
                     // 1. ออกตั๋ว (Session) สำหรับ Kitchen
                     const sessionData = {
-                        role: 'kitchen', // ชื่อต้องตรงกับที่ 'ยาม' ใน kds.html ตรวจสอบ
+                        role: 'kitchen',
                         timestamp: Date.now()
                     };
                     sessionStorage.setItem('vetres_session', JSON.stringify(sessionData));
                 
-                    // 2. เก็บชื่อซุ้มลง LocalStorage (เพื่อใช้แสดงผลในหน้าครัว)
+                    // 2. เก็บชื่อซุ้มลง LocalStorage
                     localStorage.setItem('kds_station', s); 
                     
                     // 3. ย้ายหน้า
                     window.location.href = 'kds.html'; 
                 };
-            
+                
+                // --- ต้องเพิ่มบรรทัดนี้เพื่อให้ปุ่มไปโผล่ในหน้าจอ ---
+                grid.appendChild(btn); 
+            }); // <--- ปิด forEach ตรงนี้
+
             document.getElementById('stationModal').classList.remove('hidden');
-        }
+        } // <--- ปิด function ตรงนี้
 
         function handleOutsideClick(event, type) {
             // เช็คว่าจุดที่คลิกคือ "ตัวพื้นหลัง" (overlay) ไม่ใช่ "ตัวการ์ด" (card)
