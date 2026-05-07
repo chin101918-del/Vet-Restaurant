@@ -3,233 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>VETRES | Login</title>
+    <title>VETRES | Who's using?</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@200;300;400;500;600;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@200;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ────────────────────────────────────────
-           BASE & ZINC THEME
-           ──────────────────────────────────────── */
+        :root {
+            /* สีพื้นหลังเป๊ะๆ จาก Disney+ */
+            --disney-bg: #0f111a;
+            --disney-text: #f9f9f9;
+            --disney-gray: #a8a9ad;
+        }
+
         body { 
-            font-family: 'Kanit', sans-serif; 
-            background-color: #09090b; /* Deep Zinc 950 */
-            color: #fafafa; 
-            overflow: hidden; 
-            user-select: none; 
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        .ambient-glow {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 70vw; height: 70vh;
-            background: radial-gradient(circle, rgba(220, 38, 38, 0.03) 0%, rgba(0,0,0,0) 70%);
-            z-index: 0;
-            pointer-events: none;
+            font-family: 'Inter', 'Kanit', sans-serif; 
+            background-color: var(--disney-bg);
+            color: var(--disney-text); 
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* ────────────────────────────────────────
-           PRECISION CARD DESIGN
+           TOP NAVIGATION (DISNEY STYLE)
            ──────────────────────────────────────── */
-        .portal-card {
-            background: rgba(24, 24, 27, 0.8); /* Zinc 900 */
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 28px;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(12px);
-        }
-
-        .portal-card:hover {
-            background: rgba(39, 39, 42, 0.9); /* Zinc 800 */
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transform: translateY(-12px) scale(1.02);
-            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5);
-        }
-
-        /* หัวข้อหน้าจอ (Header) */
-        /* แก้ไขส่วนนี้ในไฟล์ login.html */
-        .brand-title {
-            font-size: 4.5rem;
-            font-weight: 900;
+        .brand-logo {
+            position: fixed;
+            top: 2.5rem;
+            left: 3rem;
+            font-size: 1.5rem;
+            font-weight: 700;
             letter-spacing: -0.04em;
-            line-height: 1;
-            background: linear-gradient(to bottom, #ffffff, #d4d4d8);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            cursor: pointer;
         }
-
-        .profile-label {
-            font-size: 1.25rem; /* ใหญ่ขึ้นชัดเจน[cite: 3] */
-            font-weight: 800;
-            color: #ffffff; /* สีขาวบริสุทธิ์[cite: 3] */
-            text-transform: uppercase;
-            letter-spacing: 0.05em; /* ลดระยะห่างลงให้อ่านเป็นคำง่ายขึ้น[cite: 3] */
-            margin-top: 1.5rem;
-        }
-
-        .brand-subtitle {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.875rem;
-            font-weight: 500;
-            letter-spacing: 0.3em;
-            text-transform: uppercase;
-        }
-
-        /* Icon Colors - Minimal & Unified */
-        .icon-accent { color: #52525b; transition: all 0.3s ease; }
-        .portal-card:hover .icon-accent { color: #ffffff; }
-        .portal-card:hover .icon-red { color: #ef4444; }
+        .brand-logo span { font-weight: 300; opacity: 0.7; }
 
         /* ────────────────────────────────────────
-           NUMPAD & PIN
+           MAIN CONTENT
            ──────────────────────────────────────── */
-        .numpad-btn {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.1s ease-out;
-            color: #a1a1aa;
-            /* แก้ไข: ป้องกันการซูมบน iPad */
-            touch-action: manipulation; 
-        }
-        
-        /* เพิ่มขนาดตัวเลขให้ใหญ่และหนาขึ้น */
-        .numpad-btn-text {
-            font-size: 2.25rem; /* เทียบเท่า text-4xl */
-            font-weight: 600;
-        }
-        
-        .pin-dot { transition: all 0.2s ease; color: #27272a; }
-        .pin-dot.active { 
-            color: #ffffff; 
-            transform: scale(1.4); 
-            filter: drop-shadow(0 0 8px rgba(255,255,255,0.5)); 
+        .who-is-using {
+            font-size: 2.75rem; /* ขนาดฟอนต์เป๊ะๆ */
+            font-weight: 700;
+            margin-bottom: 4rem;
+            letter-spacing: -0.01em;
         }
 
-        /* Animations */
-        .fade-in { animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .fade-out { animation: fadeOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(1.02); } to { opacity: 1; transform: scale(1); } }
-        @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.98); } }
+        .profile-group {
+            display: flex;
+            gap: 2.5rem;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .role-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            width: 160px;
+            transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+
+        /* เอฟเฟกต์ขยายไอคอนแบบ Disney+ */
+        .icon-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 1.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+            border: 4px solid transparent;
+        }
+
+        .role-item:hover .icon-circle {
+            transform: scale(1.1);
+            border-color: #f9f9f9;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .role-label {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--disney-gray);
+            transition: color 0.3s;
+        }
+
+        .role-item:hover .role-label {
+            color: #ffffff;
+        }
+
+        /* ────────────────────────────────────────
+           PIN & MODAL OVERLAY
+           ──────────────────────────────────────── */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.4) !important; /* มืดลงแค่ 40% */
+            backdrop-filter: blur(15px) !important; /* เบลอพื้นหลัง */
+            -webkit-backdrop-filter: blur(15px) !important;
+        }
+        .btn-close-top {
+            position: absolute;
+            top: 2.5rem;
+            left: 3rem;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 1.5rem;
+            transition: all 0.2s;
+            z-index: 60;
+        }
+        .btn-close-top:hover {
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        .pin-dot {
+            width: 14px; height: 14px;
+            border: 2px solid #555;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        .pin-dot.active {
+            background: #fff;
+            border-color: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+
+        .numpad-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: 500;
+            color: #f9f9f9;
+            transition: all 0.2s;
+            margin: 0 auto; /* จัดกลางในช่อง grid */
+        }
+        .numpad-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.4);
+        }
+
+        .numpad-btn:active {
+            transform: scale(0.9);
+            background: rgba(255,255,255,0.2);
+        }
+        /* หัวข้อ: ปรับขนาดลงให้ดูแพง ไม่ตะโกน */
+        .station-header {
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.25em; /* เพิ่มระยะห่างให้ดูหรู */
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 3rem;
+        }
+
+        /* ปุ่มแบบ Compact Tile: ลด Padding และความหนาลง */
+        .station-option {
+            position: relative;
+            padding: 1.25rem 0.5rem; /* ลดจาก 2.5rem เหลือครึ่งเดียว */
+            font-size: 1.1rem; /* ขนาดฟอนต์กำลังดี ไม่ใหญ่เกินหน้าแรก */
+            font-weight: 400;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.03); /* จางลงอีกเพื่อให้ดูเบา */
+            border: 1px solid rgba(255, 255, 255, 0.05); /* เส้นขอบบางมาก */
+            border-radius: 12px; /* มุมโค้งเล็กลงให้ดู Sharp */
+            transition: all 0.2s ease;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+        }
+
+        /* แตะแล้วให้แค่เข้มขึ้นและยุบตัวจางๆ */
+        .station-option:active {
+            transform: scale(0.97);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ปรับ Modal Container ให้ดูกระชับ ไม่บานเต็มจอเกินไป */
+        #stationCard {
+            max-width: 800px;
+            width: 85%;
+            padding: 1rem;
+        }
+        /* สไตล์หน้าจอเมื่อถูกล็อค */
+        .system-locked-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(40px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen relative">
+<body class="flex flex-col items-center justify-center min-h-screen">
 
-    <div class="ambient-glow"></div>
-
-    <!-- ──────────────── PROFILE SELECTION ──────────────── -->
-    <section id="profileSection" class="w-full flex flex-col items-center justify-center p-6 z-10 fade-in">
-    <header class="text-center mb-16">
-    <!-- ปรับ tracking-wider เพื่อให้ชื่อแบรนด์ดูโปร่งขึ้น -->
-    <h1 class="brand-title uppercase tracking-wider">VET<span class="text-red-600" style="-webkit-text-fill-color: initial;"> RESTAURANT</span></h1>
+    <div class="brand-logo lowercase">vet<span>restaurant</span></div>
     
-    <!-- ปรับ tracking-widest สำหรับตัวหนังสือตัวเล็กเพื่อให้สแกนสายตาง่าย -->
-    <p class="brand-subtitle text-xl tracking-[0.3em] uppercase">Select Your Role</p>
-    </header>
 
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl">
-        <!-- Admin -->
-        <div onclick="selectProfile('admin')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
-            <div class="text-blue-500 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
-                    <path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" />
-                </svg>
+    <main id="profileSection" class="text-center fade-in">
+        <h2 class="who-is-using">Who's using?</h2>
+
+        <div class="profile-group">
+            <div onclick="selectProfile('admin')" class="role-item">
+                <div class="icon-circle text-blue-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" /></svg>
+                </div>
+                <span class="role-label">Admin</span>
             </div>
-            <p class="profile-label">Admin</p>
-        </div>
 
-        <!-- Staff -->
-        <div onclick="selectProfile('staff')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
-            <div class="text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
-                    <path d="M5.223 2.25c-.497 0-.974.198-1.325.55l-1.3 1.298A3.75 3.75 0 0 0 7.5 9.75c.627.47 1.406.75 2.25.75.844 0 1.624-.28 2.25-.75.626.47 1.406.75 2.25.75.844 0 1.623-.28 2.25-.75a3.75 3.75 0 0 0 4.902-5.652l-1.3-1.299a1.875 1.875 0 0 0-1.325-.549H5.223Z" />
-                    <path fill-rule="evenodd" d="M3 20.25v-8.755c1.42.674 3.08.673 4.5 0A5.234 5.234 0 0 0 9.75 12c.804 0 1.568-.182 2.25-.506a5.234 5.234 0 0 0 2.25.506c.804 0 1.567-.182 2.25-.506 1.42.674 3.08.675 4.5.001v8.755h.75a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1 0-1.5H3Zm3-6a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75v-3Zm8.25-.75a.75.75 0 0 0-.75.75v5.25c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-5.25a.75.75 0 0 0-.75-.75h-3Z" clip-rule="evenodd" />
-                </svg>
+            <div onclick="selectProfile('staff')" class="role-item">
+                <div class="icon-circle text-rose-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path d="M5.223 2.25c-.497 0-.974.198-1.325.55l-1.3 1.298A3.75 3.75 0 0 0 7.5 9.75c.627.47 1.406.75 2.25.75.844 0 1.624-.28 2.25-.75.626.47 1.406.75 2.25.75.844 0 1.623-.28 2.25-.75a3.75 3.75 0 0 0 4.902-5.652l-1.3-1.299a1.875 1.875 0 0 0-1.325-.549H5.223Z" /><path fill-rule="evenodd" d="M3 20.25v-8.755c1.42.674 3.08.673 4.5 0A5.234 5.234 0 0 0 9.75 12c.804 0 1.568-.182 2.25-.506a5.234 5.234 0 0 0 2.25.506c.804 0 1.567-.182 2.25-.506 1.42.674 3.08.675 4.5.001v8.755h.75a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1 0-1.5H3Zm3-6a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75v-3Zm8.25-.75a.75.75 0 0 0-.75.75v5.25c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-5.25a.75.75 0 0 0-.75-.75h-3Z" clip-rule="evenodd" /></svg>
+                </div>
+                <span class="role-label">Staff</span>
             </div>
-            <p class="profile-label">Staff</p>
-        </div>
 
-        <!-- Kitchen -->
-        <div onclick="selectProfile('kitchen')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
-            <div class="text-orange-500 drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
-                    <path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248ZM15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.718Z" clip-rule="evenodd" />
-                </svg>
+            <div onclick="selectProfile('kitchen')" class="role-item">
+                <div class="icon-circle text-orange-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248ZM15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.718Z" clip-rule="evenodd" /></svg>
+                </div>
+                <span class="role-label">Kitchen</span>
             </div>
-            <p class="profile-label">Kitchen</p>
-        </div>
 
-        <!-- Dashboard -->
-        <div onclick="selectProfile('dashboard')" class="portal-card cursor-pointer flex flex-col items-center justify-center w-48 h-64 md:w-60 md:h-80 p-8">
-            <div class="text-purple-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-24 h-24">
-                    <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
-                    <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
-                </svg>
+            <div onclick="selectProfile('dashboard')" class="role-item">
+                <div class="icon-circle text-purple-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" /></svg>
+                </div>
+                <span class="role-label">Stats</span>
             </div>
-            <p class="profile-label">Dashboard</p>
         </div>
-    </div>
-</section>
+    </main>
 
-    <!-- ──────────────── PIN ENTRY SECTION ──────────────── -->
-        <section id="pinSection" class="hidden absolute inset-0 w-full h-full p-6 flex flex-col items-center justify-center z-20">
-        <!-- ปรับความกว้างให้กระชับขึ้นจาก max-w-sm เป็น max-w-[340px] -->
-        <div class="portal-card w-full max-w-[340px] p-10 flex flex-col items-center relative">
-            <button onclick="closePinModal()" class="absolute top-8 left-8 text-zinc-500 hover:text-white text-xl transition-colors">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-    
-            <div id="pinTitle" class="mb-10 mt-2 text-center"></div>
+    <section id="pinSection" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center" onclick="handleOutsideClick(event, 'pin')">
+        <button onclick="closePinModal()" class="btn-close-top">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <div id="pinCard" class="w-full max-w-[320px] flex flex-col items-center">
+            <div id="pinTitle" class="mb-10 text-center"></div>
             
-            <!-- PIN Dots -->
-            <div class="flex justify-center gap-8 mb-16">
-                <i class="pin-dot fas fa-circle text-[10px]" id="dot1"></i>
-                <i class="pin-dot fas fa-circle text-[10px]" id="dot2"></i>
-                <i class="pin-dot fas fa-circle text-[10px]" id="dot3"></i>
-                <i class="pin-dot fas fa-circle text-[10px]" id="dot4"></i>
+            <div class="flex justify-center gap-6 mb-12">
+                <div class="pin-dot" id="dot1"></div>
+                <div class="pin-dot" id="dot2"></div>
+                <div class="pin-dot" id="dot3"></div>
+                <div class="pin-dot" id="dot4"></div>
             </div>
             
-            <!-- Numpad -->
-            <div class="grid grid-cols-3 gap-4 w-full">
-                <script>
-                    // แก้ไข: ปรับขนาดฟอนต์ให้ใหญ่ขึ้น (text-4xl) และเพิ่มความหนา (font-semibold)
-                    for(let i=1; i<=9; i++) {
-                        document.write(`
-                            <button onclick="pressKey('${i}')" class="numpad-btn aspect-square rounded-full text-4xl font-semibold">
-                                ${i}
-                            </button>
-                        `);
-                    }
-                </script>
-                <button onclick="pressKey('clear')" class="numpad-btn aspect-square rounded-full flex items-center justify-center transition-colors group">
-                    <span class="text-[11px] font-light text-zinc-500 uppercase tracking-wider group-hover:text-white transition-colors">
-                        Clear
-                    </span>
+            <div class="grid grid-cols-3 gap-y-6 gap-x-4 w-full justify-items-center">
+                <button onclick="pressKey('1')" class="numpad-btn">1</button>
+                <button onclick="pressKey('2')" class="numpad-btn">2</button>
+                <button onclick="pressKey('3')" class="numpad-btn">3</button>
+                <button onclick="pressKey('4')" class="numpad-btn">4</button>
+                <button onclick="pressKey('5')" class="numpad-btn">5</button>
+                <button onclick="pressKey('6')" class="numpad-btn">6</button>
+                <button onclick="pressKey('7')" class="numpad-btn">7</button>
+                <button onclick="pressKey('8')" class="numpad-btn">8</button>
+                <button onclick="pressKey('9')" class="numpad-btn">9</button>
+                
+                <button onclick="pressKey('clear')" class="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Clear</button>
+                <button onclick="pressKey('0')" class="numpad-btn">0</button>
+                <button onclick="pressKey('backspace')" class="text-zinc-500 hover:text-white transition-colors">
+                    <i class="fas fa-backspace text-xl"></i>
                 </button>
-                <button onclick="pressKey('0')" class="numpad-btn aspect-square rounded-full text-4xl font-semibold">0</button>
-                <button onclick="pressKey('backspace')" class="numpad-btn aspect-square rounded-full flex items-center justify-center text-zinc-600"><i class="fas fa-backspace text-xl"></i></button>
             </div>
         </div>
     </section>
 
-    <!-- ──────────────── KDS STATION MODAL ──────────────── -->
-    <div id="stationModal" class="hidden fixed inset-0 flex items-center justify-center p-4 z-50 bg-black/80 backdrop-blur-md">
-        <div class="portal-card p-12 w-full max-w-4xl text-center">
-            <button onclick="closeStationModal()" class="absolute top-8 right-8 text-zinc-500 hover:text-white text-2xl transition-all"><i class="fas fa-times"></i></button>
-            
+    <div id="stationModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4" onclick="handleOutsideClick(event, 'station')">
+        <button onclick="closeStationModal()" class="btn-close-top"><i class="fas fa-times"></i></button>
+        
+        <div id="stationCard" class="w-full max-w-4xl text-center">
             <header class="mb-12">
-                <h2 class="text-4xl font-black text-white tracking-wide uppercase mb-2">ซุ้มอาหาร</h2>
-                <p class="text-zinc-500 text-[15px] uppercase tracking-[0.3em] font-bold">Please select your station</p>
+                <h2 class="text-3xl font-bold text-white tracking-tight uppercase">Select Station</h2>
+                <p class="text-zinc-500 text-sm mt-2 font-light">Please select your work station</p>
             </header>
-            
             <div id="stationGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
     <script>
+        // ข้อมูลนี้หาได้จาก Supabase Project Settings > API
+        const SUPABASE_URL = 'https://xjosswxrtcanhvpdbrap.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqb3Nzd3hydGNhbmh2cGRicmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjkyODcsImV4cCI6MjA5MjUwNTI4N30.DrtoBXmdL1EN17sVYZIYNVVOOp7UHfeAz1sDImZmYFM';
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         const PINS = { admin: "1111", staff: "2222" };
         const STATIONS = ['โรบินฮู้ด', 'หมูกระทะ', 'ไก่ไวน์', 'ส้มตำ', 'กระต่าย', 'ต้มยำ', 'คอหมูย่าง', 'บาร์บีคิว', 'ไข่เจียว', 'ข้าว', 'น้ำ', 'โอ้เอ๋ว'];
         
@@ -243,43 +318,32 @@
 
             currentPinInput = "";
             document.getElementById('pinTitle').innerHTML = `
-                <span class="block text-[10px] text-zinc-500 uppercase tracking-[0.2em] mb-1 font-medium">กรอกรหัสผ่านสำหรับ</span>
-                <span class="block text-3xl font-black text-white uppercase tracking-wider leading-none">${role}</span>
+                <p class="text-zinc-500 text-[13px] uppercase tracking-normal mb-2 font-medium">กรอกรหัสผ่านสำหรับ</p>
+                <h2 class="text-2xl font-bold text-white uppercase tracking-wide">${role}</h2>
             `;
             resetPinDots();
-            
-            toggleSection('profileSection', 'pinSection', true);
+            document.getElementById('profileSection').classList.add('hidden');
+            document.getElementById('pinSection').classList.remove('hidden');
         }
 
         function closePinModal() {
-            toggleSection('pinSection', 'profileSection', false);
-        }
-
-        function toggleSection(hideId, showId, isForward) {
-            const hideEl = document.getElementById(hideId);
-            const showEl = document.getElementById(showId);
-            hideEl.classList.add('fade-out');
-            setTimeout(() => {
-                hideEl.classList.add('hidden');
-                hideEl.classList.remove('fade-out');
-                showEl.classList.remove('hidden');
-                showEl.classList.add('fade-in');
-            }, 300);
+            document.getElementById('pinSection').classList.add('hidden');
+            document.getElementById('profileSection').classList.remove('hidden');
         }
 
         function pressKey(key) {
             if (key === 'clear') currentPinInput = "";
             else if (key === 'backspace') currentPinInput = currentPinInput.slice(0, -1);
             else if (currentPinInput.length < 4) currentPinInput += key;
-            
             updatePinDots();
-            if (currentPinInput.length === 4) setTimeout(checkPin, 150);
+            if (currentPinInput.length === 4) setTimeout(checkPin, 200);
         }
 
         function updatePinDots() {
-            resetPinDots();
-            for (let i = 1; i <= currentPinInput.length; i++) {
-                document.getElementById(`dot${i}`).classList.add('active');
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                if (i <= currentPinInput.length) dot.classList.add('active');
+                else dot.classList.remove('active');
             }
         }
 
@@ -287,41 +351,118 @@
             for (let i = 1; i <= 4; i++) document.getElementById(`dot${i}`).classList.remove('active');
         }
 
-        function checkPin() {
-            if (currentPinInput === PINS[currentRole]) {
-                window.location.href = `${currentRole}.html`;
-            } else {
-                const dots = document.querySelectorAll('.pin-dot');
-                dots.forEach(d => d.style.color = '#ef4444'); 
-                document.getElementById('pinSection').querySelector('.portal-card').animate([
-                    { transform: 'translateX(-8px)' }, { transform: 'translateX(8px)' }, { transform: 'translateX(0)' }
-                ], { duration: 200, iterations: 2 });
-                setTimeout(() => { currentPinInput = ""; resetPinDots(); dots.forEach(d => d.style.color = ''); }, 400);
+        // ตั้งค่าความปลอดภัย
+        const MAX_ATTEMPTS = 5;
+        const LOCKOUT_TIME = 5 * 60 * 1000; // 5 นาที (มิลลิวินาที)
+
+       async function checkPin() {
+            // เข้ารหัส PIN ก่อนส่ง
+            const hashedInput = CryptoJS.SHA256(currentPinInput).toString();
+            console.log("Current PIN:", currentPinInput); // ดูว่าเลขที่กดคือ 1111 จริงไหม
+            console.log("Hashed Output:", hashedInput);  // ดูว่า Hash ตรงกับใน DB ไหม
+
+            try {
+                // 2. เปลี่ยนมาเรียกใช้ตัวแปร supabaseClient ที่เราตั้งใหม่
+                const { data, error } = await supabaseClient.rpc('verify_staff_access', {
+                    input_role: currentRole,
+                    input_hash: hashedInput
+                });
+
+                if (error) {
+                    console.error("RPC Error:", error); // ถ้าฟังก์ชันไม่มีหรือเขียนผิด จะขึ้นตรงนี้
+                    alert("เกิดข้อผิดพลาดที่ระบบหลังบ้าน");
+                    return;
+                }
+
+                console.log("Response from DB:", data);
+
+                if (data.success) {
+                    // สร้างตั๋วผ่านทาง เก็บชื่อตำแหน่งและเวลาที่ Login
+                    const sessionData = {
+                        role: currentRole,
+                        timestamp: Date.now(),
+                        token: CryptoJS.SHA256(currentRole + Date.now()).toString() // ตั๋วจำลอง
+                    };
+                    sessionStorage.setItem('vetres_session', JSON.stringify(sessionData));
+                    
+                    window.location.href = `${currentRole}.html`;
+                } else {
+                    // แสดงข้อความ Error จาก SQL RPC (เช่น รหัสผิด หรือ เครื่องโดนล็อค)
+                    alert(data.message);
+                    currentPinInput = "";
+                    resetPinDots();
+                }
+            } catch (err) {
+                console.error('Error:', err.message);
+                alert('ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการตั้งค่า RPC');
+                currentPinInput = "";
+                resetPinDots();
             }
+        }
+
+        function handleFailedAttempt() {
+            let attempts = parseInt(localStorage.getItem('vetres_failed_attempts') || "0");
+            attempts++;
+            localStorage.setItem('vetres_failed_attempts', attempts);
+
+            if (attempts >= MAX_ATTEMPTS) {
+                const lockoutTime = Date.now() + LOCKOUT_TIME;
+                localStorage.setItem('vetres_lockout_until', lockoutTime);
+                alert("คุณกรอกรหัสผิดเกินกำหนด! ระบบถูกล็อคเป็นเวลา 5 นาที");
+            } else {
+                alert(`รหัสผ่านไม่ถูกต้อง (เหลือโอกาสอีก ${MAX_ATTEMPTS - attempts} ครั้ง)`);
+            }
+            
+            currentPinInput = "";
+            resetPinDots();
+        }
+
+        // ฟังก์ชันตัวอย่างการเรียกฐานข้อมูล (Concept)
+        async function validatePinWithBackend(role, pin) {
+            // ในขั้นตอนใช้งานจริง คุณควรใช้ Supabase/Firebase 
+            // เพื่อตรวจสอบ PIN ที่ผ่านการ Hash มาแล้ว
+            return pin === "1111"; // ตัวอย่างชั่วคราว
         }
 
         function openStationModal() {
             const grid = document.getElementById('stationGrid');
+            const headerContainer = document.querySelector('#stationCard header');
+            
+            headerContainer.innerHTML = `<h2 class="station-header uppercase">เลือกซุ้มของคุณ</h2>`;
+            
             grid.innerHTML = "";
+            // ใช้ 4 คอลัมน์ แต่ลด Gap ลงให้ดูเกาะกลุ่มกันมากขึ้น
+            grid.className = "grid grid-cols-2 md:grid-cols-4 gap-4";
+
             STATIONS.forEach(s => {
                 const btn = document.createElement('button');
-                btn.className = "numpad-btn p-6 rounded-2xl font-medium text-zinc-400 hover:text-white hover:border-red-500/50 hover:bg-red-500/10 transition-all";
+                btn.className = "station-option";
                 btn.innerText = s;
-                btn.onclick = () => { localStorage.setItem('kds_station', s); window.location.href = 'kds.html'; };
+                
+                btn.onclick = (e) => { 
+                    e.stopPropagation();
+                    localStorage.setItem('kds_station', s); 
+                    window.location.href = 'kds.html'; 
+                };
                 grid.appendChild(btn);
             });
+            
             document.getElementById('stationModal').classList.remove('hidden');
         }
 
-        function closeStationModal() { document.getElementById('stationModal').classList.add('hidden'); }
-
-        document.addEventListener('keydown', (e) => {
-            if (!document.getElementById('pinSection').classList.contains('hidden')) {
-                if (e.key >= '0' && e.key <= '9') pressKey(e.key);
-                else if (e.key === 'Backspace') pressKey('backspace');
-                else if (e.key === 'Escape') closePinModal();
+        function handleOutsideClick(event, type) {
+            // เช็คว่าจุดที่คลิกคือ "ตัวพื้นหลัง" (overlay) ไม่ใช่ "ตัวการ์ด" (card)
+            const cardId = type === 'pin' ? 'pinCard' : 'stationCard';
+            const card = document.getElementById(cardId);
+            
+            if (!card.contains(event.target)) {
+                if (type === 'pin') closePinModal();
+                else closeStationModal();
             }
-        });
+        }
+
+        function closeStationModal() { document.getElementById('stationModal').classList.add('hidden'); }
     </script>
+    
 </body>
 </html>
