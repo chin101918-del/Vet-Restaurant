@@ -1206,30 +1206,44 @@
         function showNotifBubble(itemName, newStatus) {
             const bubble = document.getElementById('notif-bubble');
             const msg = document.getElementById('bubble-msg');
+            const iconBox = document.getElementById('bubble-icon-box');
             const bellBtn = document.getElementById('btnBell');
             const isOut = newStatus === 'หมด';
         
             if (!bubble || !msg) return;
         
-            // 1. ตั้งค่าข้อความ
-            msg.innerText = `${itemName}: ${newStatus}`;
+            // ตั้งค่าข้อความแจ้งเตือน
+            msg.innerHTML = `<span class="${isOut ? 'text-red-400' : 'text-emerald-400'}">${itemName}</span>: ${newStatus}`;
             
-            // 2. แสดงผลและสั่นกระดิ่ง
+            // ปรับสีไอคอนตามสถานะ
+            if (isOut) {
+                iconBox.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-red-500/20 text-red-500";
+            } else {
+                iconBox.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-emerald-500/20 text-emerald-400";
+            }
+        
+            // แสดงผล (Slide In)
             bubble.classList.add('bubble-show');
+            bubble.classList.remove('pointer-events-none');
+            
+            // สั่นกระดิ่งเพื่อเรียกร้องความสนใจ
             bellBtn.classList.add('animate-ring', 'text-red-500');
             
-            // 3. เพิ่มตัวเลข Badge (สมมติว่านับเพิ่ม)
-            unreadNotifCount++;
-            const badge = document.getElementById('bellBadge');
-            badge.innerText = unreadNotifCount;
-            badge.classList.remove('hidden');
-        
-            // 4. เล่นเสียงแจ้งเตือน
+            // เล่นเสียงแจ้งเตือน (ใช้ระบบเสียงเดิมที่คุณมี)
             if (audioEnabled && audioUnlocked) {
                 const sound = document.getElementById('notiSound');
                 sound.currentTime = 0;
                 sound.play().catch(() => {});
             }
+        
+            // ซ่อน Bubble หลังจาก 5 วินาที
+            setTimeout(() => {
+                bubble.classList.remove('bubble-show');
+                bubble.classList.add('pointer-events-none');
+                // หยุดสั่นถ้าไม่มีแจ้งเตือนค้าง (แต่ยังคงสีแดงไว้ถ้ายังไม่ได้กดดู)
+                bellBtn.classList.remove('animate-ring');
+            }, 5000);
+        }
         
             // 5. หายไปเองใน 5 วินาที
             setTimeout(() => {
@@ -2616,6 +2630,34 @@
                 if (currentChannel === 'takehome') fetchTakehomeOrders();
                 if (currentChannel === 'staff') fetchStaffOrders();
             }).subscribe();
+
+        supabaseClient.channel('menu_alerts')
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'menu_status_logs' 
+            }, (payload) => {
+                const newLog = payload.new;
+                
+                // 1. เรียกใช้ฟังก์ชันแสดง Bubble แจ้งเตือน
+                // itemName: ชื่อเมนู, newStatus: หมด หรือ ปกติ
+                showNotifBubble(newLog.item_name_th, newLog.new_status);
+        
+                // 2. อัปเดตตัวเลข Badge สีแดงบนกระดิ่ง
+                unreadNotifCount++;
+                const badge = document.getElementById('bellBadge');
+                if (badge) {
+                    badge.innerText = unreadNotifCount > 9 ? '9+' : unreadNotifCount;
+                    badge.classList.remove('hidden');
+                }
+        
+                // 3. ถ้าเปิด Modal ประวัติค้างไว้ ให้โหลดข้อมูลใหม่ทันที
+                const modal = document.getElementById('notifModal');
+                if (!modal.classList.contains('hidden')) {
+                    openNotifModal(); // รีโหลดข้อมูลในลิสต์
+                }
+            })
+            .subscribe();
 
         fetchAndRenderMap();
         fetchTakehomeOrders();
