@@ -442,19 +442,15 @@
         let ordersData = {};
 
         (function checkAccess() {
-            // ดึงตั๋วออกมาดู
-            const sessionRaw = sessionStorage.getItem('vetres_session');
+            const session = JSON.parse(sessionStorage.getItem('vetres_session'));
             
-            if (!sessionRaw) {
-                console.log("No ticket found!");
+            if (!session) {
                 window.location.href = 'index.html';
                 return;
             }
         
-            const session = JSON.parse(sessionRaw);
-        
-            // ตรวจสอบ: ต้องเป็นคนที่มีตั๋ว 'kitchen' หรือ 'admin' เท่านั้นถึงจะเข้าหน้าครัวได้
-            if (session.role !== 'kitchen' && session.role !== 'admin') {
+            // ยอมรับเฉพาะคนที่มีตั๋ว kds หรือ admin
+            if (session.role !== 'kds' && session.role !== 'admin') {
                 alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
                 window.location.href = 'index.html';
             }
