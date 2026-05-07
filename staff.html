@@ -823,20 +823,22 @@
         </div>
     </nav>
 
-    <div id="changeDiscountModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[130]">
-        <div class="bg-[#1c1c1c] w-full max-w-xs rounded-[32px] border border-white/10 p-6 shadow-2xl glass-card">
-            <div class="text-center mb-6">
-                <h3 class="text-xl font-bold text-white mb-1">เปลี่ยนส่วนลด</h3>
-                <p id="discountModalTableId" class="text-slate-400 text-sm">โต๊ะ A01</p>
+    <div id="changeDiscountModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[130]">
+        <div class="bg-[#141414] w-full max-w-sm rounded-[32px] border border-white/10 p-8 shadow-2xl glass-card">
+            <div class="text-center mb-8">
+                <h3 class="text-xl font-bold text-white tracking-wide">เปลี่ยนส่วนลด <span id="discountModalTableId" class="text-purple-400">A01</span></h3>
             </div>
             
-            <div class="grid grid-cols-1 gap-3 mb-6">
-                <button onclick="updateSessionDiscount(0)" class="py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 text-white font-bold transition-all">0% (ไม่มีส่วนลด)</button>
-                <button onclick="updateSessionDiscount(5)" class="py-3 rounded-2xl bg-white/5 hover:bg-purple-600 border border-white/5 text-white font-bold transition-all">5%</button>
-                <button onclick="updateSessionDiscount(10)" class="py-3 rounded-2xl bg-white/5 hover:bg-red-600 border border-white/5 text-white font-bold transition-all">10%</button>
+            <div class="flex flex-row gap-2 mb-10">
+                <button onclick="selectStagedDiscount(0, this)" class="staged-disc-btn flex-1 py-4 rounded-2xl bg-white/5 border border-white/5 text-white font-bold transition-all hover:bg-white/10" id="btn-staged-0">0%</button>
+                <button onclick="selectStagedDiscount(5, this)" class="staged-disc-btn flex-1 py-4 rounded-2xl bg-white/5 border border-white/5 text-white font-bold transition-all hover:bg-white/10" id="btn-staged-5">5%</button>
+                <button onclick="selectStagedDiscount(10, this)" class="staged-disc-btn flex-1 py-4 rounded-2xl bg-white/5 border border-white/5 text-white font-bold transition-all hover:bg-white/10" id="btn-staged-10">10%</button>
             </div>
     
-            <button onclick="closeModal('changeDiscountModal')" class="w-full py-3 text-slate-500 font-medium hover:text-slate-300 transition-colors">ยกเลิก</button>
+            <div class="flex gap-3">
+                <button onclick="closeModal('changeDiscountModal')" class="flex-1 py-4 rounded-xl bg-white/5 hover:bg-white/10 font-medium text-slate-400 transition-all">ยกเลิก</button>
+                <button onclick="confirmUpdateDiscount()" class="flex-1 py-4 rounded-xl bg-purple-600 hover:bg-purple-500 font-bold text-white shadow-lg shadow-purple-900/20 transition-all">ยืนยัน</button>
+            </div>
         </div>
     </div>
 
@@ -1500,11 +1502,74 @@
             }
         }
 
-        // ฟังก์ชันเปิด Modal
+        let stagedDiscountValue = 0; // ตัวแปรเก็บค่าที่เลือกชั่วคราวใน Modal
+
+        // 1. ฟังก์ชันเปิด Modal และเซ็ตสถานะเริ่มต้น
         function openChangeDiscountModal() {
             if (!activeSessionData) return;
-            document.getElementById('discountModalTableId').innerText = `โต๊ะ ${selectedTableId}`;
+            
+            // แสดงชื่อโต๊ะ
+            document.getElementById('discountModalTableId').innerText = selectedTableId;
+            
+            // ตั้งค่า staged ให้เท่ากับส่วนลดปัจจุบันของโต๊ะนั้น
+            const currentDisc = activeSessionData.discount || 0;
+            stagedDiscountValue = currentDisc;
+            
+            // ไฮไลท์ปุ่มตามค่าปัจจุบัน
+            const targetBtn = document.getElementById(`btn-staged-${currentDisc}`);
+            if (targetBtn) selectStagedDiscount(currentDisc, targetBtn);
+            
             document.getElementById('changeDiscountModal').classList.remove('hidden');
+        }
+        
+        // 2. ฟังก์ชันสำหรับเลือกส่วนลด (ยังไม่บันทึก)
+        function selectStagedDiscount(val, btn) {
+            stagedDiscountValue = val;
+            
+            // ลบสีไฮไลท์จากทุกปุ่มในกลุ่มนี้
+            document.querySelectorAll('.staged-disc-btn').forEach(b => {
+                b.classList.remove('bg-purple-600', 'border-purple-500', 'shadow-lg');
+                b.classList.add('bg-white/5', 'border-white/5');
+            });
+            
+            // เพิ่มสีไฮไลท์ให้ปุ่มที่เลือก (ใช้สีม่วงให้เข้ากับ Dashboard)
+            btn.classList.remove('bg-white/5', 'border-white/5');
+            btn.classList.add('bg-purple-600', 'border-purple-500', 'shadow-lg');
+        }
+        
+        // 3. ฟังก์ชันกดยืนยันเพื่อบันทึกลง Supabase (รวม logic จาก updateSessionDiscount เดิม)
+        async function confirmUpdateDiscount() {
+            if (!activeSessionData) return;
+        
+            try {
+                const { error } = await supabaseClient
+                    .from('sessions')
+                    .update({ discount: stagedDiscountValue })
+                    .eq('id', activeSessionData.id);
+        
+                if (error) throw error;
+        
+                // อัปเดตข้อมูล Local
+                activeSessionData.discount = stagedDiscountValue;
+                closeModal('changeDiscountModal');
+                Notify.toast(`อัปเดตส่วนลดเป็น ${stagedDiscountValue}% สำเร็จ`);
+        
+                // เช็คว่าต้อง Refresh หน้าจอไหน (ใช้ logic ที่คุยกันก่อนหน้านี้)
+                if (window._currentDiscountSource === 'takehome') {
+                    fetchTakehomeOrders();
+                } else if (window._currentDiscountSource === 'staff') {
+                    fetchStaffOrders();
+                } else {
+                    // กรณี Dine-in ปกติให้โหลด Modal บิลใหม่
+                    openOrderDetails({ id: selectedTableId }, activeSessionData);
+                }
+                
+                window._currentDiscountSource = null;
+        
+            } catch (err) {
+                console.error("Confirm Discount Error:", err);
+                Notify.toast("เปลี่ยนส่วนลดไม่สำเร็จ", "error");
+            }
         }
         
         async function updateSessionDiscount(newVal) {
