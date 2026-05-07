@@ -1526,15 +1526,15 @@
         function selectStagedDiscount(val, btn) {
             stagedDiscountValue = val;
             
-            // ลบสีไฮไลท์จากทุกปุ่มในกลุ่มนี้
+            // ลบสีไฮไลท์แดงออกจากทุกปุ่ม
             document.querySelectorAll('.staged-disc-btn').forEach(b => {
-                b.classList.remove('bg-purple-600', 'border-purple-500', 'shadow-lg');
+                b.classList.remove('bg-red-600', 'border-red-500', 'shadow-lg');
                 b.classList.add('bg-white/5', 'border-white/5');
             });
             
-            // เพิ่มสีไฮไลท์ให้ปุ่มที่เลือก (ใช้สีม่วงให้เข้ากับ Dashboard)
+            // เพิ่มสีไฮไลท์แดงให้ปุ่มที่ถูกเลือก
             btn.classList.remove('bg-white/5', 'border-white/5');
-            btn.classList.add('bg-purple-600', 'border-purple-500', 'shadow-lg');
+            btn.classList.add('bg-red-600', 'border-red-500', 'shadow-lg');
         }
         
         // 3. ฟังก์ชันกดยืนยันเพื่อบันทึกลง Supabase (รวม logic จาก updateSessionDiscount เดิม)
