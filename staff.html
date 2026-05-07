@@ -1244,29 +1244,28 @@
             const seenData = JSON.parse(localStorage.getItem('vetres_seen_orders') || '{}');
             const lastSeenTime = seenData[activeSessionData.id] || 0;
             let maxTime = lastSeenTime;
-
+        
             container.innerHTML = items.map(item => {
                 const t = new Date(item.created_at).getTime();
                 if (t > maxTime) maxTime = t;
                 const isNew = t > lastSeenTime;
                 
-                // กำหนดสไตล์ Badge ตามสถานะ
                 let badgeClass = item.status === 'pending' ? 'badge-pending' : (item.status === 'served' ? 'badge-served' : 'badge-cancel');
                 let statusText = item.status === 'pending' ? 'รอทำ' : (item.status === 'served' ? 'เสิร์ฟ' : 'ยกเลิก');
                 
                 const optionChips = formatOptionChips(item.option);
                 const isCancelled = item.status === 'cancel';
-
-                // ดึงชื่อบริกร
+        
                 let staffName = '';
                 if (item.orders) {
                     const orderData = Array.isArray(item.orders) ? item.orders[0] : item.orders;
                     staffName = orderData?.staff_name ? `บริกร: ${orderData.staff_name}` : '';
                 }
-
+        
+                const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
+        
                 return `
                     <div class="group relative bg-white/[0.02] hover:bg-white/[0.05] p-4 rounded-2xl border ${isNew ? 'border-red-500/30' : 'border-white/5'} transition-all">
-                        <!-- แถวหลัก: ชื่ออาหาร + Badge และ ราคา + ปุ่มแก้ไข -->
                         <div class="flex justify-between items-start gap-4">
                             <div class="flex flex-wrap items-center gap-2">
                                 <span class="text-lg font-bold ${isCancelled ? 'text-zinc-600 line-through' : 'text-zinc-100'}">
@@ -1282,19 +1281,17 @@
                                 <span class="text-lg font-black ${isCancelled ? 'text-zinc-700' : 'text-white'}">
                                     ฿${parseFloat(item.total_price).toLocaleString()}
                                 </span>
-                                <button onclick='openEditItem(${JSON.stringify(item)})' class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all">
+                                <button data-item='${itemJson}' onclick='openEditItem(JSON.parse(this.dataset.item))' class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/10 transition-all">
                                     <i class="fas fa-pencil-alt text-[10px]"></i>
                                 </button>
                             </div>
                         </div>
-
-                        <!-- แถวรอง: บริกร และ ตัวเลือกเสริม -->
+        
                         <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                             ${staffName ? `<span class="text-[11px] text-zinc-500 font-medium">${staffName}</span>` : ''}
                             ${optionChips ? `<div class="flex flex-wrap">${optionChips}</div>` : ''}
                         </div>
-
-                        <!-- หมายเหตุ (ถ้ามี) -->
+        
                         ${item.note ? `
                             <div class="mt-2 text-[11px] text-orange-400/80 italic flex items-center gap-1.5 bg-orange-400/5 px-2 py-1 rounded-md w-fit">
                                 <i class="fas fa-comment-dots text-[9px]"></i>
@@ -1304,25 +1301,20 @@
                     </div>
                 `;
             }).join('');
-
-
+        
             const disc = activeSessionData.discount || 0;
             const validItems = items.filter(i => i.status !== 'cancel');
             const sub = validItems.reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
             const discountableSub = validItems.filter(i => i.kds_station !== 'น้ำ').reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
-            
-            // ✅ ตรรกะปัดส่วนลดลง (Floor Discount)
             const discAmt = Math.floor(discountableSub * (disc / 100));
-            const finalTotal = sub - discAmt;
-            
-            // ✅ แสดงผลเป็นเลขกลม (ลบ minimumFractionDigits ออก)
+        
             document.getElementById('billSubtotal').innerText = `฿${sub.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
             document.getElementById('billDiscountLabel').innerHTML = `
                 ส่วนลด (${disc}%) 
                 <i class="fas fa-edit text-[10px] opacity-40 group-hover:opacity-100 transition-opacity ml-1"></i>`;
             document.getElementById('billDiscountAmount').innerText = `- ฿${discAmt.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
             document.getElementById('billTotal').innerText = `฿${(sub - discAmt).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
-
+        
             seenData[activeSessionData.id] = maxTime;
             localStorage.setItem('vetres_seen_orders', JSON.stringify(seenData));
         }
