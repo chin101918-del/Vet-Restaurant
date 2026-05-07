@@ -612,7 +612,15 @@
 
             <div class="bg-[#1a1a1a] p-5 rounded-2xl border border-white/5">
                 <div class="flex justify-between text-slate-400 mb-2 font-light"><span>ยอดรวม</span><span id="billSubtotal">฿0.00</span></div>
-                <div class="flex justify-between text-red-400 mb-4 text-sm font-medium"><span id="billDiscountLabel">ส่วนลด (0%)</span><span id="billDiscountAmount">- ฿0.00</span></div>
+                <div class="flex justify-between text-red-400 mb-4 text-sm font-medium">
+                    <span id="billDiscountLabel" class="flex items-center gap-2">
+                        ส่วนลด (${disc}%)
+                        <button onclick="changeTableDiscount()" class="text-white/40 hover:text-white transition-colors">
+                            <i class="fas fa-edit text-xs"></i>
+                        </button>
+                    </span>
+                    <span id="billDiscountAmount">- ฿${discAmt.toLocaleString()}</span>
+                </div>
                 <div class="flex justify-between text-white text-3xl font-bold mb-6"><span>ยอดสุทธิ</span><span id="billTotal">฿0.00</span></div>
                 
                 <!-- ปรับปรุงกลุ่มปุ่ม Action ใหม่: 3 ปุ่มรองบน + 1 ปุ่มหลักล่าง -->
@@ -1423,6 +1431,43 @@
                             </button>
                         </div>`;
                 }).join('');
+            }
+        }
+
+        async function changeTableDiscount() {
+            if (!activeSessionData) return;
+        
+            // 1. ถามพนักงานว่าต้องการเปลี่ยนเป็นกี่ %
+            const newDiscount = prompt(`เปลี่ยนส่วนลดสำหรับโต๊ะ ${selectedTableId}\nระบุตัวเลข (เช่น 0, 5, 10, 15):`, activeSessionData.discount);
+            
+            // ถ้ากดยกเลิก หรือไม่ระบุค่า ให้จบการทำงาน
+            if (newDiscount === null || newDiscount === "") return;
+        
+            const discountVal = parseInt(newDiscount);
+            if (isNaN(discountVal) || discountVal < 0 || discountVal > 100) {
+                alert("กรุณาระบุตัวเลขระหว่าง 0 - 100 เท่านั้นครับ");
+                return;
+            }
+        
+            try {
+                // 2. อัปเดตลงฐานข้อมูลตาราง sessions
+                const { error } = await supabaseClient
+                    .from('sessions')
+                    .update({ discount: discountVal })
+                    .eq('id', activeSessionData.id);
+        
+                if (error) throw error;
+        
+                // 3. อัปเดตตัวแปรในเครื่อง และโหลดข้อมูลหน้า Modal ใหม่ทันที
+                activeSessionData.discount = discountVal;
+                Notify.toast(`เปลี่ยนส่วนลดเป็น ${discountVal}% เรียบร้อย`);
+                
+                // สั่งโหลดรายการอาหารและยอดเงินใหม่เพื่อให้ตัวเลขเปลี่ยนทันที
+                openOrderDetails({ id: selectedTableId }, activeSessionData);
+        
+            } catch (err) {
+                console.error("Change Discount Error:", err);
+                Notify.toast("ไม่สามารถเปลี่ยนส่วนลดได้", "error");
             }
         }
 
