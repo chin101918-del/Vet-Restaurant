@@ -19,17 +19,7 @@
             color: #fafafa; 
             overflow-x: hidden; 
         }
-        /* 🌟 2. เพิ่ม Noise Texture บางๆ ให้พื้นหลังดูไม่แบน (ทางลือกเพื่อความพรีเมียม) */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: url('https://grainy-gradients.vercel.app/noise.svg');
-            opacity: 0.15;
-            pointer-events: none;
-            z-index: -1;
-            filter: contrast(120%) brightness(120%);
-        }
+        
         .no-scrollbar::-webkit-scrollbar { display: none; }
         
         /* --- UI Layout Base --- */
@@ -1202,6 +1192,7 @@
             }).join('');
         }
         
+        // ฟังก์ชันแสดง Bubble แจ้งเตือน
         function showNotifBubble(itemName, newStatus) {
             const bubble = document.getElementById('notif-bubble');
             const msg = document.getElementById('bubble-msg');
@@ -1212,14 +1203,8 @@
         
             msg.innerHTML = `<span class="${isOut ? 'text-red-400' : 'text-emerald-400'}">${itemName}</span>: ${newStatus}`;
             bubble.classList.add('bubble-show');
+            bubble.classList.remove('pointer-events-none');
             bellBtn.classList.add('animate-ring', 'text-red-500');
-        
-            unreadNotifCount++;
-            const badge = document.getElementById('bellBadge');
-            if (badge) {
-                badge.innerText = unreadNotifCount;
-                badge.classList.remove('hidden');
-            }
         
             if (audioEnabled && audioUnlocked) {
                 const sound = document.getElementById('notiSound');
@@ -1229,30 +1214,28 @@
         
             setTimeout(() => {
                 bubble.classList.remove('bubble-show');
+                bubble.classList.add('pointer-events-none');
                 bellBtn.classList.remove('animate-ring');
             }, 5000);
-        } // <--- ต้องมีปีกกาปิดตรงนี้ก่อนเริ่มฟังก์ชันถัดไป!
+        }
         
+        // ฟังก์ชันเปิดรายละเอียดออเดอร์
         async function openOrderDetails(table, session) {
             if (!session) { Notify.toast("ไม่พบข้อมูล Session", "error"); return; }
             selectedTableId = table.id;
             activeSessionData = session;
-
+        
             document.getElementById('detailTableId').innerText = `โต๊ะ ${table.id}`;
             document.getElementById('detailSessionInfo').innerText = `Token: ${session.token} | Pax: ${session.pax}`;
             document.getElementById('orderDetailModal').classList.remove('hidden');
-
-            // ✅ ค้นหาด้วย session_token พร้อมพ่วงชื่อบริกรมาด้วยเบาๆ (ไม่บังคับ Inner Join)
+        
             const { data: items, error } = await supabaseClient
                 .from('order_items')
                 .select('*, orders(staff_name)')
                 .eq('session_token', session.token)
                 .order('created_at', { ascending: false });
-
-            if (error) {
-                console.error("Fetch Items Error:", error);
-            }
-
+        
+            if (error) console.error("Fetch Items Error:", error);
             renderOrderItems(items || []);
         }
 
