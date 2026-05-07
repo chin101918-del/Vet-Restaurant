@@ -313,14 +313,21 @@
 
         function selectProfile(role) {
             currentRole = role;
-            if (role === 'dashboard') { window.location.href = 'dashboard.html'; return; }
-            if (role === 'kitchen') { openStationModal(); return; }
-
             currentPinInput = "";
+            
+            // ตั้งหัวข้อหน้า PIN ให้ตรงตามตำแหน่ง
+            const titleMap = {
+                admin: "ผู้จัดการระบบ",
+                staff: "พนักงานบริการ",
+                kitchen: "แผนกครัว",
+                dashboard: "ระบบสถิติร้าน"
+            };
+
             document.getElementById('pinTitle').innerHTML = `
-                <p class="text-zinc-500 text-[13px] uppercase tracking-normal mb-2 font-medium">กรอกรหัสผ่านสำหรับ</p>
-                <h2 class="text-2xl font-bold text-white uppercase tracking-wide">${role}</h2>
+                <p class="text-zinc-500 text-[13px] uppercase mb-2 font-medium">กรอกรหัสผ่านสำหรับ</p>
+                <h2 class="text-2xl font-bold text-white uppercase tracking-wide">${titleMap[role]}</h2>
             `;
+            
             resetPinDots();
             document.getElementById('profileSection').classList.add('hidden');
             document.getElementById('pinSection').classList.remove('hidden');
@@ -356,45 +363,41 @@
         const LOCKOUT_TIME = 5 * 60 * 1000; // 5 นาที (มิลลิวินาที)
 
        async function checkPin() {
-            // เข้ารหัส PIN ก่อนส่ง
             const hashedInput = CryptoJS.SHA256(currentPinInput).toString();
-            console.log("Current PIN:", currentPinInput); // ดูว่าเลขที่กดคือ 1111 จริงไหม
-            console.log("Hashed Output:", hashedInput);  // ดูว่า Hash ตรงกับใน DB ไหม
 
             try {
-                // 2. เปลี่ยนมาเรียกใช้ตัวแปร supabaseClient ที่เราตั้งใหม่
                 const { data, error } = await supabaseClient.rpc('verify_staff_access', {
                     input_role: currentRole,
                     input_hash: hashedInput
                 });
 
-                if (error) {
-                    console.error("RPC Error:", error); // ถ้าฟังก์ชันไม่มีหรือเขียนผิด จะขึ้นตรงนี้
-                    alert("เกิดข้อผิดพลาดที่ระบบหลังบ้าน");
-                    return;
-                }
-
-                console.log("Response from DB:", data);
+                if (error) throw error;
 
                 if (data.success) {
-                    // สร้างตั๋วผ่านทาง เก็บชื่อตำแหน่งและเวลาที่ Login
+                    // 1. สร้างตั๋วผ่านทาง (Session)
                     const sessionData = {
                         role: currentRole,
-                        timestamp: Date.now(),
-                        token: CryptoJS.SHA256(currentRole + Date.now()).toString() // ตั๋วจำลอง
+                        timestamp: Date.now()
                     };
                     sessionStorage.setItem('vetres_session', JSON.stringify(sessionData));
-                    
-                    window.location.href = `${currentRole}.html`;
+
+                    // 2. ตรวจสอบว่าต้องไปหน้าไหน
+                    if (currentRole === 'kitchen') {
+                        // ถ้าเป็นครัว: ปิดหน้า PIN แล้วให้เลือกซุ้มก่อนเข้า kds.html
+                        document.getElementById('pinSection').classList.add('hidden');
+                        openStationModal(); 
+                    } else {
+                        // ถ้าเป็น Admin, Staff หรือ Dashboard: ไปหน้านั้นๆ ทันที
+                        window.location.href = `${currentRole}.html`;
+                    }
                 } else {
-                    // แสดงข้อความ Error จาก SQL RPC (เช่น รหัสผิด หรือ เครื่องโดนล็อค)
                     alert(data.message);
                     currentPinInput = "";
                     resetPinDots();
                 }
             } catch (err) {
-                console.error('Error:', err.message);
-                alert('ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบการตั้งค่า RPC');
+                console.error(err);
+                alert('ระบบขัดข้อง กรุณาลองใหม่');
                 currentPinInput = "";
                 resetPinDots();
             }
