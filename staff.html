@@ -1205,30 +1205,6 @@
         
         // 3. ฟังก์ชันจำลองการแสดง Bubble (จะใช้จริงใน Phase 3)
         function showNotifBubble(itemName, newStatus) {
-            const bubble = document.getElementById('notif-bubble');
-            const msg = document.getElementById('bubble-msg');
-            const iconBox = document.getElementById('bubble-icon-box');
-            const isOut = newStatus === 'หมด';
-        
-            // เปลี่ยนสีตามสถานะ
-            msg.innerText = `${itemName}: ${newStatus}`;
-            if (isOut) {
-                iconBox.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-red-500/20 text-red-500";
-                bubble.classList.add('border-red-500/30');
-            } else {
-                iconBox.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0 bg-emerald-500/20 text-emerald-500";
-                bubble.classList.remove('border-red-500/30');
-            }
-        
-            // แสดง Bubble และสั่นกระดิ่ง
-            bubble.classList.add('bubble-show');
-            document.getElementById('btnBell').classList.add('animate-ring', 'text-red-500');
-            
-            // ซ่อนหลังจาก 5 วินาที
-            setTimeout(() => {
-                bubble.classList.remove('bubble-show');
-            }, 5000);
-        }
         
         async function openOrderDetails(table, session) {
             if (!session) { Notify.toast("ไม่พบข้อมูล Session", "error"); return; }
