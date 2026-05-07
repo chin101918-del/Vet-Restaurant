@@ -442,13 +442,23 @@
                 btn.className = "station-option";
                 btn.innerText = s;
                 
+                // ภายในฟังก์ชัน openStationModal
                 btn.onclick = (e) => { 
                     e.stopPropagation();
+                    
+                    // 1. ออกตั๋ว (Session) สำหรับ Kitchen
+                    const sessionData = {
+                        role: 'kitchen', // ชื่อต้องตรงกับที่ 'ยาม' ใน kds.html ตรวจสอบ
+                        timestamp: Date.now()
+                    };
+                    sessionStorage.setItem('vetres_session', JSON.stringify(sessionData));
+                
+                    // 2. เก็บชื่อซุ้มลง LocalStorage (เพื่อใช้แสดงผลในหน้าครัว)
                     localStorage.setItem('kds_station', s); 
+                    
+                    // 3. ย้ายหน้า
                     window.location.href = 'kds.html'; 
                 };
-                grid.appendChild(btn);
-            });
             
             document.getElementById('stationModal').classList.remove('hidden');
         }
