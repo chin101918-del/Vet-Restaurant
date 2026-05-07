@@ -1211,12 +1211,12 @@
             const finalTotal = sub - discAmt;
             
             // ✅ แสดงผลเป็นเลขกลม (ลบ minimumFractionDigits ออก)
-            document.getElementById('billSubtotal').innerText = `฿${sub.toLocaleString()}`;
+            document.getElementById('billSubtotal').innerText = `฿${sub.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
             document.getElementById('billDiscountLabel').innerHTML = `
                 ส่วนลด (${disc}%) 
                 <i class="fas fa-edit text-[10px] opacity-40 group-hover:opacity-100 transition-opacity ml-1"></i>`;
-            document.getElementById('billDiscountAmount').innerText = `- ฿${discAmt.toLocaleString()}`;
-            document.getElementById('billTotal').innerText = `฿${finalTotal.toLocaleString()}`;
+            document.getElementById('billDiscountAmount').innerText = `- ฿${discAmt.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
+            document.getElementById('billTotal').innerText = `฿${(sub - discAmt).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
 
             seenData[activeSessionData.id] = maxTime;
             localStorage.setItem('vetres_seen_orders', JSON.stringify(seenData));
@@ -2018,8 +2018,8 @@
                 
                 // จัดรูปแบบ HTML (ถอดราคาเดิมที่ขีดฆ่าให้เห็นด้วยถ้ามีส่วนลด)
                 const priceHtml = discountPercent > 0
-                    ? `<span class="line-through text-slate-400 text-[10px] mr-1">฿${totalGross.toLocaleString('th-TH')}</span><span class="text-orange-400 font-bold">฿${totalNet.toLocaleString('th-TH')}</span>`
-                    : `<span class="text-white/80 font-bold">฿${totalGross.toLocaleString('th-TH')}</span>`;
+                    ? `<span class="line-through text-slate-400 text-[10px] mr-1">฿${totalGross.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span><span class="text-orange-400 font-bold">฿${totalNet.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>`
+                    : `<span class="text-white/80 font-bold">฿${totalGross.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</span>`;
 
                 return `
                     <div class="kds-card ${cardClass}">
