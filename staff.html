@@ -1174,12 +1174,12 @@
             const validItems = items.filter(i => i.status !== 'cancel');
             const sub = validItems.reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
             const discountableSub = validItems.filter(i => i.kds_station !== 'น้ำ').reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
-            const discAmt = discountableSub * (disc / 100);
+            const discAmt = Math.floor(discountableSub * (disc / 100));
 
             document.getElementById('billSubtotal').innerText = `฿${sub.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
             document.getElementById('billDiscountLabel').innerText = `ส่วนลด (${disc}%)`;
             document.getElementById('billDiscountAmount').innerText = `- ฿${discAmt.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
-            document.getElementById('billTotal').innerText = `฿${Math.ceil(sub - discAmt).toLocaleString()}`;
+            document.getElementById('billTotal').innerText = `฿${(sub - discAmt).toLocaleString('th-TH', { minimumFractionDigits: 2 })}`;
 
             seenData[activeSessionData.id] = maxTime;
             localStorage.setItem('vetres_seen_orders', JSON.stringify(seenData));
@@ -1790,7 +1790,7 @@
             
             // ✅ ลดราคาเฉพาะค่าอาหาร 10%
             const discountableGross = servedItems.filter(i => i.kds_station !== 'น้ำ').reduce((sum, i) => sum + (parseFloat(i.total_price) || 0), 0);
-            const totalNet = Math.ceil(totalGross - discountAmount);
+            const totalNet = totalGross - (discountableGross * 0.10); 
 
             document.getElementById('cntStaff').innerText = (orders || []).length;
             renderKdsCards('staffContainer', orders || [], 'staff');
@@ -1898,7 +1898,7 @@
                 const discountableGross = validItems.filter(i => i.kds_station !== 'น้ำ').reduce((s, i) => s + (parseFloat(i.total_price) || 0), 0);
                 
                 const discountAmount = discountableGross * (discountPercent / 100);
-                const totalNet = Math.ceil(totalGross - (discountableGross * 0.10));
+                const totalNet = totalGross - discountAmount;
                 
                 // จัดรูปแบบ HTML (ถอดราคาเดิมที่ขีดฆ่าให้เห็นด้วยถ้ามีส่วนลด)
                 const priceHtml = discountPercent > 0
@@ -2189,9 +2189,9 @@
             // ✅ แยกยอดส่วนลดในกระดาษใบเสร็จ
             const discountableGross = items.filter(i => i.kds_station !== 'น้ำ').reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
             const discAmt = discountableGross * (discPct / 100);
-            const net = Math.ceil(totalGross - discAmt);
+            const net = totalGross - discAmt;
 
-            document.getElementById('r-net-total').innerText = `฿${net.toLocaleString()}`;
+            document.getElementById('r-subtotal').innerText = `฿${totalGross.toLocaleString()}`;
             if (discPct > 0) {
                 document.getElementById('r-disc-container').style.display = 'flex';
                 document.getElementById('r-discount-label').innerText = `ส่วนลด (${discPct}%)`;
