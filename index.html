@@ -279,14 +279,17 @@
         <div id="pinCard" class="w-full max-w-[320px] flex flex-col items-center">
             <div id="pinTitle" class="mb-10 text-center"></div>
             
-            <div class="flex justify-center gap-6 mb-12">
-                <div class="pin-dot" id="dot1"></div>
-                <div class="pin-dot" id="dot2"></div>
-                <div class="pin-dot" id="dot3"></div>
-                <div class="pin-dot" id="dot4"></div>
+            <div class="flex flex-col items-center">
+                <div id="pinDotContainer" class="flex justify-center gap-6 mb-4">
+                    <div class="pin-dot" id="dot1"></div>
+                    <div class="pin-dot" id="dot2"></div>
+                    <div class="pin-dot" id="dot3"></div>
+                    <div class="pin-dot" id="dot4"></div>
+                </div>
+                <div id="pinErrorMessage" class="text-center"></div>
             </div>
             
-            <div class="grid grid-cols-3 gap-y-6 gap-x-4 w-full justify-items-center">
+            <div class="grid grid-cols-3 gap-y-6 gap-x-4 w-full justify-items-center mt-12">
                 <button onclick="pressKey('1')" class="numpad-btn">1</button>
                 <button onclick="pressKey('2')" class="numpad-btn">2</button>
                 <button onclick="pressKey('3')" class="numpad-btn">3</button>
@@ -305,16 +308,6 @@
             </div>
         </div>
     </section>
-
-    <div class="flex flex-col items-center">
-        <div id="pinDotContainer" class="flex justify-center gap-6 mb-4">
-            <div class="pin-dot" id="dot1"></div>
-            <div class="pin-dot" id="dot2"></div>
-            <div class="pin-dot" id="dot3"></div>
-            <div class="pin-dot" id="dot4"></div>
-        </div>
-        <div id="pinErrorMessage"></div>
-    </div>
 
     <div id="stationModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4" onclick="handleOutsideClick(event, 'station')">
         <button onclick="closeStationModal()" class="btn-close-top"><i class="fas fa-times"></i></button>
