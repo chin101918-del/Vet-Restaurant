@@ -441,6 +441,27 @@
         let audioUnlocked = false; // browser อนุญาตให้เล่นเสียงแล้วหรือยัง
         let ordersData = {};
 
+        (function checkAccess() {
+            const session = JSON.parse(sessionStorage.getItem('vetres_session'));
+            const currentPage = window.location.pathname.split('/').pop().replace('.html', '');
+        
+            // 1. ถ้าไม่มีตั๋ว หรือ ตั๋วหมดอายุ (เช่น เกิน 12 ชั่วโมง)
+            if (!session || (Date.now() - session.timestamp > 12 * 60 * 60 * 1000)) {
+                alert('กรุณาเข้าสู่ระบบก่อนใช้งาน');
+                window.location.href = 'index.html';
+                return;
+            }
+        
+            // 2. ถ้ามีตั๋วแต่ "ตำแหน่งไม่ตรง" (เช่น Staff พยายามแอบเข้าหน้า Admin)
+            if (currentPage !== 'kitchen' && session.role !== currentPage) {
+                // อนุญาตเฉพาะกรณีพิเศษ เช่น Admin เข้าได้ทุกหน้า
+                if (session.role !== 'admin') {
+                    alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+                    window.location.href = 'index.html';
+                }
+            }
+        })();
+
         // Browser autoplay policy: เสียงต้องเล่นหลังจาก user click ครั้งแรก
         // จับ first click ทุกที่บนหน้า → unlock audio
         function unlockAudio() {
