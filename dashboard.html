@@ -624,221 +624,196 @@
         }
 
         function processData(items, orders, sessions, yestItems, yestSessions) {
-            const pendingItems = items.filter(i => i.status === 'pending');
-            const servedItems = items.filter(i => i.status === 'served');
-            currentRawData = { servedItems, sessions, orders };
+    const pendingItems = items.filter(i => i.status === 'pending');
+    const servedItems = items.filter(i => i.status === 'served');
+    currentRawData = { servedItems, sessions, orders };
 
-            const orderTypeMap = orders.reduce((acc, o) => { acc[o.id] = o.order_type; return acc; }, {});
-            const discountMap = sessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
-            const yestDiscountMap = yestSessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
+    // สร้าง Map เพื่อการค้นหาข้อมูลที่รวดเร็ว
+    const orderTypeMap = orders.reduce((acc, o) => { acc[o.id] = o.order_type; return acc; }, {});
+    const discountMap = sessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
+    const yestDiscountMap = yestSessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
 
-            // --- 1. คำนวณรายได้ ---
-            const calcNetRevenue = (itemArray, discMap) => {
-                let gross = 0, discountAmt = 0;
-                itemArray.forEach(item => {
-                    const price = parseFloat(item.total_price) || 0;
-                    gross += price;
-                    if (item.kds_station !== 'น้ำ') {
-                        discountAmt += price * ((discMap[item.session_token] || 0) / 100);
-                    }
-                });
-                return { gross, discountAmt, net: gross - discountAmt };
-            };
+    // ==========================================
+    // 1. ฟังก์ชันหลัก: คำนวณรายได้แบบ "ปัดส่วนลดลงรายบิล"
+    // ==========================================
+    const calcNetRevenue = (itemArray, discMap) => {
+        let totalGross = 0;
+        let totalDiscount = 0;
+        const sessionGroups = {};
 
-            const todayRev = calcNetRevenue(servedItems, discountMap);
-            const yestRev = calcNetRevenue(yestItems, yestDiscountMap);
-
-            document.getElementById('statNet').innerText = `฿${todayRev.net.toLocaleString('th-TH', {minimumFractionDigits:2})}`;
-            document.getElementById('statGross').innerText = `฿${todayRev.gross.toLocaleString('th-TH')}`;
-            document.getElementById('statDiscount').innerText = `-฿${todayRev.discountAmt.toLocaleString('th-TH', {minimumFractionDigits:2})}`;
-            document.getElementById('statPending').innerText = pendingItems.length;
-            document.getElementById('donutTotal').innerText = `฿${todayRev.net.toLocaleString('th-TH')}`;
-
-            const trendEl = document.getElementById('trendNet');
-            if (yestRev.net === 0) {
-                trendEl.innerHTML = `<span class="text-slate-400">N/A</span>`;
-            } else {
-                const diff = todayRev.net - yestRev.net;
-                const pct = (diff / yestRev.net) * 100;
-                if (diff >= 0) {
-                    trendEl.className = 'text-xs bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-lg border border-emerald-500/30';
-                    trendEl.innerHTML = `<i class="fas fa-arrow-up mr-1"></i> ${pct.toFixed(1)}%`;
-                } else {
-                    trendEl.className = 'text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded-lg border border-red-500/30';
-                    trendEl.innerHTML = `<i class="fas fa-arrow-down mr-1"></i> ${Math.abs(pct).toFixed(1)}%`;
-                }
+        // 1.1 จัดกลุ่มรายการอาหารตาม Session
+        itemArray.forEach(item => {
+            const token = item.session_token;
+            if (!token) return;
+            if (!sessionGroups[token]) {
+                sessionGroups[token] = { gross: 0, discountable: 0 };
             }
+            const price = parseFloat(item.total_price) || 0;
+            sessionGroups[token].gross += price;
+            // "น้ำ" ไม่นำมาคำนวณส่วนลด
+            if (item.kds_station !== 'น้ำ') {
+                sessionGroups[token].discountable += price;
+            }
+        });
 
-            // --- 2. คำนวณ Customer Insights (Spend, Dwell Time, Turnover) ---
-            document.getElementById('statTotalBills').innerText = orders.length;
+        // 1.2 คำนวณรายบิล: ยอดบิล - FLOOR(ยอดอาหาร * %)
+        Object.keys(sessionGroups).forEach(token => {
+            const group = sessionGroups[token];
+            const pct = discMap[token] || 0;
+            const billDiscount = Math.floor(group.discountable * (pct / 100));
             
-            let totalPax = 0;
-            let totalDwellTimeMs = 0;
-            let validDwellSessions = 0;
+            totalGross += group.gross;
+            totalDiscount += billDiscount;
+        });
 
-            let longestStayMs = 0;
-            let shortestStayMs = Infinity;
-            let maxBill = 0;
-            let minBill = Infinity;
+        return { gross: totalGross, discountAmt: totalDiscount, net: totalGross - totalDiscount };
+    };
 
-            const tableCounts = {}; // นับบิลแต่ละโต๊ะ
+    const todayRev = calcNetRevenue(servedItems, discountMap);
+    const yestRev = calcNetRevenue(yestItems, yestDiscountMap);
 
-            // 2.1 หาระยะเวลา และนับบิลรายโต๊ะ
-            sessions.forEach(s => {
-                // นับโต๊ะ (ไม่นับ Takehome)
-                if (s.table_id && s.table_id.toLowerCase() !== 'takehome') {
-                    tableCounts[s.table_id] = (tableCounts[s.table_id] || 0) + 1;
-                }
+    // อัปเดต UI ส่วนการเงิน (ใช้เลขกลม)
+    document.getElementById('statNet').innerText = `฿${todayRev.net.toLocaleString()}`;
+    document.getElementById('statGross').innerText = `฿${todayRev.gross.toLocaleString()}`;
+    document.getElementById('statDiscount').innerText = `-฿${todayRev.discountAmt.toLocaleString()}`;
+    document.getElementById('statPending').innerText = pendingItems.length;
+    document.getElementById('donutTotal').innerText = `฿${todayRev.net.toLocaleString()}`;
 
-                if (s.session_type === 'dine_in' || !s.session_type) {
-                    const pax = parseInt(s.pax, 10) || 1;
-                    totalPax += pax;
+    // คำนวณ Trend เปรียบเทียบเมื่อวาน
+    const trendEl = document.getElementById('trendNet');
+    if (yestRev.net > 0) {
+        const diff = todayRev.net - yestRev.net;
+        const pct = (diff / yestRev.net) * 100;
+        const isUp = diff >= 0;
+        trendEl.className = `text-xs font-bold px-2 py-1 rounded-lg border ${isUp ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`;
+        trendEl.innerHTML = `<i class="fas fa-arrow-${isUp ? 'up' : 'down'} mr-1"></i> ${Math.abs(pct).toFixed(1)}%`;
+    } else {
+        trendEl.innerHTML = `<span class="text-slate-500">N/A</span>`;
+    }
 
-                    if (s.opened_at && s.closed_at) {
-                        const dwellTime = new Date(s.closed_at).getTime() - new Date(s.opened_at).getTime();
-                        totalDwellTimeMs += dwellTime;
-                        validDwellSessions++;
+    // ==========================================
+    // 2. คำนวณ Customer Insights (พฤติกรรมลูกค้า)
+    // ==========================================
+    let totalPax = 0;
+    let totalDwellTimeMs = 0;
+    let validDwellSessions = 0;
+    let longestStay = 0;
+    let shortestStay = Infinity;
+    const tableCounts = {};
+    const sessionNetTotals = {}; // เก็บยอด Net รายบิลไว้คำนวณ Max/Min Bill
 
-                        if (dwellTime > longestStayMs) longestStayMs = dwellTime;
-                        if (dwellTime > 0 && dwellTime < shortestStayMs) shortestStayMs = dwellTime;
-                    }
-                }
-            });
-
-            if (shortestStayMs === Infinity) shortestStayMs = 0;
-
-            // คำนวณหาโต๊ะหมุนไว/ช้าสุด (Turnover)
-            let maxTableCount = 0; let minTableCount = Infinity;
-            let maxTableId = '-'; let minTableId = '-';
-            
-            Object.entries(tableCounts).forEach(([tId, count]) => {
-                if (count > maxTableCount) { maxTableCount = count; maxTableId = tId; }
-                if (count < minTableCount) { minTableCount = count; minTableId = tId; }
-            });
-            if (minTableCount === Infinity) minTableCount = 0;
-
-            // 2.2 หายอดบิลสุทธิรายโต๊ะ
-            const sessionNetTotals = {};
-            servedItems.forEach(i => {
-                if(orderTypeMap[i.order_id] === 'dine_in' || !orderTypeMap[i.order_id]) {
-                    const token = i.session_token;
-                    if(token) {
-                        const price = parseFloat(i.total_price || 0);
-                        const discountPct = i.kds_station === 'น้ำ' ? 0 : (discountMap[token] || 0);
-                        const netPrice = price * (1 - discountPct / 100);
-                        sessionNetTotals[token] = (sessionNetTotals[token] || 0) + netPrice;
-                    }
-                }
-            });
-
-            let dineInNet = 0;
-            Object.values(sessionNetTotals).forEach(netTotal => {
-                dineInNet += netTotal;
-                if (netTotal > maxBill) maxBill = netTotal;
-                if (netTotal > 0 && netTotal < minBill) minBill = netTotal;
-            });
-            if (minBill === Infinity) minBill = 0;
-
-            // 2.3 อัปเดตหน้าจอทั้งหมด
-            const avgSpend = totalPax > 0 ? (dineInNet / totalPax) : 0;
-            document.getElementById('statAvgSpend').innerText = `฿${Math.round(avgSpend).toLocaleString()}`;
-            
-            const statOverviewAvgSpend = document.getElementById('statOverviewAvgSpend');
-            if (statOverviewAvgSpend) statOverviewAvgSpend.innerText = `฿${Math.round(avgSpend).toLocaleString()}`;
-            
-            const statOverviewTotalBills = document.getElementById('statOverviewTotalBills');
-            if (statOverviewTotalBills) statOverviewTotalBills.innerText = orders.length;
-
-            const avgDwellMs = validDwellSessions > 0 ? (totalDwellTimeMs / validDwellSessions) : 0;
-            document.getElementById('statAvgDwell').innerText = formatDuration(avgDwellMs);
-            
-            document.getElementById('statMaxBill').innerText = `฿${Math.round(maxBill).toLocaleString()}`;
-            document.getElementById('statMinBill').innerText = `฿${Math.round(minBill).toLocaleString()}`;
-            
-            document.getElementById('statLongestStay').innerText = formatDuration(longestStayMs);
-            document.getElementById('statShortestStay').innerText = formatDuration(shortestStayMs);
-
-            // แสดงผลโต๊ะ Turnover
-            document.getElementById('statMaxTurnover').innerText = maxTableCount > 0 ? `${maxTableId} (${maxTableCount} บิล)` : '-';
-            document.getElementById('statMinTurnover').innerText = minTableCount > 0 ? `${minTableId} (${minTableCount} บิล)` : '-';
-
-            // --- 3. คำนวณความเร็วรายซุ้ม (Station Performance) ---
-            const stationTimes = {}; // { 'ซุ้มA': { totalMs: 0, count: 0 } }
-            servedItems.forEach(item => {
-                if (item.kds_station && item.created_at && item.served_at) {
-                    const waitTime = new Date(item.served_at).getTime() - new Date(item.created_at).getTime();
-                    if (!stationTimes[item.kds_station]) stationTimes[item.kds_station] = { totalMs: 0, count: 0 };
-                    stationTimes[item.kds_station].totalMs += waitTime;
-                    stationTimes[item.kds_station].count++;
-                }
-            });
-
-            let fastestStation = { name: '-', time: Infinity };
-            let slowestStation = { name: '-', time: 0 };
-
-            Object.keys(stationTimes).forEach(station => {
-                const avgMs = stationTimes[station].totalMs / stationTimes[station].count;
-                // พิจารณาเฉพาะซุ้มที่มีคิวพอสมควร (เช่น มากกว่า 1 จาน) เพื่อตัด outlier
-                if (stationTimes[station].count > 0) {
-                    if (avgMs < fastestStation.time) { fastestStation = { name: station, time: avgMs }; }
-                    if (avgMs > slowestStation.time) { slowestStation = { name: station, time: avgMs }; }
-                }
-            });
-
-            document.getElementById('statFastestStation').innerHTML = fastestStation.name !== '-' 
-                ? `ซุ้ม${fastestStation.name} <span class="text-sm font-normal text-slate-400">(${Math.round(fastestStation.time / 60000)}m)</span>` 
-                : '-';
-            
-            document.getElementById('statSlowestStation').innerHTML = slowestStation.name !== '-' 
-                ? `ซุ้ม${slowestStation.name} <span class="text-sm font-normal text-slate-400">(${Math.round(slowestStation.time / 60000)}m)</span>` 
-                : '-';
-
-            // --- 4. Render Charts (ของเดิม) ---
-            const hoursCount = Array(24).fill(0);
-            items.forEach(i => hoursCount[new Date(i.created_at).getHours()]++);
-            renderPeakChart(hoursCount);
-
-            const menuRev = {};
-            servedItems.forEach(i => menuRev[i.item_name_th] = (menuRev[i.item_name_th] || 0) + parseFloat(i.total_price || 0));
-            document.getElementById('topMenusList').innerHTML = Object.entries(menuRev).sort((a,b) => b[1] - a[1]).slice(0, 5).map((m, i) => `
-                <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-400 border border-slate-700">${i+1}</div>
-                        <span class="font-medium text-slate-200">${m[0]}</span>
-                    </div>
-                    <span class="font-bold text-emerald-400">฿${m[1].toLocaleString()}</span>
-                </div>
-            `).join('') || '<div class="text-slate-500 text-center py-5">ยังไม่มีข้อมูล</div>';
-
-            const stationGross = {};
-            servedItems.forEach(i => {
-                const st = i.kds_station || 'Unknown';
-                stationGross[st] = (stationGross[st] || 0) + parseFloat(i.total_price || 0);
-            });
-            renderStationChart(stationGross);
-
-            const typeGross = { 'dine_in': 0, 'takehome': 0, 'staff': 0 };
-            servedItems.forEach(i => {
-                const t = orderTypeMap[i.order_id] || 'dine_in';
-                typeGross[t] = (typeGross[t] || 0) + parseFloat(i.total_price || 0);
-            });
-            renderTypeChart(typeGross);
-
-            // --- เตรียมข้อมูลสำหรับกราฟ Pie ออเดอร์ค้าง ---
-            const pendingByStation = {};
-            pendingItems.forEach(i => {
-                const st = i.kds_station || 'Unknown';
-                pendingByStation[st] = (pendingByStation[st] || 0) + i.quantity;
-            });
-            renderPendingChart(pendingByStation);
-
+    // ประมวลผลราย Session
+    sessions.forEach(s => {
+        if (s.table_id && s.table_id !== 'TH' && s.table_id !== 'STAFF') {
+            tableCounts[s.table_id] = (tableCounts[s.table_id] || 0) + 1;
         }
 
-        // ════════════════════════════════════════════════
-        // 3. Chart.js Configurations
-        // ════════════════════════════════════════════════
-        Chart.defaults.color = 'rgba(255,255,255,0.5)';
-        Chart.defaults.font.family = 'Kanit';
+        // เฉพาะลูกค้า Dine-in
+        if (s.session_type === 'dine_in' || !s.session_type) {
+            totalPax += (parseInt(s.pax) || 1);
+            if (s.opened_at && s.closed_at) {
+                const duration = new Date(s.closed_at) - new Date(s.opened_at);
+                if (duration > 0) {
+                    totalDwellTimeMs += duration;
+                    validDwellSessions++;
+                    if (duration > longestStay) longestStay = duration;
+                    if (duration < shortestStay) shortestStay = duration;
+                }
+            }
+        }
+    });
+
+    // คำนวณยอด Net รายบิลจาก servedItems
+    const tempGroups = {};
+    servedItems.forEach(i => {
+        const t = i.session_token;
+        if (!t) return;
+        if (!tempGroups[t]) tempGroups[t] = { gross: 0, discountable: 0 };
+        tempGroups[t].gross += parseFloat(i.total_price || 0);
+        if (i.kds_station !== 'น้ำ') tempGroups[t].discountable += parseFloat(i.total_price || 0);
+    });
+
+    Object.keys(tempGroups).forEach(t => {
+        const pct = (orderTypeMap[Object.keys(orderTypeMap).find(oid => servedItems.find(si => si.session_token === t)?.order_id === oid)] === 'staff') ? 10 : (discountMap[t] || 0);
+        sessionNetTotals[t] = tempGroups[t].gross - Math.floor(tempGroups[t].discountable * (pct / 100));
+    });
+
+    const billValues = Object.values(sessionNetTotals);
+    const maxBill = billValues.length ? Math.max(...billValues) : 0;
+    const minBill = billValues.length ? Math.min(...billValues) : 0;
+
+    // อัปเดต UI Insights
+    document.getElementById('statTotalBills').innerText = orders.length;
+    document.getElementById('statOverviewTotalBills').innerText = orders.length;
+    document.getElementById('statAvgSpend').innerText = totalPax > 0 ? Math.round(todayRev.net / totalPax).toLocaleString() : '0';
+    document.getElementById('statOverviewAvgSpend').innerText = totalPax > 0 ? `฿${Math.round(todayRev.net / totalPax).toLocaleString()}` : '฿0';
+    document.getElementById('statAvgDwell').innerText = formatDuration(validDwellSessions > 0 ? totalDwellTimeMs / validDwellSessions : 0);
+    document.getElementById('statMaxBill').innerText = `฿${Math.round(maxBill).toLocaleString()}`;
+    document.getElementById('statMinBill').innerText = `฿${Math.round(minBill).toLocaleString()}`;
+    document.getElementById('statLongestStay').innerText = formatDuration(longestStay);
+    document.getElementById('statShortestStay').innerText = shortestStay === Infinity ? '0 นาที' : formatDuration(shortestStay);
+
+    // Turnover (โต๊ะไหนหมุนบ่อยสุด)
+    const sortedTables = Object.entries(tableCounts).sort((a,b) => b[1] - a[1]);
+    document.getElementById('statMaxTurnover').innerText = sortedTables.length ? `${sortedTables[0][0]} (${sortedTables[0][1]} บิล)` : '-';
+    document.getElementById('statMinTurnover').innerText = sortedTables.length ? `${sortedTables[sortedTables.length-1][0]} (${sortedTables[sortedTables.length-1][1]} บิล)` : '-';
+
+    // ==========================================
+    // 3. วิเคราะห์ความเร็วรายซุ้ม & กราฟ
+    // ==========================================
+    const stationPerf = {};
+    servedItems.forEach(i => {
+        if (i.kds_station && i.created_at && i.served_at) {
+            const time = new Date(i.served_at) - new Date(i.created_at);
+            if (!stationPerf[i.kds_station]) stationPerf[i.kds_station] = { totalMs: 0, count: 0 };
+            stationPerf[i.kds_station].totalMs += time;
+            stationPerf[i.kds_station].count++;
+        }
+    });
+
+    const perfArray = Object.entries(stationPerf).map(([name, data]) => ({ name, avg: data.totalMs / data.count }));
+    const fastest = perfArray.sort((a,b) => a.avg - b.avg)[0];
+    const slowest = perfArray.sort((a,b) => b.avg - a.avg)[0];
+
+    document.getElementById('statFastestStation').innerHTML = fastest ? `ซุ้ม${fastest.name} <span class="text-sm font-normal text-slate-400">(${Math.round(fastest.avg/60000)}m)</span>` : '-';
+    document.getElementById('statSlowestStation').innerHTML = slowest ? `ซุ้ม${slowest.name} <span class="text-sm font-normal text-slate-400">(${Math.round(slowest.avg/60000)}m)</span>` : '-';
+
+    // กราฟ Peak Time (รายชั่วโมง)
+    const hoursCount = Array(24).fill(0);
+    items.forEach(i => hoursCount[new Date(i.created_at).getHours()]++);
+    renderPeakChart(hoursCount);
+
+    // 5 อันดับเมนู
+    const menuRev = {};
+    servedItems.forEach(i => menuRev[i.item_name_th] = (menuRev[i.item_name_th] || 0) + parseFloat(i.total_price || 0));
+    document.getElementById('topMenusList').innerHTML = Object.entries(menuRev).sort((a,b) => b[1] - a[1]).slice(0, 5).map((m, i) => `
+        <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-400 border border-slate-700">${i+1}</div>
+                <span class="font-medium text-slate-200">${m[0]}</span>
+            </div>
+            <span class="font-bold text-emerald-400">฿${Math.round(m[1]).toLocaleString()}</span>
+        </div>
+    `).join('') || '<div class="text-slate-500 text-center py-5">ยังไม่มีข้อมูล</div>';
+
+    // รายได้แยกซุ้ม (Bar Chart)
+    const stationGross = {};
+    servedItems.forEach(i => stationGross[i.kds_station] = (stationGross[i.kds_station] || 0) + parseFloat(i.total_price || 0));
+    renderStationChart(stationGross);
+
+    // รายได้แยกประเภท (Donut Chart - ใช้ตรรกะ Floor)
+    const typeGross = { 'dine_in': 0, 'takehome': 0, 'staff': 0 };
+    Object.keys(sessionNetTotals).forEach(t => {
+        const type = sessions.find(s => s.token === t)?.session_type || 'dine_in';
+        typeGross[type] += sessionNetTotals[t];
+    });
+    renderTypeChart(typeGross);
+
+    // ออเดอร์ค้าง (Pending Pie)
+    const pendingByStation = {};
+    pendingItems.forEach(i => pendingByStation[i.kds_station] = (pendingByStation[i.kds_station] || 0) + i.quantity);
+    renderPendingChart(pendingByStation);
+}
 
         function renderPeakChart(dataArr) {
             if (charts.peak) charts.peak.destroy();
