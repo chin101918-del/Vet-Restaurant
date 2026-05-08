@@ -1039,30 +1039,40 @@
         // ════════════════════════════════════════════════════════
         // 5. MENUS DATA (sidebar tab — status toggle + per-choice deactivation)
         // ════════════════════════════════════════════════════════
-        let menusCache = []; // เก็บไว้สำหรับ toggle option
-        const expandedMenus = new Set(); // เก็บ menu ids ที่กำลังขยาย options อยู่
+        let menusCache = [];
+        let optionsMasterMap = {}; // UUID → option_items row
+        const expandedMenus = new Set();
 
         async function loadMenusData() {
             const list = document.getElementById('menuList');
             list.innerHTML = `<div class="text-center text-slate-500 py-6"><i class="fas fa-spinner fa-spin"></i> กำลังโหลด...</div>`;
 
-            const { data: menus, error } = await supabaseClient.from('menus')
-                .select('id, item_th, status, image_url, option_th, disabled_options')
-                .eq('station_th', currentStation)
-                .neq('status', 'ลบ')
-                .order('sort_order');
+            const [optItemsRes, menusRes] = await Promise.all([
+                supabaseClient.from('option_items')
+                    .select('id, name_th, name_en, name_cn, status')
+                    .eq('station_th', currentStation),
+                supabaseClient.from('menus')
+                    .select('id, item_th, status, image_url, options_config')
+                    .eq('station_th', currentStation)
+                    .neq('status', 'ลบ')
+                    .order('sort_order')
+            ]);
 
-            if (error || !menus) {
+            if (menusRes.error || !menusRes.data) {
                 list.innerHTML = `<div class="text-center text-red-500 py-6 text-sm">ดึงข้อมูลไม่สำเร็จ</div>`;
                 return;
             }
 
-            if (menus.length === 0) {
+            // Build UUID → option_item lookup map
+            optionsMasterMap = {};
+            (optItemsRes.data || []).forEach(o => { optionsMasterMap[o.id] = o; });
+
+            if (menusRes.data.length === 0) {
                 list.innerHTML = `<div class="text-center text-slate-600 py-6 text-sm">ยังไม่มีเมนูในซุ้มนี้</div>`;
                 return;
             }
 
-            menusCache = menus;
+            menusCache = menusRes.data;
             renderMenuList();
         }
 
@@ -1077,12 +1087,11 @@
                 : `<div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-slate-600 flex-shrink-0"><i class="fas fa-image text-xs"></i></div>`;
 
             const statusColor = m.status === 'ปกติ' ? 'text-green-400' : (m.status === 'หมด' ? 'text-red-400' : 'text-yellow-400');
-            const hasOptions = m.option_th && m.option_th.trim();
+            const hasOptions = Array.isArray(m.options_config) && m.options_config.some(g => (g.item_ids || []).length > 0);
             const isExpanded = expandedMenus.has(m.id);
-            
-            // นับจำนวน choices ที่ disabled
-            const disabledList = Array.isArray(m.disabled_options) ? m.disabled_options : [];
-            const disabledCount = disabledList.length;
+
+            const disabledCount = (m.options_config || []).reduce((acc, g) =>
+                acc + (g.item_ids || []).filter(id => optionsMasterMap[id]?.status === 'หมด').length, 0);
             const optionsBtnLabel = disabledCount > 0 
                 ? `<i class="fas fa-toggle-off mr-1"></i> ${disabledCount} ปิด`
                 : `<i class="fas fa-toggle-on mr-1"></i> ตัวเลือก`;
@@ -1117,40 +1126,32 @@
         }
 
         function renderOptionsPanel(m) {
-            // Parse option_th — format: "Group: choice1, choice2(+30) || Group2: ..."
-            const groups = (m.option_th || '').split('||').map(g => g.trim()).filter(Boolean);
-            const disabledList = Array.isArray(m.disabled_options) ? m.disabled_options : [];
+            const config = Array.isArray(m.options_config) ? m.options_config : [];
 
-            const groupsHtml = groups.map(groupStr => {
-                const parts = groupStr.split(':');
-                if (parts.length < 2) return '';
-                
-                let label = parts[0].trim();
-                // remove (M) marker
-                label = label.replace(/\(M\)/g, '').trim();
-                
-                const choicesRaw = parts[1].split(',').map(c => c.trim()).filter(Boolean);
-                const choicesHtml = choicesRaw.map(c => {
-                    // strip price suffix to get clean name
-                    let cleanName = c.replace(/\s*\(\+\d+\)\s*$/, '').trim();
-                    const isDisabled = disabledList.includes(cleanName);
-                    
-                    const iconHtml = isDisabled 
+            const groupsHtml = config.map(group => {
+                const label = group.label_th || '';
+                const choicesHtml = (group.item_ids || []).map(id => {
+                    const opt = optionsMasterMap[id];
+                    if (!opt) return '';
+                    const isDisabled = opt.status === 'หมด';
+                    // name_th is the display field; name_en / name_cn available for future lang toggle
+                    const displayName = opt.name_th;
+                    const iconHtml = isDisabled
                         ? '<span class="icon"><i class="fas fa-times"></i></span>'
                         : '<span class="icon"><i class="fas fa-check"></i></span>';
-                    
-                    return `<span class="choice-toggle ${isDisabled ? 'disabled' : ''}" onclick="toggleChoiceDisabled('${m.id}', ${JSON.stringify(cleanName).replace(/"/g, '&quot;')})">
-                        ${iconHtml} ${c}
+                    return `<span class="choice-toggle ${isDisabled ? 'disabled' : ''}" onclick="toggleChoiceDisabled('${id}')">
+                        ${iconHtml} ${displayName}
                     </span>`;
-                }).join('');
+                }).filter(Boolean).join('');
 
+                if (!choicesHtml) return '';
                 return `
                     <div class="mb-2 last:mb-0">
                         <div class="options-group-label">${label}</div>
                         <div>${choicesHtml}</div>
                     </div>
                 `;
-            }).join('');
+            }).filter(Boolean).join('');
 
             return `
                 <div class="options-section">
@@ -1169,30 +1170,24 @@
             renderMenuList();
         }
 
-        async function toggleChoiceDisabled(menuId, choiceName) {
-            const menu = menusCache.find(x => x.id === menuId);
-            if (!menu) return;
+        async function toggleChoiceDisabled(optionId) {
+            const opt = optionsMasterMap[optionId];
+            if (!opt) return;
 
-            const current = Array.isArray(menu.disabled_options) ? [...menu.disabled_options] : [];
-            const idx = current.indexOf(choiceName);
-            
-            if (idx >= 0) {
-                current.splice(idx, 1); // เปิดกลับ
-            } else {
-                current.push(choiceName); // ปิด
-            }
+            const newStatus = opt.status === 'หมด' ? 'ปกติ' : 'หมด';
 
             // Optimistic update
-            menu.disabled_options = current;
+            opt.status = newStatus;
             renderMenuList();
 
-            const { error } = await supabaseClient.from('menus')
-                .update({ disabled_options: current })
-                .eq('id', menuId);
-            
+            const { error } = await supabaseClient
+                .from('option_items')
+                .update({ status: newStatus })
+                .eq('id', optionId);
+
             if (error) {
                 alert('บันทึกไม่สำเร็จ: ' + error.message);
-                loadMenusData(); // reload from server
+                loadMenusData();
             }
         }
 
@@ -1268,6 +1263,21 @@
         supabaseClient.channel('kds_table_move')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
                 initKDS();
+            }).subscribe();
+
+        // Real-time: option_items status changes (syncs with Admin toggles)
+        supabaseClient.channel('kds_option_items')
+            .on('postgres_changes', {
+                event: 'UPDATE',
+                schema: 'public',
+                table: 'option_items',
+                filter: `station_th=eq.${currentStation}`
+            }, (payload) => {
+                const updated = payload.new;
+                if (updated && updated.id && optionsMasterMap[updated.id] !== undefined) {
+                    Object.assign(optionsMasterMap[updated.id], updated);
+                    if (currentPanel === 'menus') renderMenuList();
+                }
             }).subscribe();
 
         // ════════════════════════════════════════════════════════
