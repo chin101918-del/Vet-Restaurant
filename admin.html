@@ -173,7 +173,8 @@
             background: rgba(59, 130, 246, 0.08);
             color: #60a5fa;
             border: 1px solid rgba(59, 130, 246, 0.15);
-            padding: 3px 10px;
+            height: 32px; /* เพิ่มบรรทัดนี้: ล็อคความสูงให้เท่ากับปุ่ม */
+            padding: 0 12px; /* ปรับ Padding ใหม่ */
             border-radius: 8px;
             font-size: 10px;
             font-weight: 600;
@@ -421,8 +422,8 @@
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
                         <input type="text" id="optionSearchInput" placeholder="ค้นหาหัวข้อ..." class="pl-10 pr-4 py-3 rounded-2xl text-sm w-60" oninput="renderOptionsView()">
                     </div>
-                    <button onclick="openAddOptionModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-900/30 touch-manipulation">
-                        <i class="fas fa-plus"></i> เพิ่ม Option
+                    <button onclick="openCreateGroupModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-900/30 touch-manipulation">
+                        <i class="fas fa-plus"></i> เพิ่มกลุ่ม Option
                     </button>
                 </div>
             </header>
@@ -1202,10 +1203,10 @@
             menuData.forEach(menu => {
                 if (menu.options_config && Array.isArray(menu.options_config)) {
                     menu.options_config.forEach(group => {
-                        const key = group.label_th;
+                        const key = menu.station_th + '_' + group.label_th;
                         if (!groupsMap[key]) {
                             groupsMap[key] = { 
-                                label: key, 
+                                label: group.label_th, 
                                 station: menu.station_th, 
                                 type: group.selection_type, 
                                 itemIds: group.item_ids || [], 
@@ -1281,16 +1282,22 @@
                                 </div>
                             </div>
                             <button onclick="openEditGroupModal('${group.label}', '${group.station}', '${group.type}')"
-                                    class="flex-shrink-0 w-8 h-8 rounded-xl bg-white/5 border border-white/8 text-slate-500 hover:bg-blue-600/15 hover:text-blue-400 hover:border-blue-500/30 flex items-center justify-center transition-all"
+                                    class="flex-shrink-0 w-8 h-8 rounded-xl bg-white/5 border border-white/5 text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 flex items-center justify-center transition-all group/edit"
                                     title="แก้ไขกลุ่ม">
-                                <i class="fas fa-pencil-alt text-[11px]"></i>
+                                <i class="fas fa-pencil-alt text-[10px] opacity-40 group-hover/edit:opacity-100"></i>
                             </button>
                         </div>
                         <div class="p-3 opt-list-container">${itemsHtml.length ? itemsHtml : '<p class="text-center text-slate-600 text-xs py-4 italic">ยังไม่มีตัวเลือก</p>'}</div>
-                        <div class="px-4 pb-4">
-                            <div class="flex flex-wrap gap-1.5">
+                        <div class="px-4 pb-4 flex justify-between items-end gap-3">
+                            <div class="flex flex-wrap gap-1.5 flex-1">
                                 ${group.linkedMenus.map(m => `<span class="menu-chip"><i class="fas fa-utensils text-[9px]"></i> ${m.name}</span>`).join('')}
                             </div>
+                            <!-- เพิ่มปุ่ม + เพิ่มตัวเลือก ด้านขวาล่าง ความสูง 32px (h-[32px]) เท่ากับชิป -->
+                            <button onclick="openAddItemToGroupModal('${group.label}', '${group.station}')" 
+                                    class="flex-shrink-0 h-[32px] px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-blue-900/30 active:scale-95">
+                                <i class="fas fa-plus text-[9px]"></i> เพิ่มตัวเลือก
+                            </button>
+                        </div>
                         </div>
                     </div>
                 `;
@@ -2006,6 +2013,11 @@
             document.getElementById('editGroupSelection').value = type;
             document.getElementById('currentStationLabel').innerText = station;
             assignedMenuIds = menuData.filter(m => m.station_th === station && (m.options_config || []).some(g => g.label_th === label)).map(m => m.id);
+            // Load existing EN/CN labels from source config
+            const srcMenu = menuData.find(m => m.station_th === station && (m.options_config || []).some(g => g.label_th === label));
+            const srcGroup = srcMenu ? (srcMenu.options_config || []).find(g => g.label_th === label) : null;
+            document.getElementById('editGroupLabelEn').value = (srcGroup && srcGroup.label_en) || '';
+            document.getElementById('editGroupLabelCn').value = (srcGroup && srcGroup.label_cn) || '';
             renderEditGroupMenus(station);
             document.getElementById('editGroupModal').classList.remove('hidden');
         }
@@ -2022,9 +2034,11 @@
 
         async function saveGroupFullChanges() {
             const newLabel = document.getElementById('editGroupLabel').value.trim();
+            const newLabelEn = document.getElementById('editGroupLabelEn').value.trim() || newLabel;
+            const newLabelCn = document.getElementById('editGroupLabelCn').value.trim() || newLabel;
             const newType = document.getElementById('editGroupSelection').value;
             const station = currentEditGroupStation;
-            
+
             toast('กำลังบันทึก...', 'info');
 
             // อัปเดตเมนูในซุ้ม
@@ -2032,7 +2046,7 @@
                 let conf = (m.options_config || []).map(g => {
                     if (g.label_th !== originalGroupLabel) return g;
                     // อัปเดตเฉพาะ label และ type — คง item_ids ของเมนูนี้ไว้
-                    return { ...g, label_th: newLabel, selection_type: newType };
+                    return { ...g, label_th: newLabel, label_en: newLabelEn, label_cn: newLabelCn, selection_type: newType };
                 });
                 if (!assignedMenuIds.includes(m.id)) {
                     // ถอดกลุ่มออกถ้า uncheck
@@ -2041,10 +2055,12 @@
                     // เพิ่มกลุ่มใหม่ถ้าเพิ่งถูก assign (ไม่มีอยู่เดิม)
                     let source = null;
                     for (const mx of menuData) {
-                        source = (mx.options_config || []).find(g => g.label_th === originalGroupLabel);
-                        if (source) break;
+                        if (mx.station_th === station) {
+                            source = (mx.options_config || []).find(g => g.label_th === originalGroupLabel);
+                            if (source) break;
+                        }
                     }
-                    if (source) conf.push({ ...source, label_th: newLabel, selection_type: newType });
+                    if (source) conf.push({ ...source, label_th: newLabel, label_en: newLabelEn, label_cn: newLabelCn, selection_type: newType });
                 }
                 return supabaseClient.from('menus').update({ options_config: conf }).eq('id', m.id);
             }));
@@ -2071,7 +2087,7 @@
 
             assignedMenuIds = [];
             menuData.forEach(m => {
-                if (m.options_config && m.options_config.find(g => g.label_th === groupLabel)) {
+                if (m.station_th === groupStation && m.options_config && m.options_config.find(g => g.label_th === groupLabel)) {
                     assignedMenuIds.push(m.id);
                 }
             });
@@ -2127,15 +2143,19 @@
             // หาต้นแบบของ Config จากกลุ่มนี้ (เอาจากเมนูแรกที่เจอ)
             let sourceConfig = null;
             for (const m of menuData) {
-                sourceConfig = (m.options_config || []).find(g => g.label_th === currentAssigningGroup);
-                if (sourceConfig) break;
+                if (m.station_th === currentAssigningStation) {
+                    sourceConfig = (m.options_config || []).find(g => g.label_th === currentAssigningGroup);
+                    if (sourceConfig) break;
+                }
             }
 
             if (!sourceConfig) return toast('ไม่พบต้นแบบข้อมูล', 'error');
 
             try {
-                // วนลูปอัปเดตเมนูทุกตัวในระบบ
-                const updatePromises = menuData.map(async (m) => {
+                // วนลูปเฉพาะเมนูในซุ้มเดียวกันเท่านั้น ห้ามแตะซุ้มอื่น
+                const updatePromises = menuData
+                    .filter(m => m.station_th === currentAssigningStation)
+                    .map(async (m) => {
                     let newConfig = [...(m.options_config || [])];
                     const hasGroup = newConfig.find(g => g.label_th === currentAssigningGroup);
                     const shouldHaveGroup = assignedMenuIds.includes(m.id);
@@ -2226,16 +2246,38 @@
             else toast('บันทึกราคาใหม่แล้ว');
         }
 
-        // 4. ฟังก์ชันสลับสถานะ
         async function toggleOptionStatus(id, newStatus) {
-            const { error } = await supabaseClient.from('option_items').update({ status: newStatus }).eq('id', id);
-            if (error) { toast('อัปเดตสถานะไม่สำเร็จ', 'error'); fetchOptionsMaster(); }
-            else {
-                const idx = optionsMasterData.findIndex(o => o.id === id);
-                if (idx !== -1) optionsMasterData[idx].status = newStatus;
-                toast(`"${optionsMasterData[idx].name_th}" -> ${newStatus}`);
-                renderOptionsView();
+            const targetOption = optionsMasterData.find(o => o.id === id);
+            if (!targetOption) return;
+
+            const { name_th, station_th } = targetOption;
+
+            // Collect explicit UUIDs to update — fallback to single id if station_th is missing
+            let idsToUpdate;
+            if (station_th) {
+                idsToUpdate = optionsMasterData
+                    .filter(o => o.name_th === name_th && o.station_th === station_th)
+                    .map(o => o.id);
+            } else {
+                idsToUpdate = [id];
             }
+
+            const { error } = await supabaseClient
+                .from('option_items')
+                .update({ status: newStatus })
+                .in('id', idsToUpdate);
+
+            if (error) {
+                toast('อัปเดตสถานะไม่สำเร็จ: ' + error.message, 'error');
+                fetchOptionsMaster();
+                return;
+            }
+
+            const idSet = new Set(idsToUpdate);
+            optionsMasterData.forEach(o => { if (idSet.has(o.id)) o.status = newStatus; });
+
+            toast(`อัปเดตสถานะ ${name_th} ทั้งซุ้ม ${station_th} แล้ว`);
+            renderOptionsView();
         }
 
         // 5. ระบบย้ายซุ้ม (กรณีอยากจัดกลุ่มใหม่)
@@ -2261,6 +2303,8 @@
             editingItemGroup = groupLabel;
             editingItemStation = station;
             document.getElementById('itemEditName').value = opt.name_th || '';
+            document.getElementById('itemEditNameEn').value = opt.name_en || '';
+            document.getElementById('itemEditNameCn').value = opt.name_cn || '';
             document.getElementById('itemEditPrice').value = opt.extra_price || 0;
             document.getElementById('itemEditStatus').checked = opt.status !== 'หมด';
             document.getElementById('itemEditModal').classList.remove('hidden');
@@ -2270,12 +2314,14 @@
             const btn = document.getElementById('btnSaveItemEdit');
             btn.disabled = true;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
-            const name = document.getElementById('itemEditName').value.trim();
+            const nameTh = document.getElementById('itemEditName').value.trim();
+            const nameEn = document.getElementById('itemEditNameEn').value.trim() || nameTh;
+            const nameCn = document.getElementById('itemEditNameCn').value.trim() || nameTh;
             const price = parseFloat(document.getElementById('itemEditPrice').value) || 0;
             const status = document.getElementById('itemEditStatus').checked ? 'ปกติ' : 'หมด';
             try {
                 const { error } = await supabaseClient.from('option_items')
-                    .update({ name_th: name, extra_price: price, status })
+                    .update({ name_th: nameTh, name_en: nameEn, name_cn: nameCn, extra_price: price, status })
                     .eq('id', editingItemId);
                 if (error) throw error;
                 toast('บันทึกเรียบร้อย');
@@ -2337,6 +2383,165 @@
 
 
         // ════════════════════════════════════════════════════════
+        // CREATE GROUP MODAL
+        // ════════════════════════════════════════════════════════
+        function openCreateGroupModal() {
+            document.getElementById('createGroupForm').reset();
+            const stationSel = document.getElementById('createGroupStationSelect');
+            stationSel.innerHTML = '<option value="">-- เลือกซุ้ม --</option>' +
+                stationsData.map(s => `<option value="${s.station_th}">${s.station_th}</option>`).join('');
+            document.getElementById('createGroupMenuCheckboxes').innerHTML = '<p class="text-slate-600 text-xs italic">เลือกซุ้มก่อน</p>';
+            document.getElementById('createGroupModal').classList.remove('hidden');
+        }
+
+        function onStationChangeInCreateGroup() {
+            const station = document.getElementById('createGroupStationSelect').value;
+            const container = document.getElementById('createGroupMenuCheckboxes');
+            if (!station) {
+                container.innerHTML = '<p class="text-slate-600 text-xs italic">เลือกซุ้มก่อน</p>';
+                return;
+            }
+            const menus = menuData.filter(m => m.station_th === station);
+            container.innerHTML = menus.length
+                ? menus.map(m => `
+                    <label class="flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-transparent cursor-pointer hover:border-white/10">
+                        <input type="checkbox" class="w-5 h-5 accent-blue-500" value="${m.id}">
+                        <span class="text-sm font-bold text-white">${m.item_th}</span>
+                    </label>`).join('')
+                : '<p class="text-slate-500 text-xs italic py-4">ไม่มีเมนูในซุ้มนี้</p>';
+        }
+
+        async function saveNewGroup() {
+            const btn = document.getElementById('btnSaveNewGroup');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+
+            const labelTh = document.getElementById('createGroupLabelTh').value.trim();
+            const labelEn = document.getElementById('createGroupLabelEn').value.trim();
+            const labelCn = document.getElementById('createGroupLabelCn').value.trim();
+            const selectionType = document.getElementById('createGroupSelection').value;
+
+            if (!labelTh) {
+                toast('กรุณากรอกชื่อกลุ่ม (TH)', 'error');
+                btn.disabled = false; btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึก`; return;
+            }
+
+            const selectedMenuIds = Array.from(
+                document.querySelectorAll('#createGroupMenuCheckboxes input[type=checkbox]:checked')
+            ).map(cb => cb.value);
+
+            if (selectedMenuIds.length === 0) {
+                toast('กรุณาเลือกอย่างน้อย 1 เมนู', 'error');
+                btn.disabled = false; btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึก`; return;
+            }
+
+            const newGroup = {
+                label_th: labelTh,
+                label_en: labelEn || labelTh,
+                label_cn: labelCn || labelTh,
+                selection_type: selectionType,
+                item_ids: []
+            };
+
+            try {
+                await Promise.all(selectedMenuIds.map(menuId => {
+                    const menu = menuData.find(m => m.id === menuId);
+                    if (!menu) return Promise.resolve();
+                    const updatedConfig = [...(menu.options_config || []), newGroup];
+                    return supabaseClient.from('menus').update({ options_config: updatedConfig }).eq('id', menuId);
+                }));
+                toast(`สร้างกลุ่ม "${labelTh}" เรียบร้อย`);
+                closeModal('createGroupModal');
+                await fetchAll();
+                renderOptionsView();
+            } catch (e) {
+                toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึก`;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // ADD ITEM TO GROUP MODAL
+        // ════════════════════════════════════════════════════════
+        let targetGroupLabel = null;
+        let targetStation = null;
+
+        function openAddItemToGroupModal(groupLabel, station) {
+            targetGroupLabel = groupLabel;
+            targetStation = station;
+            document.getElementById('addItemGroupName').innerText = groupLabel;
+            document.getElementById('addItemStationName').innerText = station;
+            document.getElementById('addItemNameTh').value = '';
+            document.getElementById('addItemNameEn').value = '';
+            document.getElementById('addItemNameCn').value = '';
+            document.getElementById('addItemPrice').value = '0';
+            document.getElementById('addItemToGroupModal').classList.remove('hidden');
+        }
+
+        async function saveNewItemToGroup() {
+            const btn = document.getElementById('btnSaveNewItemToGroup');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+
+            const nameTh = document.getElementById('addItemNameTh').value.trim();
+            const nameEn = document.getElementById('addItemNameEn').value.trim();
+            const nameCn = document.getElementById('addItemNameCn').value.trim();
+            const extraPrice = parseFloat(document.getElementById('addItemPrice').value) || 0;
+
+            if (!nameTh) {
+                toast('กรุณากรอกชื่อตัวเลือก (TH)', 'error');
+                btn.disabled = false; btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึก`; return;
+            }
+
+            try {
+                const maxOrder = optionsMasterData.filter(o => o.station_th === targetStation)
+                    .reduce((m, o) => Math.max(m, o.sort_order || 0), 0);
+
+                const { data: newItem, error: insertError } = await supabaseClient
+                    .from('option_items')
+                    .insert([{
+                        name_th: nameTh,
+                        name_en: nameEn || nameTh,
+                        name_cn: nameCn || nameTh,
+                        extra_price: extraPrice,
+                        station_th: targetStation,
+                        status: 'ปกติ',
+                        sort_order: maxOrder + 10
+                    }])
+                    .select()
+                    .single();
+                if (insertError) throw insertError;
+
+                const newItemId = newItem.id;
+
+                const affectedMenus = menuData.filter(m =>
+                    m.station_th === targetStation &&
+                    (m.options_config || []).some(g => g.label_th === targetGroupLabel)
+                );
+
+                await Promise.all(affectedMenus.map(m => {
+                    const updatedConfig = (m.options_config || []).map(g => {
+                        if (g.label_th !== targetGroupLabel) return g;
+                        return { ...g, item_ids: [...(g.item_ids || []), newItemId] };
+                    });
+                    return supabaseClient.from('menus').update({ options_config: updatedConfig }).eq('id', m.id);
+                }));
+
+                toast(`เพิ่ม "${nameTh}" เข้ากลุ่ม "${targetGroupLabel}" เรียบร้อย`);
+                closeModal('addItemToGroupModal');
+                await fetchOptionsMaster();
+                await fetchAll();
+            } catch (e) {
+                toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึก`;
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
         // INIT
         // ════════════════════════════════════════════════════════
         fetchAll();
@@ -2381,18 +2586,29 @@
         </div>
         
         <div class="p-8 overflow-y-auto no-scrollbar space-y-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ชื่อหัวข้อ</label>
-                    <input type="text" id="editGroupLabel" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-blue-500">
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-3">ชื่อหัวข้อ</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">ภาษาไทย *</label>
+                        <input type="text" id="editGroupLabel" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">English</label>
+                        <input type="text" id="editGroupLabelEn" placeholder="e.g. Spice Level" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">中文</label>
+                        <input type="text" id="editGroupLabelCn" placeholder="辣度" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
+                    </div>
                 </div>
-                <div>
-                    <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ประเภทการเลือก</label>
-                    <select id="editGroupSelection" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-blue-500 appearance-none">
-                        <option value="single">Single Select (เลือกได้ 1)</option>
-                        <option value="multiple">Multiple Select (เลือกได้หลายอัน)</option>
-                    </select>
-                </div>
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ประเภทการเลือก</label>
+                <select id="editGroupSelection" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-blue-500 appearance-none">
+                    <option value="single">Single Select (เลือกได้ 1)</option>
+                    <option value="multiple">Multiple Select (เลือกได้หลายอัน)</option>
+                </select>
             </div>
 
             <div>
@@ -2455,8 +2671,16 @@
         </div>
         <div class="space-y-4">
             <div>
-                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ชื่อตัวเลือก</label>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ชื่อ (TH) *</label>
                 <input type="text" id="itemEditName" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">Name (EN)</label>
+                <input type="text" id="itemEditNameEn" placeholder="e.g. Not Spicy" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">名称 (CN)</label>
+                <input type="text" id="itemEditNameCn" placeholder="不辣" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
             </div>
             <div>
                 <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ราคาเพิ่ม (฿)</label>
@@ -2511,6 +2735,112 @@
             <button onclick="closeModal('addOptionModal')" class="flex-1 py-3 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all text-sm">ยกเลิก</button>
             <button id="btnSaveNewOpt" onclick="saveNewOption()" class="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all text-sm shadow-lg shadow-blue-900/30">
                 <i class="fas fa-plus mr-2"></i> เพิ่ม
+            </button>
+        </div>
+    </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     CREATE GROUP MODAL
+     ═══════════════════════════════════════════════════════ -->
+<div id="createGroupModal" class="hidden fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[75]">
+    <div class="bg-[#111] w-full max-w-2xl rounded-3xl border border-white/10 flex flex-col max-h-[90vh]">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center shrink-0">
+            <div>
+                <h2 class="text-xl font-black text-blue-400">สร้างกลุ่ม Option ใหม่</h2>
+                <p class="text-xs text-slate-500 mt-1">กลุ่มจะถูกผูกเข้ากับเมนูที่เลือก</p>
+            </div>
+            <button onclick="closeModal('createGroupModal')" class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="createGroupForm" class="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-3">ชื่อกลุ่ม</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">ภาษาไทย *</label>
+                        <input type="text" id="createGroupLabelTh" placeholder="เช่น ระดับความเผ็ด" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">English</label>
+                        <input type="text" id="createGroupLabelEn" placeholder="Spice Level" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 mb-1 block">中文</label>
+                        <input type="text" id="createGroupLabelCn" placeholder="辣度" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-3">ประเภทการเลือก</label>
+                <select id="createGroupSelection" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all appearance-none">
+                    <option value="single">Single Select (เลือกได้ 1)</option>
+                    <option value="multiple">Multiple Select (เลือกได้หลายอัน)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-3">ซุ้ม (Station)</label>
+                <select id="createGroupStationSelect" onchange="onStationChangeInCreateGroup()" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all appearance-none">
+                    <option value="">-- เลือกซุ้ม --</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-3">เมนูที่จะผูกกลุ่มนี้</label>
+                <div id="createGroupMenuCheckboxes" class="space-y-2">
+                    <p class="text-slate-600 text-xs italic">เลือกซุ้มก่อน</p>
+                </div>
+            </div>
+        </form>
+
+        <div class="p-6 border-t border-white/10 flex gap-3 shrink-0 bg-[#111] rounded-b-3xl">
+            <button onclick="closeModal('createGroupModal')" class="flex-1 py-3.5 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">ยกเลิก</button>
+            <button id="btnSaveNewGroup" onclick="saveNewGroup()" class="flex-1 py-3.5 rounded-2xl bg-blue-600 text-white font-black hover:bg-blue-500 transition-all shadow-lg shadow-blue-900/30">
+                <i class="fas fa-save mr-2"></i> บันทึก
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADD ITEM TO GROUP MODAL
+     ═══════════════════════════════════════════════════════ -->
+<div id="addItemToGroupModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[85]">
+    <div class="bg-[#111] w-full max-w-md rounded-3xl border border-white/10 p-6">
+        <div class="flex justify-between items-center mb-5">
+            <div>
+                <h2 class="text-lg font-black text-white">เพิ่มตัวเลือกเข้ากลุ่ม</h2>
+                <p class="text-xs text-slate-500 mt-1">กลุ่ม: <span id="addItemGroupName" class="text-blue-400 font-bold"></span> · ซุ้ม: <span id="addItemStationName" class="text-slate-300"></span></p>
+            </div>
+            <button onclick="closeModal('addItemToGroupModal')" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ชื่อ (TH) *</label>
+                <input type="text" id="addItemNameTh" placeholder="เช่น ไม่เผ็ด" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">Name (EN)</label>
+                <input type="text" id="addItemNameEn" placeholder="Not Spicy" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">名称 (CN)</label>
+                <input type="text" id="addItemNameCn" placeholder="不辣" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ราคาเพิ่ม (฿)</label>
+                <input type="number" id="addItemPrice" value="0" min="0" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="closeModal('addItemToGroupModal')" class="flex-1 py-3 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all text-sm">ยกเลิก</button>
+            <button id="btnSaveNewItemToGroup" onclick="saveNewItemToGroup()" class="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all text-sm shadow-lg shadow-blue-900/30">
+                <i class="fas fa-save mr-2"></i> บันทึก
             </button>
         </div>
     </div>
