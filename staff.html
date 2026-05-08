@@ -1722,18 +1722,23 @@
             const todayStart = getStartOfTodayBKK(); 
 
             // ดึงข้อมูลประวัติ (เฉพาะของวันนี้) และ เมนูที่มีปัญหาปัจจุบัน
-            const [logsRes, menusRes] = await Promise.all([
-                supabaseClient.from('menu_status_logs')
-                    .select('*')
-                    .gte('created_at', todayStart) // ✅ กรองเอาเฉพาะที่เกิดหลังเวลาเริ่มงานวันนี้
-                    .order('created_at', { ascending: false }), 
-                supabaseClient.from('menus')
-                    .select('id, item_th, status, station_th')
-                    .neq('status', 'ปกติ')
+            const [logsRes, menusRes, optionsRes] = await Promise.all([
+                supabaseClient.from('menu_status_logs').select('*').gte('created_at', todayStart).order('created_at', { ascending: false }),
+                supabaseClient.from('menus').select('item_th, status, station_th').neq('status', 'ปกติ'),
+                supabaseClient.from('option_items').select('name_th, status, station_th').neq('status', 'ปกติ') // 👈 ดึง Option ที่หมด
             ]);
 
             if (!logsRes.error) notifLogsCache = logsRes.data;
             if (!menusRes.error) activeIssuesCache = menusRes.data;
+
+            const menuIssues = menusRes.data || [];
+            const optionIssues = (optionsRes.data || []).map(opt => ({
+                item_th: `${opt.name_th} (ตัวเลือก)`, // ใส่คำว่าตัวเลือกพ่วงท้าย
+                status: opt.status,
+                station_th: opt.station_th
+            }));
+
+            activeIssuesCache = [...menuIssues, ...optionIssues]; // เก็บใส่ Cache ตัวเดียวกัน
 
             filterNotifLogs('all');
         }
@@ -1766,7 +1771,7 @@
             container.innerHTML = logs.map(log => {
                 const time = new Date(log.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
                 const isRed = (log.new_status === 'หมด' || log.new_status === 'ไม่พร้อม');
-                const isYellow = (log.new_status === '15m' || log.new_status === '30m');
+                const isYellow = (log.new_status === '15m' || log.new_status === '20m' || log.new_status === '30m');
                 let statusColor = 'text-emerald-400';
                 if (isRed) statusColor = 'text-red-400';
                 else if (isYellow) statusColor = 'text-yellow-500';
@@ -1869,14 +1874,14 @@
             if (!bubble || !msg || !iconBox) return;
 
             const isRed = (newStatus === 'หมด' || newStatus === 'ไม่พร้อม');
-            const isYellow = (newStatus === '15m' || newStatus === '30m');
+            const isYellow = (newStatus === '15m' || newStatus === '20m' || newStatus === '30m');
 
             let statusClass = 'text-emerald-400';
             let iconBg = 'bg-emerald-500/20 text-emerald-400';
-            let border = 'rgba(255, 255, 255, 0.1)';
+            let border = 'rgba(52, 211, 153, 0.3)';
             let bellColor = '#34d399';
             let iconHtml = '<i class="fas fa-check"></i>';
-            let displayStatus = newStatus === 'ปกติ' ? 'พร้อม' : newStatus;
+            let displayStatus = newStatus === 'ปกติ' ? 'พร้อมเสิร์ฟ' : newStatus;
 
             if (isRed) {
                 statusClass = 'text-red-400';
@@ -1892,7 +1897,7 @@
                 iconHtml = '<i class="fas fa-clock"></i>';
             }
 
-            msg.innerHTML = `${itemName}: <span class="${statusClass} font-black">${displayStatus}</span>`;
+            msg.innerHTML = `<span class="text-slate-500 text-xs font-normal">อัปเดตสถานะ:</span> ${itemName} → <span class="${statusClass} font-black">${displayStatus}</span>`;
             iconBox.className = `w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors ${iconBg}`;
             iconBox.innerHTML = iconHtml;
             bubble.style.borderColor = border;
@@ -3277,25 +3282,56 @@
 
         
 
+        // 🔔 Real-time: สำหรับเมนูหลัก (menus)
         supabaseClient.channel('menu_realtime_staff')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'menus' }, (payload) => {
                 const updated = payload.new;
-                
-                // ถ้าสถานะไม่ใช่ "ปกติ" ให้แจ้งเตือน Bubble
-                if (updated.status !== 'ปกติ') {
-                    showNotifBubble(updated.item_th, updated.status);
-                    unreadNotifCount++;
-                    const badge = document.getElementById('bellBadge');
-                    if (badge) {
-                        badge.innerText = unreadNotifCount;
-                        badge.classList.remove('hidden');
-                    }
-                }
+                const old = payload.old;
 
-                // หากเปิด Modal ค้างไว้ ให้รีโหลดข้อมูลใหม่ทันทีเพื่อให้ข้อมูล Real-time จริง
-                const modal = document.getElementById('notifModal');
-                if (modal && !modal.classList.contains('hidden')) {
-                    openNotifModal();
+                // เช็คว่ามีการเปลี่ยนสถานะจริงๆ (ป้องกันการแจ้งเตือนซ้ำเวลาแก้ข้อมูลอื่น)
+                if (updated.status !== old?.status) {
+                    console.log("🔥 Menu Updated:", updated.item_th, updated.status);
+                    showNotifBubble(updated.item_th, updated.status);
+
+                    // ถ้าสถานะไม่ใช่ "ปกติ" (คือของหมด/รอนาน) ให้เพิ่มเลขที่กระดิ่ง
+                    if (updated.status !== 'ปกติ') {
+                        unreadNotifCount++;
+                        const badge = document.getElementById('bellBadge');
+                        if (badge) {
+                            badge.innerText = unreadNotifCount;
+                            badge.classList.remove('hidden');
+                        }
+                    }
+
+                    // ถ้าเปิด Modal ค้างไว้ให้โหลดใหม่
+                    const modal = document.getElementById('notifModal');
+                    if (modal && !modal.classList.contains('hidden')) openNotifModal();
+                }
+            })
+            .subscribe();
+
+        // 🔔 Real-time: สำหรับตัวเลือก (option_items)
+        supabaseClient.channel('option_items_realtime_staff')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'option_items' }, (payload) => {
+                const updated = payload.new;
+                const old = payload.old;
+
+                if (updated.status !== old?.status) {
+                    console.log("🔥 Option Updated:", updated.name_th, updated.status);
+                    // แสดงชื่อ Option พร้อมชื่อซุ้ม
+                    showNotifBubble(`${updated.name_th} (${updated.station_th})`, updated.status);
+
+                    if (updated.status !== 'ปกติ') {
+                        unreadNotifCount++;
+                        const badge = document.getElementById('bellBadge');
+                        if (badge) {
+                            badge.innerText = unreadNotifCount;
+                            badge.classList.remove('hidden');
+                        }
+                    }
+
+                    const modal = document.getElementById('notifModal');
+                    if (modal && !modal.classList.contains('hidden')) openNotifModal();
                 }
             })
             .subscribe();
