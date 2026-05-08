@@ -35,6 +35,14 @@
         .status-chip { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); transition: all 0.2s; }
         .status-chip:hover { border-color: rgba(255,255,255,0.3); }
         .status-chip.active { background: #3b82f6; border-color: #60a5fa; color: white; }
+
+        /* Toggle Switch Style */
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; border: 1px solid rgba(255,255,255,0.1); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: #64748b; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #10b981; border-color: #059669; }
+        input:checked + .slider:before { transform: translateX(22px); background-color: white; }
         
         /* Status badge ในตาราง — สีแยกตาม status */
         .sb-ปกติ { background: rgba(148,163,184,0.1); color: #cbd5e1; }
@@ -47,6 +55,11 @@
         .sb-ไม่พร้อม { background: rgba(239,68,68,0.1); color: #fca5a5; }
         .sb-TH_Only { background: rgba(168,85,247,0.1); color: #a855f7; }
         .sb-ลบ { background: rgba(100,116,139,0.1); color: #64748b; }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
         
         /* Preview image */
         .img-preview { width: 100%; aspect-ratio: 16/9; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 0.75rem; }
@@ -65,6 +78,109 @@
         .sortable-ghost { opacity: 0.3; background: rgba(59,130,246,0.1) !important; }
         .sortable-chosen { background: rgba(59,130,246,0.05) !important; }
         .sortable-drag { background: #1a1a1a !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        /* --- Global Options New UI --- */
+        .opt-stat-card { background: linear-gradient(145deg, #111, #0a0a0a); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
+        .station-group-card { background: #0f0f0f; border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; margin-bottom: 24px; overflow: hidden; }
+        .station-badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Premium Toggle Switch */
+        .p-switch { position: relative; display: inline-block; width: 48px; height: 24px; }
+        .p-switch input { opacity: 0; width: 0; height: 0; }
+        .p-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 34px; }
+        .p-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: #94a3b8; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; }
+        input:checked + .p-slider { background-color: #10b981; }
+        input:checked + .p-slider:before { transform: translateX(24px); background-color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+
+        /* Option Row */
+        .opt-row { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: all 0.2s; }
+        .opt-row:last-child { border-bottom: none; }
+        .opt-row:hover { background: rgba(255,255,255,0.01); }
+        .opt-row.is-out { background: rgba(239, 68, 68, 0.02); }
+
+        /* --- Option Group Card Design --- */
+        .group-card {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 28px;
+            transition: border-color 0.25s, box-shadow 0.25s;
+            break-inside: avoid;
+            margin-bottom: 20px;
+        }
+        .group-card:hover {
+            border-color: rgba(59, 130, 246, 0.35);
+            box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+        }
+
+        /* Masonry layout */
+        #optionsContainer {
+            columns: 1;
+            column-gap: 20px;
+            display: block !important;
+        }
+        @media (min-width: 900px) { #optionsContainer { columns: 2; } }
+        @media (min-width: 1400px) { #optionsContainer { columns: 3; } }
+
+        /* Card header badges */
+        .type-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.08em;
+        }
+        .type-badge.single { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+        .type-badge.multi  { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.25); }
+        .linked-count-badge {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;
+            background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* Item rows */
+        .item-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 11px 14px;
+            border-radius: 14px;
+            margin-bottom: 6px;
+            border: 1px solid transparent;
+            background: rgba(255,255,255,0.025);
+            transition: all 0.15s;
+        }
+        .item-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
+        .item-row.is-out .item-name { text-decoration: line-through; color: #475569; }
+
+        /* Price pill */
+        .price-pill {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 3px 10px; border-radius: 10px;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+            font-size: 11px; font-weight: 700; color: #64748b;
+            min-width: 40px; justify-content: center;
+        }
+        .price-pill.has-price { color: #60a5fa; background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.2); }
+
+        /* Edit icon on item — shows on hover */
+        .item-edit-btn {
+            opacity: 0.3; width: 28px; height: 28px; border-radius: 8px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+            color: #64748b; font-size: 10px; cursor: pointer; transition: all 0.15s;
+            flex-shrink: 0;
+        }
+        .item-row:hover .item-edit-btn { opacity: 1; }
+        .item-edit-btn:hover { background: rgba(59,130,246,0.15); color: #60a5fa; border-color: rgba(59,130,246,0.3); }
+
+        .menu-chip {
+            background: rgba(59, 130, 246, 0.08);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            padding: 3px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
         
         /* View pages */
         .view-page.hidden { display: none !important; }
@@ -171,6 +287,9 @@
             <button data-view="menus" onclick="switchView('menus')" class="nav-btn w-full flex items-center gap-3 bg-blue-600/10 text-blue-500 px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
                 <i class="fas fa-utensils"></i> จัดการเมนูอาหาร
             </button>
+            <button data-view="options" onclick="switchView('options')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
+                <i class="fas fa-tags"></i> จัดการ Options
+            </button>
             <button data-view="tables" onclick="switchView('tables')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
                 <i class="fas fa-chair"></i> จัดการโต๊ะ
             </button>
@@ -191,7 +310,6 @@
     </aside>
 
         <!-- โค้ดส่วน Header และ Table ของคุณตามเดิม -->
-    </main>
 
     <main class="flex-1 flex flex-col h-screen overflow-hidden">
         
@@ -292,8 +410,30 @@
                 </div>
             </div>
         </div>
+        <!-- ════════════ VIEW: OPTIONS ════════════ -->
+        <div id="view-options" class="view-page hidden flex-col h-screen overflow-hidden">
+            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center shrink-0">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">จัดการ Options</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                        <input type="text" id="optionSearchInput" placeholder="ค้นหาหัวข้อ..." class="pl-10 pr-4 py-3 rounded-2xl text-sm w-60" oninput="renderOptionsView()">
+                    </div>
+                    <button onclick="openAddOptionModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-900/30 touch-manipulation">
+                        <i class="fas fa-plus"></i> เพิ่ม Option
+                    </button>
+                </div>
+            </header>
 
-    </main>
+            <div class="bg-[#0a0a0a] px-8 py-4 border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar" id="optionStationTabs"></div>
+
+            <div class="flex-1 p-8 overflow-y-auto no-scrollbar bg-[#050505]">
+                <div id="optionsContainer" class="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-32"></div>
+            </div>
+        </div>
+</main>
 
     <!-- ═══════════════════════════════════════════════════════
          MENU MODAL — Form scrollable แบ่ง section ด้วย divider
@@ -411,28 +551,6 @@
                             <textarea id="desc_cn" rows="3" class="w-full p-3 rounded-xl text-sm"></textarea>
                         </div>
                     </div>
-                </div>
-
-                <!-- ─────────── SECTION 5: Options (Structured Builder) ─────────── -->
-                <div class="form-section">
-                    <div class="section-title text-lg">Options</div>
-                    <p class="text-xs text-slate-500 mb-4">
-                        <i class="fas fa-info-circle mr-1"></i> 
-                        ใช้ปุ่ม + เพื่อเพิ่มกลุ่มตัวเลือกและตัวเลือก (กรอก 3 ภาษาคู่ขนานกัน) — 
-                        <button type="button" onclick="toggleOptionsHelp()" class="text-blue-400 hover:underline">ดูตัวอย่าง</button>
-                    </p>
-                    <div id="optionsHelpBox" class="hidden bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4 text-xs text-slate-300 leading-relaxed">
-                        <p class="font-medium text-blue-400 mb-1">📘 ตัวอย่างการใช้งาน:</p>
-                        <p>• <strong>กลุ่มตัวเลือก</strong> = ประเภท เช่น "ความเผ็ด", "เพิ่มเติม"</p>
-                        <p>• <strong>Multi-Select</strong> = เลือกได้หลายตัวในกลุ่มเดียวกัน (toggle ✓)</p>
-                        <p>• <strong>Choice</strong> = ตัวเลือก + ราคาเพิ่ม (ใส่ 0 ถ้าไม่เพิ่มเงิน)</p>
-                        <p>• ตัวอย่าง: <code class="bg-black/40 px-1 rounded">ความเผ็ด: ไม่เผ็ด(+0), เผ็ด(+0), เผ็ดมาก(+0)</code></p>
-                    </div>
-                    
-                    <div id="optionsBuilder"></div>
-                    <button type="button" onclick="addOptionGroup()" class="w-full mt-3 py-3 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 border border-blue-500/30 text-sm font-medium transition-all flex items-center justify-center gap-2">
-                        <i class="fas fa-plus"></i> เพิ่มกลุ่มตัวเลือก
-                    </button>
                 </div>
 
                 <!-- ─────────── SECTION 6: สถานะ ─────────── -->
@@ -642,6 +760,7 @@
 
         let menuData = [];
         let stationsData = [];
+        let optionsMasterData = [];
         let currentOptions = { th: [], en: [], cn: [] }; // state ของ options builder
         let isEditMode = false;
         let isStationEditMode = false;
@@ -672,13 +791,17 @@
                 return;
             }
         
-            // 2. ถ้ามีตั๋วแต่ "ตำแหน่งไม่ตรง" (เช่น Staff พยายามแอบเข้าหน้า Admin)
-            if (currentPage !== 'kitchen' && session.role !== currentPage) {
-                // อนุญาตเฉพาะกรณีพิเศษ เช่น Admin เข้าได้ทุกหน้า
-                if (session.role !== 'admin') {
-                    alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
-                    window.location.href = 'index.html';
-                }
+            // 2. Admin เข้าได้ทุกหน้า
+            if (session.role === 'admin') return;
+
+            // 3. kitchen เข้าได้เฉพาะ role ที่ valid (staff หรือ kitchen)
+            const kitchenRoles = ['staff', 'kitchen'];
+            if (currentPage === 'kitchen' && kitchenRoles.includes(session.role)) return;
+
+            // 4. ตรวจ role ตรงกับหน้า
+            if (session.role !== currentPage) {
+                alert('คุณไม่มีสิทธิ์เข้าถึงหน้านี้');
+                window.location.href = 'index.html';
             }
         })();
 
@@ -1058,107 +1181,121 @@
         // ════════════════════════════════════════════════════════
         // OPTIONS BUILDER (structured, 3-language parallel)
         // ════════════════════════════════════════════════════════
-        function renderOptionsBuilder() {
-            const container = document.getElementById('optionsBuilder');
-            if (currentOptions.th.length === 0) {
-                container.innerHTML = '<p class="text-center text-slate-600 text-xs py-4">ยังไม่มีตัวเลือก — กด "เพิ่มกลุ่มตัวเลือก" เพื่อเริ่ม</p>';
+        function renderOptionsView() {
+            const container = document.getElementById('optionsContainer');
+            const tabsContainer = document.getElementById('optionStationTabs');
+            const search = (document.getElementById('optionSearchInput')?.value || "").toLowerCase().trim();
+            
+            if (!container || !tabsContainer) return; // ป้องกัน Error ถ้าหา Element ไม่เจอ
+
+            // 1. วาด Tabs
+            const stations = ['ทั้งหมด', ...new Set(optionsMasterData.map(o => o.station_th))].filter(Boolean);
+            tabsContainer.innerHTML = stations.map(s => `
+                <button onclick="setOptionStationFilter('${s}')" 
+                    class="px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${selectedOptionStation === s ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30' : 'bg-white/5 text-slate-500 hover:text-white'}">
+                    ${s}
+                </button>
+            `).join('');
+
+            // 2. จัดกลุ่ม Group จากเมนู
+            const groupsMap = {};
+            menuData.forEach(menu => {
+                if (menu.options_config && Array.isArray(menu.options_config)) {
+                    menu.options_config.forEach(group => {
+                        const key = group.label_th;
+                        if (!groupsMap[key]) {
+                            groupsMap[key] = { 
+                                label: key, 
+                                station: menu.station_th, 
+                                type: group.selection_type, 
+                                itemIds: group.item_ids || [], 
+                                linkedMenus: [] 
+                            };
+                        }
+                        if (!groupsMap[key].linkedMenus.find(m => m.id === menu.id)) {
+                            groupsMap[key].linkedMenus.push({ id: menu.id, name: menu.item_th });
+                        }
+                    });
+                }
+            });
+
+            const groupKeys = Object.keys(groupsMap);
+            if (groupKeys.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center py-20 text-slate-600 italic">ยังไม่มีการตั้งค่ากลุ่มตัวเลือกในเมนูใดๆ</p>`;
                 return;
             }
 
-            container.innerHTML = currentOptions.th.map((group, gi) => {
-                const enGroup = currentOptions.en[gi] || { label: '', choices: [] };
-                const cnGroup = currentOptions.cn[gi] || { label: '', choices: [] };
-                const isMulti = group.allowMultiple || false;
+            // 3. วาดการ์ด
+            container.innerHTML = groupKeys.map(key => {
+                const group = groupsMap[key];
+                
+                // Filter Station & Search
+                if (selectedOptionStation !== 'ทั้งหมด' && group.station !== selectedOptionStation) return '';
+                if (search && !group.label.toLowerCase().includes(search)) return '';
 
-                const choicesHTML = group.choices.map((choice, ci) => {
-                    const enChoice = enGroup.choices[ci] || { name: '', price: 0 };
-                    const cnChoice = cnGroup.choices[ci] || { name: '', price: 0 };
+                const items = optionsMasterData.filter(opt => group.itemIds.includes(opt.id));
+                
+                const itemsHtml = items.map(opt => {
+                    const isOut = opt.status === 'หมด';
+                    const hasPrice = opt.extra_price > 0;
                     return `
-                        <div class="option-choice-row">
-                            <input type="text" value="${choice.name || ''}" placeholder="ตัวเลือก TH" oninput="updateChoice(${gi}, ${ci}, 'th', 'name', this.value)">
-                            <input type="text" value="${enChoice.name || ''}" placeholder="EN" oninput="updateChoice(${gi}, ${ci}, 'en', 'name', this.value)">
-                            <input type="text" value="${cnChoice.name || ''}" placeholder="CN" oninput="updateChoice(${gi}, ${ci}, 'cn', 'name', this.value)">
-                            <input type="number" value="${choice.price || 0}" placeholder="+฿" oninput="updateChoicePrice(${gi}, ${ci}, this.value)">
-                            <button type="button" onclick="removeChoice(${gi}, ${ci})" class="text-red-500 hover:text-red-400 w-10 h-10 rounded-lg hover:bg-red-500/10 transition-all" title="ลบตัวเลือก">
-                                <i class="fas fa-times"></i>
-                            </button>
+                        <div class="item-row ${isOut ? 'is-out' : ''} sortable-opt-item" data-id="${opt.id}">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="drag-handle text-slate-600 cursor-grab active:cursor-grabbing flex-shrink-0 px-0.5">
+                                    <i class="fas fa-grip-vertical text-xs"></i>
+                                </span>
+                                <span class="item-name font-semibold text-sm ${isOut ? 'text-slate-600' : 'text-slate-200'} truncate">${opt.name_th}</span>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <span class="price-pill ${hasPrice ? 'has-price' : ''}">
+                                    ฿${opt.extra_price}
+                                </span>
+                                <label class="p-switch">
+                                    <input type="checkbox" ${!isOut ? 'checked' : ''} onchange="toggleOptionStatus('${opt.id}', this.checked ? 'ปกติ' : 'หมด')">
+                                    <span class="p-slider"></span>
+                                </label>
+                                <button class="item-edit-btn" onclick="openItemEditModal('${opt.id}', '${group.label}', '${group.station}')" title="แก้ไข">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                            </div>
                         </div>
                     `;
                 }).join('');
 
                 return `
-                    <div class="option-group">
-                        <div class="flex justify-between items-center mb-3">
-                            <span class="text-xs text-blue-400 font-medium"><i class="fas fa-layer-group mr-1"></i> กลุ่มที่ ${gi + 1}</span>
-                            <div class="flex items-center gap-2">
-                                <label class="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-                                    <input type="checkbox" ${isMulti ? 'checked' : ''} onchange="toggleMulti(${gi}, this.checked)" class="accent-blue-500">
-                                    Multi-Select
-                                </label>
-                                <button type="button" onclick="removeGroup(${gi})" class="text-red-500 hover:text-red-400 w-8 h-8 rounded-lg hover:bg-red-500/10 transition-all" title="ลบกลุ่ม">
-                                    <i class="fas fa-trash text-sm"></i>
-                                </button>
+                    <div class="group-card flex flex-col">
+                        <div class="p-5 border-b border-white/[0.06] flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <h3 class="text-base font-black text-white leading-tight mb-2 truncate">${group.label}</h3>
+                                <div class="flex items-center flex-wrap gap-2">
+                                    <span class="type-badge ${group.type === 'single' ? 'single' : 'multi'}">
+                                        <i class="fas fa-${group.type === 'single' ? 'dot-circle' : 'check-square'} text-[9px]"></i>
+                                        ${group.type === 'single' ? 'เลือกได้ 1' : 'หลายอัน'}
+                                    </span>
+                                    <span class="linked-count-badge">
+                                        <i class="fas fa-store text-[9px]"></i> ${group.station}
+                                    </span>
+                                    <span class="linked-count-badge">
+                                        <i class="fas fa-utensils text-[9px]"></i> ${group.linkedMenus.length} เมนู
+                                    </span>
+                                </div>
+                            </div>
+                            <button onclick="openEditGroupModal('${group.label}', '${group.station}', '${group.type}')"
+                                    class="flex-shrink-0 w-8 h-8 rounded-xl bg-white/5 border border-white/8 text-slate-500 hover:bg-blue-600/15 hover:text-blue-400 hover:border-blue-500/30 flex items-center justify-center transition-all"
+                                    title="แก้ไขกลุ่ม">
+                                <i class="fas fa-pencil-alt text-[11px]"></i>
+                            </button>
+                        </div>
+                        <div class="p-3 opt-list-container">${itemsHtml.length ? itemsHtml : '<p class="text-center text-slate-600 text-xs py-4 italic">ยังไม่มีตัวเลือก</p>'}</div>
+                        <div class="px-4 pb-4">
+                            <div class="flex flex-wrap gap-1.5">
+                                ${group.linkedMenus.map(m => `<span class="menu-chip"><i class="fas fa-utensils text-[9px]"></i> ${m.name}</span>`).join('')}
                             </div>
                         </div>
-                        <div class="option-label-row">
-                            <input type="text" value="${group.label || ''}" placeholder="ชื่อกลุ่ม TH (เช่น ความเผ็ด)" oninput="updateGroupLabel(${gi}, 'th', this.value)">
-                            <input type="text" value="${enGroup.label || ''}" placeholder="EN (e.g. Spice level)" oninput="updateGroupLabel(${gi}, 'en', this.value)">
-                            <input type="text" value="${cnGroup.label || ''}" placeholder="CN (如 辣度)" oninput="updateGroupLabel(${gi}, 'cn', this.value)">
-                            <span class="text-xs text-slate-500 text-center">ราคา (+)</span>
-                            <span></span>
-                        </div>
-                        ${choicesHTML}
-                        <button type="button" onclick="addChoice(${gi})" class="w-full mt-2 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs font-medium transition-all">
-                            <i class="fas fa-plus mr-1"></i> เพิ่มตัวเลือก
-                        </button>
                     </div>
                 `;
             }).join('');
-        }
-
-        function addOptionGroup() {
-            currentOptions.th.push({ label: '', allowMultiple: false, choices: [{ name: '', price: 0 }] });
-            currentOptions.en.push({ label: '', choices: [{ name: '', price: 0 }] });
-            currentOptions.cn.push({ label: '', choices: [{ name: '', price: 0 }] });
-            renderOptionsBuilder();
-        }
-
-        function removeGroup(gi) {
-            currentOptions.th.splice(gi, 1);
-            currentOptions.en.splice(gi, 1);
-            currentOptions.cn.splice(gi, 1);
-            renderOptionsBuilder();
-        }
-
-        function toggleMulti(gi, checked) {
-            currentOptions.th[gi].allowMultiple = checked;
-        }
-
-        function updateGroupLabel(gi, lang, value) {
-            if (!currentOptions[lang][gi]) return;
-            currentOptions[lang][gi].label = value;
-        }
-
-        function addChoice(gi) {
-            ['th', 'en', 'cn'].forEach(lang => {
-                if (!currentOptions[lang][gi].choices) currentOptions[lang][gi].choices = [];
-                currentOptions[lang][gi].choices.push({ name: '', price: 0 });
-            });
-            renderOptionsBuilder();
-        }
-
-        function removeChoice(gi, ci) {
-            ['th', 'en', 'cn'].forEach(lang => {
-                if (currentOptions[lang][gi] && currentOptions[lang][gi].choices) {
-                    currentOptions[lang][gi].choices.splice(ci, 1);
-                }
-            });
-            renderOptionsBuilder();
-        }
-
-        function updateChoice(gi, ci, lang, field, value) {
-            if (!currentOptions[lang][gi] || !currentOptions[lang][gi].choices[ci]) return;
-            currentOptions[lang][gi].choices[ci][field] = value;
+            initOptionSortable();
         }
 
         function updateChoicePrice(gi, ci, value) {
@@ -1168,65 +1305,6 @@
                     currentOptions[lang][gi].choices[ci].price = price;
                 }
             });
-        }
-
-        function toggleOptionsHelp() {
-            document.getElementById('optionsHelpBox').classList.toggle('hidden');
-        }
-
-        // ════════════════════════════════════════════════════════
-        // OPTIONS: compile from state → string, parse string → state
-        // ════════════════════════════════════════════════════════
-        // Format: "กลุ่ม(M): choice1(+0), choice2(+30) || กลุ่ม2: a, b"
-        function compileOptions(lang) {
-            const groups = currentOptions[lang];
-            if (!groups || groups.length === 0) return null;
-            
-            const thGroups = currentOptions.th; // ใช้ TH เป็น master (multi flag อยู่ที่ TH)
-            
-            return groups.map((g, gi) => {
-                const label = (g.label || '').trim();
-                const isMulti = thGroups[gi] && thGroups[gi].allowMultiple ? '(M)' : '';
-                if (!label && (!g.choices || g.choices.length === 0)) return '';
-                
-                const choices = (g.choices || []).map((c, ci) => {
-                    const name = (c.name || '').trim();
-                    const price = thGroups[gi].choices[ci] ? (thGroups[gi].choices[ci].price || 0) : 0;
-                    if (!name) return '';
-                    return price > 0 ? `${name}(+${price})` : name;
-                }).filter(Boolean).join(', ');
-
-                return `${label}${isMulti}: ${choices}`;
-            }).filter(Boolean).join(' || ') || null;
-        }
-
-        function parseOptionsFromDB(optStrTh, optStrEn, optStrCn) {
-            // parse ทั้ง 3 ภาษามา sync เข้า structure เดียวกัน
-            function parseOne(str) {
-                if (!str) return [];
-                return str.split('||').map(groupStr => {
-                    const parts = groupStr.split(':');
-                    let label = (parts[0] || '').trim();
-                    let isMulti = false;
-                    if (label.includes('(M)')) { isMulti = true; label = label.replace(/\(M\)/g, '').trim(); }
-                    
-                    const choicesRaw = parts[1] ? parts[1].split(',') : [];
-                    const choices = choicesRaw.map(c => {
-                        c = c.trim();
-                        let name = c, price = 0;
-                        const match = c.match(/\(\+(\d+)\)$/);
-                        if (match) { price = parseInt(match[1]); name = c.slice(0, match.index).trim(); }
-                        return { name, price };
-                    });
-                    return { label, allowMultiple: isMulti, choices };
-                });
-            }
-
-            return {
-                th: parseOne(optStrTh),
-                en: parseOne(optStrEn),
-                cn: parseOne(optStrCn)
-            };
         }
 
         // ════════════════════════════════════════════════════════
@@ -1254,7 +1332,6 @@
             // Reset
             document.getElementById('menuForm').reset();
             document.getElementById('menuId').value = '';
-            currentOptions = { th: [], en: [], cn: [] };
             renderStatusSelector();
             selectStatus('ปกติ');
             updatePreview('image_url', 'imgPreview');
@@ -1284,7 +1361,6 @@
                     document.getElementById('desc_cn').value = item.desc_cn || '';
                     
                     selectStatus(item.status || 'ปกติ');
-                    currentOptions = parseOptionsFromDB(item.option_th, item.option_en, item.option_cn);
                     updatePreview('image_url', 'imgPreview');
                     
                     // Set station dropdown by station_th (snapshot)
@@ -1292,7 +1368,7 @@
                 }
             }
             
-            renderOptionsBuilder();
+            
             document.getElementById('menuModal').classList.remove('hidden');
         }
 
@@ -1341,9 +1417,6 @@
                 desc_th: document.getElementById('desc_th').value.trim() || null,
                 desc_en: document.getElementById('desc_en').value.trim() || null,
                 desc_cn: document.getElementById('desc_cn').value.trim() || null,
-                option_th: compileOptions('th'),
-                option_en: compileOptions('en'),
-                option_cn: compileOptions('cn')
             };
 
             try {
@@ -1414,6 +1487,7 @@
             // Lazy-load data ของ view ที่ยังไม่โหลด
             if (view === 'tables' && tablesData.length === 0) fetchTables();
             if (view === 'banners' && bannersData.length === 0) fetchBanners();
+            if (view === 'options' && optionsMasterData.length === 0) fetchOptionsMaster();
         }
 
 
@@ -1816,6 +1890,451 @@
             fetchBanners();
         }
 
+        // --- สเตทสำหรับระบบ Option ---
+        let numpadValue = "0";
+        let currentNumpadId = null;
+        let selectedOptionStation = 'ทั้งหมด';
+        let assignedMenuIds = [];
+        let originalGroupLabel = "";
+
+        // 1. ดึงข้อมูล
+        async function fetchOptionsMaster() {
+            const { data, error } = await supabaseClient
+                .from('option_items')
+                .select('*')
+                .order('station_th')
+                .order('sort_order', { ascending: true });
+            if (error) return toast('Error: ' + error.message, 'error');
+            optionsMasterData = data || [];
+            renderOptionsView();
+        }
+
+        // --- 1. ลบตัวเลือกรายอันออกจากกลุ่ม ---
+        async function removeOptionFromGroup(optionId, groupLabel, station) {
+            if (!confirm(`ยืนยันการลบตัวเลือกนี้ออกจากกลุ่ม "${groupLabel}"? (จะมีผลกับทุกเมนูที่ผูกกลุ่มนี้อยู่)`)) return;
+
+            toast('กำลังลบ...', 'info');
+
+            try {
+                const menusInStation = menuData.filter(m => m.station_th === station);
+                
+                await Promise.all(menusInStation.map(async (m) => {
+                    if (!m.options_config) return Promise.resolve();
+
+                    let hasChange = false;
+                    const newConfig = m.options_config.map(group => {
+                        if (group.label_th === groupLabel) {
+                            const originalCount = group.item_ids.length;
+                            group.item_ids = group.item_ids.filter(id => id !== optionId);
+                            if (group.item_ids.length !== originalCount) hasChange = true;
+                        }
+                        return group;
+                    });
+
+                    if (hasChange) {
+                        return supabaseClient.from('menus').update({ options_config: newConfig }).eq('id', m.id);
+                    }
+                    return Promise.resolve();
+                }));
+
+                toast('ลบตัวเลือกเรียบร้อย');
+                fetchAll(); // รีโหลดข้อมูลใหม่
+            } catch (e) {
+                toast('ลบไม่สำเร็จ', 'error');
+            }
+        }
+
+        // --- 2. ลบหัวข้อกลุ่มทิ้งทั้งชุด ---
+        async function deleteGroupHeader() {
+            if (!confirm(`⚠️ คำเตือน: คุณกำลังจะลบกลุ่ม "${originalGroupLabel}" ออกจากทุกเมนูในซุ้มนี้ ยืนยันหรือไม่?`)) return;
+
+            toast('กำลังลบกลุ่ม...', 'info');
+            const station = currentEditGroupStation;
+
+            try {
+                const menusInStation = menuData.filter(m => m.station_th === station);
+
+                await Promise.all(menusInStation.map(async (m) => {
+                    if (!m.options_config) return Promise.resolve();
+
+                    // กรองเอาเฉพาะกลุ่มที่ "ไม่ใช่" อันที่ต้องการลบ
+                    const newConfig = m.options_config.filter(g => g.label_th !== originalGroupLabel);
+                    
+                    // ถ้าจำนวนกลุ่มเปลี่ยนไป แสดงว่ามีการลบเกิดขึ้นจริง
+                    if (newConfig.length !== m.options_config.length) {
+                        return supabaseClient.from('menus').update({ options_config: newConfig }).eq('id', m.id);
+                    }
+                    return Promise.resolve();
+                }));
+
+                toast('ลบกลุ่มตัวเลือกเรียบร้อย');
+                closeModal('editGroupModal');
+                fetchAll();
+            } catch (e) {
+                toast('ลบกลุ่มไม่สำเร็จ', 'error');
+            }
+        }
+
+        // 3. ฟังก์ชันเสริม (Numpad, Edit, Switch)
+        function setOptionStationFilter(s) { selectedOptionStation = s; renderOptionsView(); }
+
+        function openNumpad(id, name, price) {
+            currentNumpadId = id; numpadValue = price.toString();
+            document.getElementById('numpadItemName').innerText = name;
+            document.getElementById('numpadDisplay').innerText = numpadValue;
+            document.getElementById('numpadOverlay').classList.remove('hidden');
+        }
+
+        function pressNum(k) {
+            if (k === 'C') numpadValue = "0";
+            else if (k === 'B') numpadValue = numpadValue.length > 1 ? numpadValue.slice(0, -1) : "0";
+            else numpadValue = numpadValue === "0" ? k : (numpadValue.length < 5 ? numpadValue + k : numpadValue);
+            document.getElementById('numpadDisplay').innerText = numpadValue;
+        }
+
+        function closeNumpad() { document.getElementById('numpadOverlay').classList.add('hidden'); }
+
+        async function confirmNumpad() {
+            await updateOptionPrice(currentNumpadId, parseInt(numpadValue));
+            closeNumpad(); fetchOptionsMaster();
+        }
+
+        function openEditGroupModal(label, station, type) {
+            originalGroupLabel = label;
+            currentEditGroupStation = station;
+            document.getElementById('editGroupLabel').value = label;
+            document.getElementById('editGroupSelection').value = type;
+            document.getElementById('currentStationLabel').innerText = station;
+            assignedMenuIds = menuData.filter(m => m.station_th === station && (m.options_config || []).some(g => g.label_th === label)).map(m => m.id);
+            renderEditGroupMenus(station);
+            document.getElementById('editGroupModal').classList.remove('hidden');
+        }
+
+        function renderEditGroupMenus(station) {
+            const list = document.getElementById('editGroupMenuList');
+            list.innerHTML = menuData.filter(m => m.station_th === station).map(m => `
+                <label class="flex items-center gap-3 p-4 rounded-2xl bg-white/5 border border-transparent cursor-pointer">
+                    <input type="checkbox" class="w-5 h-5 accent-blue-500" ${assignedMenuIds.includes(m.id) ? 'checked' : ''} onchange="toggleMenuSelection('${m.id}', this.checked)">
+                    <span class="text-sm font-bold text-white">${m.item_th}</span>
+                </label>
+            `).join('');
+        }
+
+        async function saveGroupFullChanges() {
+            const newLabel = document.getElementById('editGroupLabel').value.trim();
+            const newType = document.getElementById('editGroupSelection').value;
+            const station = currentEditGroupStation;
+            
+            toast('กำลังบันทึก...', 'info');
+
+            // อัปเดตเมนูในซุ้ม
+            await Promise.all(menuData.filter(m => m.station_th === station).map(async (m) => {
+                let conf = (m.options_config || []).map(g => {
+                    if (g.label_th !== originalGroupLabel) return g;
+                    // อัปเดตเฉพาะ label และ type — คง item_ids ของเมนูนี้ไว้
+                    return { ...g, label_th: newLabel, selection_type: newType };
+                });
+                if (!assignedMenuIds.includes(m.id)) {
+                    // ถอดกลุ่มออกถ้า uncheck
+                    conf = conf.filter(g => g.label_th !== newLabel && g.label_th !== originalGroupLabel);
+                } else if (!conf.find(g => g.label_th === newLabel)) {
+                    // เพิ่มกลุ่มใหม่ถ้าเพิ่งถูก assign (ไม่มีอยู่เดิม)
+                    let source = null;
+                    for (const mx of menuData) {
+                        source = (mx.options_config || []).find(g => g.label_th === originalGroupLabel);
+                        if (source) break;
+                    }
+                    if (source) conf.push({ ...source, label_th: newLabel, selection_type: newType });
+                }
+                return supabaseClient.from('menus').update({ options_config: conf }).eq('id', m.id);
+            }));
+
+            toast('บันทึกเรียบร้อย');
+            closeModal('editGroupModal');
+            fetchAll();
+        }
+
+        let currentAssigningGroup = null;
+        let currentAssigningStation = null;
+        let currentEditGroupStation = null;
+        
+
+        function manageGroupAssignment(groupLabel, groupStation) { // ✅ รับ groupStation เข้ามา
+            currentAssigningGroup = groupLabel;
+            currentAssigningStation = groupStation; // ✅ บันทึกซุ้มไว้
+            
+            document.getElementById('assignGroupName').innerText = "หัวข้อ: " + groupLabel;
+            
+            // เปลี่ยนคำอธิบายใน Modal ให้ชัดเจน
+            const subTitle = document.querySelector('#assignmentModal p.text-sm');
+            subTitle.innerHTML = `หัวข้อ: ${groupLabel} <span class="mx-2 text-slate-600">|</span> <i class="fas fa-store text-blue-500 mr-1"></i> เฉพาะซุ้ม: ${groupStation}`;
+
+            assignedMenuIds = [];
+            menuData.forEach(m => {
+                if (m.options_config && m.options_config.find(g => g.label_th === groupLabel)) {
+                    assignedMenuIds.push(m.id);
+                }
+            });
+
+            document.getElementById('assignmentModal').classList.remove('hidden');
+            renderMenuSelection();
+        }
+
+        // 2. วาดรายการเมนูให้ติ๊กเลือก
+        function renderMenuSelection() {
+            const search = document.getElementById('menuSearchInAssign').value.toLowerCase();
+            const container = document.getElementById('menuSelectionList');
+            
+            // ✅ กรอง 2 ชั้น: 1. กรองเฉพาะซุ้มที่กำหนด 2. กรองตามชื่อที่ค้นหา
+            const filteredMenus = menuData.filter(m => {
+                const matchStation = m.station_th === currentAssigningStation;
+                const matchSearch = m.item_th.toLowerCase().includes(search);
+                return matchStation && matchSearch;
+            });
+
+            if (filteredMenus.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-10 text-center text-slate-600 italic">ไม่พบเมนูในซุ้ม ${currentAssigningStation}</div>`;
+                return;
+            }
+
+            container.innerHTML = filteredMenus.map(m => {
+                const isChecked = assignedMenuIds.includes(m.id);
+                return `
+                    <label class="flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${isChecked ? 'bg-blue-600/10 border-blue-500/40' : 'bg-white/5 border-transparent hover:border-white/10'}">
+                        <input type="checkbox" class="w-6 h-6 accent-blue-500 rounded-lg" ${isChecked ? 'checked' : ''} 
+                            onchange="toggleMenuSelection('${m.id}', this.checked)">
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-white truncate">${m.item_th}</p>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-widest">${m.station_th}</p>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+        }
+
+        function toggleMenuSelection(menuId, isChecked) {
+            if (isChecked) {
+                if (!assignedMenuIds.includes(menuId)) assignedMenuIds.push(menuId);
+            } else {
+                assignedMenuIds = assignedMenuIds.filter(id => id !== menuId);
+            }
+        }
+
+        // 3. บันทึก (หัวใจสำคัญ: การกระจาย config ไปยังเมนูต่างๆ)
+        async function saveAssignments() {
+            toast('กำลังบันทึก...', 'info');
+
+            // หาต้นแบบของ Config จากกลุ่มนี้ (เอาจากเมนูแรกที่เจอ)
+            let sourceConfig = null;
+            for (const m of menuData) {
+                sourceConfig = (m.options_config || []).find(g => g.label_th === currentAssigningGroup);
+                if (sourceConfig) break;
+            }
+
+            if (!sourceConfig) return toast('ไม่พบต้นแบบข้อมูล', 'error');
+
+            try {
+                // วนลูปอัปเดตเมนูทุกตัวในระบบ
+                const updatePromises = menuData.map(async (m) => {
+                    let newConfig = [...(m.options_config || [])];
+                    const hasGroup = newConfig.find(g => g.label_th === currentAssigningGroup);
+                    const shouldHaveGroup = assignedMenuIds.includes(m.id);
+
+                    if (shouldHaveGroup && !hasGroup) {
+                        // ถ้าควรมีแต่ยังไม่มี -> เพิ่มเข้าไป
+                        newConfig.push(sourceConfig);
+                    } else if (!shouldHaveGroup && hasGroup) {
+                        // ถ้าไม่ควรมีแต่มีอยู่ -> ลบออก
+                        newConfig = newConfig.filter(g => g.label_th !== currentAssigningGroup);
+                    } else {
+                        // กรณีอื่นๆ ข้ามไป
+                        return Promise.resolve();
+                    }
+
+                    return supabaseClient.from('menus').update({ options_config: newConfig }).eq('id', m.id);
+                });
+
+                await Promise.all(updatePromises);
+                toast('อัปเดตการผูกเมนูสำเร็จ');
+                closeModal('assignmentModal');
+                fetchAll(); // โหลดข้อมูลเมนูใหม่เพื่อให้หน้าจออัปเดต
+            } catch (e) {
+                console.error(e);
+                toast('เกิดข้อผิดพลาดในการบันทึก', 'error');
+            }
+        }
+
+        // สร้างตัวแปรเก็บ Instance ไว้ด้านนอก เพื่อคอยล้างค่าของเก่า
+        let optionSortableInstances = [];
+
+        function initOptionSortable() {
+            // 1. เคลียร์ Sortable เก่าทิ้งทุกครั้งที่วาดหน้าจอใหม่ ป้องกันบั๊กซ้อนทับ
+            optionSortableInstances.forEach(inst => {
+                try { inst.destroy(); } catch(e){}
+            });
+            optionSortableInstances = [];
+
+            document.querySelectorAll('.opt-list-container').forEach(el => {
+                const inst = Sortable.create(el, {
+                    handle: '.drag-handle',
+                    draggable: '.sortable-opt-item', // 2. ระบุชัดเจนว่าลากได้เฉพาะไอเทม (กันไม่ให้ลากข้อความว่างเปล่า)
+                    animation: 200,
+                    ghostClass: 'sortable-ghost', // เปลี่ยนมาใช้ CSS คลาสที่มีอยู่แล้วแทน Tailwind class
+                    onEnd: async (evt) => {
+                        // เช็คก่อนว่าลากไปไว้ที่เดิมหรือเปล่า ถ้าใช่ก็ไม่ต้องทำอะไร
+                        if (evt.oldIndex === evt.newIndex) return; 
+
+                        // ดึงรายการทั้งหมดในกลุ่มนั้น (หลังลากเสร็จ)
+                        const allRows = Array.from(evt.to.querySelectorAll('.sortable-opt-item'));
+                        
+                        const updates = allRows.map((row, idx) => ({
+                            id: row.dataset.id,
+                            sort_order: (idx + 1) * 10 // รันลำดับ 10, 20, 30...
+                        }));
+
+                        try {
+                            // อัปเดตข้อมูล Local ให้ตรงกับฐานข้อมูล
+                            updates.forEach(u => {
+                                const opt = optionsMasterData.find(o => o.id === u.id);
+                                if (opt) opt.sort_order = u.sort_order;
+                            });
+                            
+                            // 3. *** สำคัญมาก: เรียงลำดับ Array ต้นฉบับใหม่ ไม่งั้นรีเรนเดอร์แล้วจะเด้งกลับไปที่เดิม ***
+                            optionsMasterData.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+                            // เซฟขึ้น Supabase
+                            await Promise.all(updates.map(u => 
+                                supabaseClient.from('option_items').update({ sort_order: u.sort_order }).eq('id', u.id)
+                            ));
+                            
+                            toast('เรียงลำดับใหม่สำเร็จ');
+                        } catch (error) {
+                            toast('บันทึกลำดับไม่สำเร็จ โปรดลองใหม่', 'error');
+                        }
+                    }
+                });
+                // เก็บลง Array ไว้เตรียม Destroy รอบหน้า
+                optionSortableInstances.push(inst);
+            });
+        }
+
+        // 3. ฟังก์ชันอัปเดตราคา
+        async function updateOptionPrice(id, newPrice) {
+            const price = parseFloat(newPrice) || 0;
+            const { error } = await supabaseClient.from('option_items').update({ extra_price: price }).eq('id', id);
+            if (error) toast('แก้ราคาไม่สำเร็จ', 'error');
+            else toast('บันทึกราคาใหม่แล้ว');
+        }
+
+        // 4. ฟังก์ชันสลับสถานะ
+        async function toggleOptionStatus(id, newStatus) {
+            const { error } = await supabaseClient.from('option_items').update({ status: newStatus }).eq('id', id);
+            if (error) { toast('อัปเดตสถานะไม่สำเร็จ', 'error'); fetchOptionsMaster(); }
+            else {
+                const idx = optionsMasterData.findIndex(o => o.id === id);
+                if (idx !== -1) optionsMasterData[idx].status = newStatus;
+                toast(`"${optionsMasterData[idx].name_th}" -> ${newStatus}`);
+                renderOptionsView();
+            }
+        }
+
+        // 5. ระบบย้ายซุ้ม (กรณีอยากจัดกลุ่มใหม่)
+        async function changeOptionStation(id, current) {
+            const newStation = prompt("เปลี่ยนชื่อซุ้ม/หมวดหมู่สำหรับ Option นี้:", current);
+            if (newStation && newStation !== current) {
+                const { error } = await supabaseClient.from('option_items').update({ station_th: newStation.trim() }).eq('id', id);
+                if (!error) { fetchOptionsMaster(); toast('ย้ายซุ้มสำเร็จ'); }
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        // ITEM EDIT MODAL
+        // ════════════════════════════════════════════════════════
+        let editingItemId = null;
+        let editingItemGroup = null;
+        let editingItemStation = null;
+
+        function openItemEditModal(optId, groupLabel, station) {
+            const opt = optionsMasterData.find(o => o.id === optId);
+            if (!opt) return;
+            editingItemId = optId;
+            editingItemGroup = groupLabel;
+            editingItemStation = station;
+            document.getElementById('itemEditName').value = opt.name_th || '';
+            document.getElementById('itemEditPrice').value = opt.extra_price || 0;
+            document.getElementById('itemEditStatus').checked = opt.status !== 'หมด';
+            document.getElementById('itemEditModal').classList.remove('hidden');
+        }
+
+        async function saveItemEdit() {
+            const btn = document.getElementById('btnSaveItemEdit');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+            const name = document.getElementById('itemEditName').value.trim();
+            const price = parseFloat(document.getElementById('itemEditPrice').value) || 0;
+            const status = document.getElementById('itemEditStatus').checked ? 'ปกติ' : 'หมด';
+            try {
+                const { error } = await supabaseClient.from('option_items')
+                    .update({ name_th: name, extra_price: price, status })
+                    .eq('id', editingItemId);
+                if (error) throw error;
+                toast('บันทึกเรียบร้อย');
+                closeModal('itemEditModal');
+                fetchOptionsMaster();
+            } catch (e) {
+                toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save mr-2"></i> บันทึก`;
+            }
+        }
+
+        async function deleteItemFromModal() {
+            if (!confirm(`ลบตัวเลือกนี้ออกจากกลุ่ม "${editingItemGroup}"?`)) return;
+            await removeOptionFromGroup(editingItemId, editingItemGroup, editingItemStation);
+            closeModal('itemEditModal');
+        }
+
+        // ════════════════════════════════════════════════════════
+        // ADD OPTION MODAL
+        // ════════════════════════════════════════════════════════
+        function openAddOptionModal() {
+            document.getElementById('addOptName').value = '';
+            document.getElementById('addOptPrice').value = '0';
+            document.getElementById('addOptStation').innerHTML = stationsData.map(s =>
+                `<option value="${s.station_th}">${s.station_th}</option>`
+            ).join('');
+            document.getElementById('addOptionModal').classList.remove('hidden');
+        }
+
+        async function saveNewOption() {
+            const btn = document.getElementById('btnSaveNewOpt');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> กำลังบันทึก...`;
+            const name = document.getElementById('addOptName').value.trim();
+            const price = parseFloat(document.getElementById('addOptPrice').value) || 0;
+            const station = document.getElementById('addOptStation').value;
+            if (!name) { toast('กรุณากรอกชื่อตัวเลือก', 'error'); btn.disabled = false; btn.innerHTML = `<i class="fas fa-plus mr-2"></i> เพิ่ม`; return; }
+            const maxOrder = optionsMasterData.filter(o => o.station_th === station).reduce((m, o) => Math.max(m, o.sort_order || 0), 0);
+            try {
+                const { error } = await supabaseClient.from('option_items').insert([{
+                    name_th: name, extra_price: price, station_th: station,
+                    status: 'ปกติ', sort_order: maxOrder + 10
+                }]);
+                if (error) throw error;
+                toast(`เพิ่ม "${name}" เรียบร้อย`);
+                closeModal('addOptionModal');
+                fetchOptionsMaster();
+            } catch (e) {
+                toast('เพิ่มไม่สำเร็จ: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-plus mr-2"></i> เพิ่ม`;
+            }
+        }
+
+        
+
 
         // ════════════════════════════════════════════════════════
         // INIT
@@ -1827,5 +2346,174 @@
         style.textContent = `@keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`;
         document.head.appendChild(style);
     </script>
+    <div id="assignmentModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 z-[60]">
+    <div class="bg-[#111] w-full max-w-2xl rounded-[32px] border border-white/10 flex flex-col max-h-[85vh]">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-black text-blue-400">ผูกกลุ่มตัวเลือกเข้ากับเมนู</h2>
+                <p id="assignGroupName" class="text-sm text-slate-100 font-bold mt-1"></p>
+            </div>
+            <button onclick="closeModal('assignmentModal')" class="text-slate-500 hover:text-white text-2xl"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="p-6 overflow-y-auto no-scrollbar">
+            <div class="mb-6">
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-3">ค้นหาเมนูในระบบ</label>
+                <input type="text" id="menuSearchInAssign" placeholder="พิมพ์ชื่อเมนู..." oninput="renderMenuSelection()"
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-sm outline-none focus:border-blue-500 transition-all">
+            </div>
+
+            <div id="menuSelectionList" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                </div>
+        </div>
+
+        <div class="p-6 border-t border-white/10 flex gap-4">
+            <button onclick="closeModal('assignmentModal')" class="flex-1 py-3.5 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all">ยกเลิก</button>
+            <button onclick="saveAssignments()" class="flex-1 py-3.5 rounded-2xl bg-blue-600 text-white font-bold shadow-lg shadow-blue-900/30 hover:bg-blue-500 transition-all">บันทึกการเปลี่ยนแปลง</button>
+        </div>
+    </div>
+</div>
+    <div id="editGroupModal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 z-[70]">
+    <div class="bg-[#111] w-full max-w-2xl rounded-[40px] border border-white/10 flex flex-col max-h-[90vh]">
+        <div class="p-8 border-b border-white/10 flex justify-between items-center">
+            <h2 class="text-2xl font-black text-white">แก้ไขกลุ่มตัวเลือก</h2>
+            <button onclick="closeModal('editGroupModal')" class="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="p-8 overflow-y-auto no-scrollbar space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ชื่อหัวข้อ</label>
+                    <input type="text" id="editGroupLabel" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ประเภทการเลือก</label>
+                    <select id="editGroupSelection" class="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white font-bold outline-none focus:border-blue-500 appearance-none">
+                        <option value="single">Single Select (เลือกได้ 1)</option>
+                        <option value="multiple">Multiple Select (เลือกได้หลายอัน)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-4">เมนูที่แสดงกลุ่มตัวเลือกนี้ (เฉพาะซุ้ม <span id="currentStationLabel" class="text-blue-400"></span>)</label>
+                <div id="editGroupMenuList" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    </div>
+            </div>
+        </div>
+
+        <div class="p-8 border-t border-white/10 flex gap-4 shrink-0">
+        <button onclick="deleteGroupHeader()" class="px-6 py-4 rounded-2xl bg-red-600/10 text-red-500 font-bold hover:bg-red-600 hover:text-white transition-all">
+            <i class="fas fa-trash-alt mr-2"></i> ลบกลุ่มนี้
+        </button>
+        <div class="flex-1 flex gap-4">
+            <button onclick="closeModal('editGroupModal')" class="flex-1 py-4 rounded-2xl bg-white/5 text-slate-400 font-bold">ยกเลิก</button>
+            <button onclick="saveGroupFullChanges()" class="flex-1 py-4 rounded-2xl bg-blue-600 text-white font-black">บันทึกทั้งหมด</button>
+        </div>
+    </div>
+    </div>
+</div>
+
+<div id="numpadOverlay" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center p-4">
+    <div class="bg-[#1a1a1a] w-full max-w-[320px] rounded-[32px] border border-white/10 p-6 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+        <div class="text-center mb-6">
+            <p id="numpadItemName" class="text-slate-400 text-xs font-bold mb-2 uppercase"></p>
+            <div class="text-4xl font-black text-blue-400 flex items-center justify-center gap-2">
+                <span class="text-xl">฿</span><span id="numpadDisplay">0</span>
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-3 mb-6">
+            <button onclick="pressNum('1')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">1</button>
+            <button onclick="pressNum('2')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">2</button>
+            <button onclick="pressNum('3')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">3</button>
+            <button onclick="pressNum('4')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">4</button>
+            <button onclick="pressNum('5')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">5</button>
+            <button onclick="pressNum('6')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">6</button>
+            <button onclick="pressNum('7')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">7</button>
+            <button onclick="pressNum('8')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">8</button>
+            <button onclick="pressNum('9')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">9</button>
+            <button onclick="pressNum('C')" class="h-16 rounded-2xl bg-red-500/10 text-red-500 text-sm font-bold">CLR</button>
+            <button onclick="pressNum('0')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all">0</button>
+            <button onclick="pressNum('B')" class="h-16 rounded-2xl bg-white/5 text-xl font-bold hover:bg-white/10 active:scale-95 transition-all"><i class="fas fa-backspace"></i></button>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="closeNumpad()" class="flex-1 py-4 rounded-2xl font-bold text-slate-500 bg-white/5">ยกเลิก</button>
+            <button onclick="confirmNumpad()" class="flex-[2] py-4 rounded-2xl font-black bg-blue-600 text-white">ตกลง</button>
+        </div>
+    </div>
+</div>
+<!-- ═══════════════════════════════════════════════════════
+     ITEM EDIT MODAL
+     ═══════════════════════════════════════════════════════ -->
+<div id="itemEditModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[80]">
+    <div class="bg-[#111] w-full max-w-sm rounded-3xl border border-white/10 p-6">
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-lg font-black text-white">แก้ไขตัวเลือก</h2>
+            <button onclick="closeModal('itemEditModal')" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ชื่อตัวเลือก</label>
+                <input type="text" id="itemEditName" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ราคาเพิ่ม (฿)</label>
+                <input type="number" id="itemEditPrice" min="0" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/8">
+                <span class="text-sm font-bold text-white">พร้อมขาย</span>
+                <label class="p-switch">
+                    <input type="checkbox" id="itemEditStatus">
+                    <span class="p-slider"></span>
+                </label>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="deleteItemFromModal()" class="px-4 py-3 rounded-2xl bg-red-600/10 text-red-500 font-bold hover:bg-red-600 hover:text-white transition-all text-sm">
+                <i class="fas fa-trash-alt mr-1"></i> ลบ
+            </button>
+            <button onclick="closeModal('itemEditModal')" class="flex-1 py-3 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all text-sm">ยกเลิก</button>
+            <button id="btnSaveItemEdit" onclick="saveItemEdit()" class="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all text-sm shadow-lg shadow-blue-900/30">
+                <i class="fas fa-save mr-2"></i> บันทึก
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADD OPTION MODAL
+     ═══════════════════════════════════════════════════════ -->
+<div id="addOptionModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[80]">
+    <div class="bg-[#111] w-full max-w-sm rounded-3xl border border-white/10 p-6">
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-lg font-black text-white">เพิ่ม Option ใหม่</h2>
+            <button onclick="closeModal('addOptionModal')" class="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-slate-400 hover:text-white">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <div class="space-y-4">
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ชื่อตัวเลือก *</label>
+                <input type="text" id="addOptName" placeholder="เช่น ทรัฟเฟิล, ชีส..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ราคาเพิ่ม (฿)</label>
+                <input type="number" id="addOptPrice" value="0" min="0" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all">
+            </div>
+            <div>
+                <label class="text-[10px] font-black uppercase text-slate-500 tracking-widest block mb-2">ซุ้ม</label>
+                <select id="addOptStation" class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white font-bold outline-none focus:border-blue-500 transition-all appearance-none"></select>
+            </div>
+        </div>
+        <div class="flex gap-3 mt-6">
+            <button onclick="closeModal('addOptionModal')" class="flex-1 py-3 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all text-sm">ยกเลิก</button>
+            <button id="btnSaveNewOpt" onclick="saveNewOption()" class="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all text-sm shadow-lg shadow-blue-900/30">
+                <i class="fas fa-plus mr-2"></i> เพิ่ม
+            </button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
