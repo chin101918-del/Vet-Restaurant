@@ -639,18 +639,29 @@
                     headerIcon = '<i class="fas fa-utensils opacity-40 text-white"></i>';
                     headerTitleText = `โต๊ะ ${order.table_id || '??'}`;
 
-                    // ✅ เพิ่มชื่อบริกรกลับมาในรูปแบบ Badge และปรับขนาดให้ใหญ่เท่ากัน (text-sm)
-                    if (order.staff_name) {
-                        subHeaderInfo = `
-                            <div class="mt-2">
-                                <span class="inline-flex items-center bg-white/15 text-white/90 text-sm px-3 py-1 rounded-xl font-bold uppercase tracking-wider border border-white/10 shadow-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-2 opacity-50">
-                                        <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
-                                    </svg>
-                                    บริกร: ${order.staff_name}
-                                </span>
-                            </div>`;
-                    }
+                    // 🆕 1. สร้าง Pax Badge (แสดงจำนวนคน)
+                    let paxBadge = order.pax > 0 ? `
+                        <span class="inline-flex items-center bg-white/15 text-white/90 text-sm px-3 py-1 rounded-xl font-bold uppercase tracking-wider border border-white/10 shadow-sm">
+                            <i class="fas fa-users text-xs mr-2 opacity-50"></i>
+                            ${order.pax} ท่าน
+                        </span>` : '';
+
+                    // 🆕 2. สร้าง Staff Badge (ชื่อบริกร)
+                    let staffBadge = order.staff_name ? `
+                        <span class="inline-flex items-center bg-white/15 text-white/90 text-sm px-3 py-1 rounded-xl font-bold uppercase tracking-wider border border-white/10 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 mr-2 opacity-50">
+                                <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                            </svg>
+                            บริกร: ${order.staff_name}
+                        </span>` : '';
+
+                    // 🆕 3. นำ Badge มาแสดงผลรวมกัน (ใช้ gap-2 เพื่อให้เว้นระยะห่างสวยงาม)
+                    subHeaderInfo = `
+                        <div class="mt-2 flex flex-wrap gap-2">
+                            ${paxBadge}
+                            ${staffBadge}
+                        </div>`;
+                        
                     discountPercent = parseFloat(order.discount) || 0;
                 }
                 
