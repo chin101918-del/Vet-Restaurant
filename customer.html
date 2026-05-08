@@ -502,6 +502,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- GLOBAL STATE ---
 let menuData = [], flatMenu = {}, cart = [], currentLang = 'th';
+let optItemsMap = new Map(); // UUID → option_items row
 let currentItemForBottomSheet = null, lastClickedImageElement = null;
 let editingIndex = null; 
 let activeMenuItem = null; 
@@ -839,6 +840,7 @@ async function authenticateViaToken(tableIdHint, token) {
         // 🔌 เปิดระบบ Realtime ดักจับเวลามีของหมด หรือพนักงานปิดโต๊ะ
         subscribeToSessionExpiration();
         subscribeToMenuStatusUpdates();
+        subscribeToOptionItemUpdates();
 
     } catch (err) {
         console.error("Token Auth Error:", err);
@@ -1059,52 +1061,30 @@ async function loadBannersFromServer() {
 }
 
 // 🎯 ฟังก์ชันแยกตัวเลือก
-function parseOptionString(optStr, disabledList = []) {
-    if (!optStr) return [];
-    return optStr.split('||').map(groupStr => {
-        const parts = groupStr.split(':');
-        let label = parts[0] ? parts[0].trim() : '';
-        
-        let isMulti = false;
-        if (label.includes('(M)')) {
-            isMulti = true;
-            label = label.replace(/\(M\)/g, '').trim();
-        }
-
-        const choicesRaw = parts[1] ? parts[1].split(',') : [];
-        const choices = choicesRaw.map(c => {
-            c = c.trim();
-            let name = c;
-            let price = 0;
-            
-            // ตัดราคาออกก่อนเพื่อเอาชื่อเพียวๆ ไปเช็ค
-            const match = name.match(/\(\+(\d+)\)$/);
-            if (match) {
-                price = parseInt(match[1]);
-                name = name.slice(0, match.index).trim();
-            }
-
-            // ✅ เช็คว่าชื่อ option นี้อยู่ในรายการที่ถูกปิดจาก KDS (disabled_options) หรือไม่
-            let isOutOfStock = disabledList.includes(name);
-
-            // เผื่อยังพิมพ์ (หมด) แบบแมนนวลอยู่
-            const outOfStockPattern = /[\(\[\{\-]?\s*หมด\s*[\)\]\}]?/i;
-            if (outOfStockPattern.test(name)) {
-                isOutOfStock = true;
-                name = name.replace(outOfStockPattern, '').trim();
-            }
-            
-            return { name: name, price: price, isOutOfStock: isOutOfStock };
-        });
-        
-        return { label: label, allowMultiple: isMulti, choices: choices };
-    });
+function buildOptionGroups(optionsConfig, itemsMap) {
+    return (optionsConfig || []).map(group => ({
+        label_th: group.label_th,
+        label_en: group.label_en || group.label_th,
+        label_cn: group.label_cn || group.label_th,
+        allowMultiple: group.selection_type === 'multiple',
+        choices: (group.item_ids || []).map(id => {
+            const opt = itemsMap.get(id);
+            if (!opt) return null;
+            return {
+                id: opt.id,
+                name_th: opt.name_th,
+                name_en: opt.name_en || opt.name_th,
+                name_cn: opt.name_cn || opt.name_th,
+                price: parseFloat(opt.extra_price) || 0,
+                isOutOfStock: opt.status === 'หมด'
+            };
+        }).filter(Boolean)
+    }));
 }
 
 
 async function loadMenusFromServer() {
-    // 1. โหลดทั้งเมนูและซุ้ม (Stations) พร้อมกันเพื่อนำมาอ้างอิงลำดับ
-    const [menuRes, stationRes] = await Promise.all([
+    const [menuRes, stationRes, optItemsRes] = await Promise.all([
         supabaseClient.from('menus')
             .select('*')
             .neq('status', 'ลบ')
@@ -1112,7 +1092,9 @@ async function loadMenusFromServer() {
         supabaseClient.from('stations')
             .select('*')
             .eq('is_active', true)
-            .order('sort_order', { ascending: true })
+            .order('sort_order', { ascending: true }),
+        supabaseClient.from('option_items')
+            .select('id, name_th, name_en, name_cn, extra_price, status')
     ]);
 
     if (menuRes.error) {
@@ -1121,12 +1103,13 @@ async function loadMenusFromServer() {
         return;
     }
 
+    // Build global UUID → option_item map for O(1) lookup
+    optItemsMap = new Map((optItemsRes.data || []).map(o => [o.id, o]));
+
     const stationsData = stationRes.data || [];
     const menusData = menuRes.data || [];
-
     const grouped = {};
 
-    // 2. สร้างกลุ่มหมวดหมู่ตามลำดับที่ดึงมาจาก stations ก่อน (ทำให้การเรียงซุ้มตรงกับ Admin 100%)
     stationsData.forEach(st => {
         grouped[st.station_th] = {
             name: { th: st.station_th, en: st.station_en || st.station_th, cn: st.station_cn || st.station_th },
@@ -1135,11 +1118,8 @@ async function loadMenusFromServer() {
         };
     });
 
-    // 3. นำเมนูที่เรียงลำดับ sort_order แล้ว มายัดใส่กลุ่ม
     menusData.forEach(item => {
         const catName = item.station_th;
-        
-        // เผื่อมีเมนูที่ซุ้มถูกลบไปแล้ว แต่ยังค้างอยู่ ให้สร้างกลุ่มสำรองต่อท้าย
         if (!grouped[catName]) {
             grouped[catName] = {
                 name: { th: item.station_th, en: item.station_en || item.station_th, cn: item.station_cn || item.station_th },
@@ -1148,13 +1128,6 @@ async function loadMenusFromServer() {
             };
         }
 
-        const disabledList = Array.isArray(item.disabled_options) ? item.disabled_options : [];
-        let parsedOptions = { th: [], en: [], cn: [] };
-        
-        if (item.option_th) parsedOptions.th = parseOptionString(item.option_th, disabledList);
-        if (item.option_en) parsedOptions.en = parseOptionString(item.option_en, disabledList);
-        if (item.option_cn) parsedOptions.cn = parseOptionString(item.option_cn, disabledList);
-
         grouped[catName].items.push({
             item: { th: item.item_th, en: item.item_en || item.item_th, cn: item.item_cn || item.item_th },
             price: parseFloat(item.price),
@@ -1162,17 +1135,14 @@ async function loadMenusFromServer() {
             imageURL: item.image_url,
             description: { th: item.desc_th, en: item.desc_en, cn: item.desc_cn },
             status: item.status,
-            optionGroups: parsedOptions,
-            disabled_options: disabledList,
+            optionGroups: buildOptionGroups(item.options_config, optItemsMap),
             db_id: item.id,
             kds_station: item.kds_station,
             station: item.station_th
         });
     });
 
-    // 4. กรองเอาเฉพาะซุ้มที่มีเมนูอยู่จริงๆ
     const finalData = Object.values(grouped).filter(cat => cat.items.length > 0);
-
     onMenuLoaded(finalData);
 }
 
@@ -1734,59 +1704,50 @@ function openBottomSheet(item, station) {
 
 function renderOptionsHTML(item) {
     const container = document.getElementById('bs-radio-container');
-    container.innerHTML = ''; 
+    container.innerHTML = '';
     const optionsDiv = document.getElementById('bs-options-container');
 
-    const groupsTH = item.optionGroups?.th || [];
-    const groupsDisplay = item.optionGroups?.[currentLang] || groupsTH;
-
-    if (groupsTH.length === 0) {
-        optionsDiv.style.display = 'none';
-        return;
-    }
+    const groups = item.optionGroups || [];
+    if (groups.length === 0) { optionsDiv.style.display = 'none'; return; }
     optionsDiv.style.display = 'block';
 
-    groupsTH.forEach((groupTH, gIdx) => {
-        const isMulti = groupTH.allowMultiple;
+    const soldOutText = { th: 'หมด', en: 'Sold Out', cn: '售罄' };
+
+    groups.forEach((group, gIdx) => {
+        const isMulti = group.allowMultiple;
         const type = isMulti ? 'checkbox' : 'radio';
-        
-        const groupDisplayObj = groupsDisplay[gIdx] || groupTH;
-        const reqText = isMulti ? t('options') : t('select_options_alert').replace('กรุณาระบุ', '* ').replace('Please select', '* ').replace('请选择', '* ');
-        const displayReqText = isMulti ? '' : '*';
+        const labelDisplay = group[`label_${currentLang}`] || group.label_th;
         const reqClass = isMulti ? 'hidden' : 'text-red-500 font-bold ml-1';
 
         let html = `
             <div class="mb-6 border-b border-gray-100 pb-4 option-group" data-required="${!isMulti}">
                 <div class="flex items-baseline mb-3">
-                    <h4 class="font-bold text-lg text-gray-800">${groupDisplayObj.label}</h4>
-                    <span class="${reqClass}">${displayReqText}</span>
+                    <h4 class="font-bold text-lg text-gray-800">${labelDisplay}</h4>
+                    <span class="${reqClass}">*</span>
                 </div>
                 <div class="grid grid-cols-1 gap-3">
         `;
 
-        groupTH.choices.forEach((choiceTH, cIdx) => {
-            const valueTH = choiceTH.name;
-            const price = choiceTH.price || 0;
-            const isOutOfStock = choiceTH.isOutOfStock || false; // ✅ ดึงสถานะหมดสต็อก
+        group.choices.forEach(choice => {
+            const isOutOfStock = choice.isOutOfStock;
+            const nameDisplay = choice[`name_${currentLang}`] || choice.name_th;
+            const price = choice.price || 0;
 
-            let choiceDisplayObj = groupDisplayObj.choices[cIdx];
-            if (!choiceDisplayObj) choiceDisplayObj = choiceTH;
-            const labelDisplay = typeof choiceDisplayObj === 'object' ? choiceDisplayObj.name : choiceDisplayObj;
-
-            // ✅ ตั้งค่า UI สำหรับของที่หมด
             const disabledAttr = isOutOfStock ? 'disabled' : '';
             const opacityClass = isOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer hover:border-orange-300';
             const textStyle = isOutOfStock ? 'line-through text-gray-400' : 'text-gray-700';
-            const badgeOutOfStock = isOutOfStock ? `<span class="text-[10px] text-red-500 font-bold ml-2 px-1.5 py-0.5 bg-red-100 rounded-md border border-red-200">หมด</span>` : '';
+            const soldOutBadge = isOutOfStock
+                ? `<span class="text-[10px] text-red-500 font-bold ml-2 px-1.5 py-0.5 bg-red-100 rounded-md border border-red-200">${soldOutText[currentLang] || soldOutText.th}</span>`
+                : '';
 
             html += `
                 <label class="relative group option-card rounded-xl border-2 border-gray-200 p-3.5 flex justify-between items-center transition-all ${opacityClass}">
-                    <input type="${type}" name="g_${gIdx}" value="${valueTH}" data-price="${price}" data-ref="${valueTH}" class="peer sr-only" onchange="validateFormAndCalcPrice()" ${disabledAttr}>
+                    <input type="${type}" name="g_${gIdx}" value="${choice.id}" data-price="${price}" data-ref="${choice.id}" class="peer sr-only" onchange="validateFormAndCalcPrice()" ${disabledAttr}>
                     <div class="flex items-center gap-3">
                         <div class="js-icon-circle w-5 h-5 rounded-${isMulti?'md':'full'} border-2 border-gray-300 flex items-center justify-center transition-colors ${isOutOfStock ? 'bg-gray-200' : 'bg-white'}">
                             <svg class="js-icon-svg w-3.5 h-3.5 text-white opacity-0 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path d="M4.5 12.75l6 6 9-13.5"/></svg>
                         </div>
-                        <span class="font-medium ${textStyle}">${labelDisplay}${badgeOutOfStock}</span>
+                        <span class="font-medium ${textStyle}">${nameDisplay}${soldOutBadge}</span>
                     </div>
                     ${price > 0 ? `<span class="font-bold ${isOutOfStock ? 'text-gray-400' : 'text-orange-600'} text-sm">+฿${price}</span>` : ''}
                 </label>
@@ -1827,9 +1788,8 @@ function openProductModal(item, mode = 'ADD', index = null) {
 
         if (oldData.options) {
             oldData.options.forEach(opt => {
-                const targetRef = opt.choice.th; 
-                const inputs = document.querySelectorAll(`#bs-radio-container input[data-ref="${targetRef}"]`);
-                inputs.forEach(inp => inp.checked = true);
+                const inputs = document.querySelectorAll(`#bs-radio-container input[data-ref="${opt.id}"]`);
+                inputs.forEach(inp => { if (!inp.disabled) inp.checked = true; });
             });
         }
     } else {
@@ -1945,41 +1905,30 @@ function handleCommitTransaction() {
 
     const optionsToSave = [];
     let totalOptionPrice = 0;
-    
-    const groupsTH = activeMenuItem.optionGroups?.th || [];
-    const allGroups = activeMenuItem.optionGroups || {};
-    
+
+    const groups = activeMenuItem.optionGroups || [];
     const inputs = document.querySelectorAll('#bs-radio-container input:checked');
-    const tempSelections = {}; 
+    const tempSelections = {};
 
     inputs.forEach(inp => {
-        const gIndex = inp.name.split('_')[1]; 
-        if(!tempSelections[gIndex]) tempSelections[gIndex] = [];
-        tempSelections[gIndex].push(inp.value);
+        const gIndex = inp.name.split('_')[1];
+        if (!tempSelections[gIndex]) tempSelections[gIndex] = [];
+        tempSelections[gIndex].push(inp.value); // value is UUID
         totalOptionPrice += parseFloat(inp.dataset.price);
     });
 
     Object.keys(tempSelections).forEach(gIdx => {
-        const selectedThaiNames = tempSelections[gIdx];
-        selectedThaiNames.forEach(thaiName => {
-            const groupMaster = groupsTH[gIdx];
-            const cIdx = groupMaster.choices.findIndex(c => {
-                const cVal = typeof c === 'object' ? c.name : c;
-                return cVal === thaiName;
+        const group = groups[parseInt(gIdx)];
+        if (!group) return;
+        tempSelections[gIdx].forEach(uuid => {
+            const choice = group.choices.find(c => c.id === uuid);
+            if (!choice) return;
+            optionsToSave.push({
+                id: uuid,
+                label: { th: group.label_th, en: group.label_en, cn: group.label_cn },
+                choice: { th: choice.name_th, en: choice.name_en, cn: choice.name_cn },
+                price: choice.price || 0
             });
-            
-            if (cIdx > -1) {
-                const labelObj = {}, choiceObj = {};
-                ['th','en','cn'].forEach(lang => {
-                    if(allGroups[lang] && allGroups[lang][gIdx]) {
-                        labelObj[lang] = allGroups[lang][gIdx].label;
-                        const cItem = allGroups[lang][gIdx].choices[cIdx];
-                        choiceObj[lang] = typeof cItem === 'object' ? cItem.name : cItem;
-                    }
-                });
-                const p = (typeof groupMaster.choices[cIdx] === 'object') ? (groupMaster.choices[cIdx].price || 0) : 0;
-                optionsToSave.push({ label: labelObj, choice: choiceObj, price: p });
-            }
         });
     });
 
@@ -2449,68 +2398,49 @@ function subscribeToMenuStatusUpdates() {
 
             if (targetMenu) {
                 if (updated.status !== undefined) targetMenu.status = updated.status;
-                if (updated.option_th !== undefined) targetMenu.option_th = updated.option_th;
-                
-                // ✅ รับค่า disabled_options ที่ส่งตรงมาจาก KDS
-                if (updated.disabled_options !== undefined) targetMenu.disabled_options = updated.disabled_options;
-                
-                const disabledList = Array.isArray(targetMenu.disabled_options) ? targetMenu.disabled_options : [];
-
-                targetMenu.optionGroups = { th: [], en: [], cn: [] };
-                if (targetMenu.option_th) targetMenu.optionGroups.th = parseOptionString(targetMenu.option_th, disabledList);
-                if (targetMenu.option_en) targetMenu.optionGroups.en = parseOptionString(targetMenu.option_en, disabledList);
-                if (targetMenu.option_cn) targetMenu.optionGroups.cn = parseOptionString(targetMenu.option_cn, disabledList);
-
-                updated.optionGroups = targetMenu.optionGroups;
-                updated.status = targetMenu.status;
+                if (updated.options_config !== undefined) {
+                    targetMenu.optionGroups = buildOptionGroups(updated.options_config, optItemsMap);
+                }
             }
 
             if (Array.isArray(menuData)) {
                 for (const station of menuData) {
                     if (!station.items) continue;
-                    const idx = station.items.findIndex(i => i.db_id === updated.id || i.id === updated.id);
+                    const idx = station.items.findIndex(i => i.db_id === updated.id);
                     if (idx > -1) {
-                        Object.assign(station.items[idx], updated);
-                        if (targetMenu) {
-                            station.items[idx].optionGroups = targetMenu.optionGroups;
-                            station.items[idx].disabled_options = targetMenu.disabled_options;
-                        }
+                        if (updated.status !== undefined) station.items[idx].status = updated.status;
+                        if (targetMenu) station.items[idx].optionGroups = targetMenu.optionGroups;
                         break;
                     }
                 }
             }
 
             if (typeof renderMenu === 'function') renderMenu();
-            
+
             const isModalOpen = document.getElementById('bottomSheet')?.style.display === 'block';
-            if (isModalOpen && activeMenuItem && (activeMenuItem.db_id === updated.id || activeMenuItem.id === updated.id)) {
-                const checkedInputs = Array.from(document.querySelectorAll('#bs-radio-container input:checked')).map(inp => inp.value);
-                
-                activeMenuItem.status = updated.status;
-                if (targetMenu) {
-                    activeMenuItem.optionGroups = targetMenu.optionGroups;
-                    activeMenuItem.disabled_options = targetMenu.disabled_options;
-                }
-                
+            if (isModalOpen && activeMenuItem && activeMenuItem.db_id === updated.id) {
+                const checkedIds = Array.from(document.querySelectorAll('#bs-radio-container input:checked')).map(inp => inp.value);
+
+                if (updated.status !== undefined) activeMenuItem.status = updated.status;
+                if (targetMenu) activeMenuItem.optionGroups = targetMenu.optionGroups;
+
                 renderOptionsHTML(activeMenuItem);
-                
-                checkedInputs.forEach(val => {
-                    const safeVal = val.replace(/"/g, '\\"');
-                    const inp = document.querySelector(`#bs-radio-container input[value="${safeVal}"]`);
+
+                checkedIds.forEach(uuid => {
+                    const inp = document.querySelector(`#bs-radio-container input[value="${uuid}"]`);
                     if (inp && !inp.disabled) inp.checked = true;
                 });
-
                 validateFormAndCalcPrice();
 
                 const status = updated.status;
-                const isUnavailable = (status === 'หมด' || status === 'ไม่พร้อม' || status === 'ลบ');
-                const addBtn = document.getElementById('bs-addToCartBtn');
-
-                if (addBtn && isUnavailable) {
-                    addBtn.disabled = true;
-                    addBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                    addBtn.classList.remove('hover:bg-orange-700', 'active:scale-95', 'bg-orange-600');
-                    addBtn.innerHTML = `<span>${status === 'หมด' ? 'สินค้าหมด' : 'ไม่พร้อมจำหน่าย'}</span>`;
+                if (status === 'หมด' || status === 'ไม่พร้อม' || status === 'ลบ') {
+                    const addBtn = document.getElementById('bs-addToCartBtn');
+                    if (addBtn) {
+                        addBtn.disabled = true;
+                        addBtn.classList.add('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
+                        addBtn.classList.remove('hover:bg-orange-700', 'active:scale-95', 'bg-orange-600');
+                        addBtn.innerHTML = `<span>${status === 'หมด' ? 'สินค้าหมด' : 'ไม่พร้อมจำหน่าย'}</span>`;
+                    }
                 }
             }
 
@@ -2518,31 +2448,83 @@ function subscribeToMenuStatusUpdates() {
                 const before = cart.length;
                 cart = cart.filter(c => {
                     const menuItem = flatMenu[c.itemKey];
-                    if (menuItem && menuItem.db_id === updated.id) {
-                        if (updated.status === 'หมด' || updated.status === 'ไม่พร้อม' || updated.status === 'ลบ') return false;
-                        
-                        if (c.options && updated.optionGroups && updated.optionGroups.th) {
-                            for (const opt of c.options) {
-                                const selectedThName = opt.choice.th;
-                                let isOptionValid = false;
-                                for (const group of updated.optionGroups.th) {
-                                    const match = group.choices.find(ch => ch.name === selectedThName);
-                                    if (match && !match.isOutOfStock) { isOptionValid = true; break; }
-                                }
-                                if (!isOptionValid) return false; 
+                    if (!menuItem || menuItem.db_id !== updated.id) return true;
+                    if (updated.status === 'หมด' || updated.status === 'ไม่พร้อม' || updated.status === 'ลบ') return false;
+                    if (c.options && targetMenu && targetMenu.optionGroups) {
+                        for (const opt of c.options) {
+                            let isValid = false;
+                            for (const group of targetMenu.optionGroups) {
+                                const match = group.choices.find(ch => ch.id === opt.id);
+                                if (match && !match.isOutOfStock) { isValid = true; break; }
                             }
+                            if (!isValid) return false;
                         }
                     }
                     return true;
                 });
-
                 if (cart.length !== before) {
-                    if (typeof renderCart === 'function') renderCart();
-                    if (typeof updateSmartCartBar === 'function') updateSmartCartBar();
+                    renderCart();
+                    updateSmartCartBar();
                     showToast('มีการเปลี่ยนแปลง! ตัวเลือกที่คุณหยิบใส่ตะกร้าหมดกะทันหัน', 'error');
                 }
             }
         }).subscribe();
+}
+
+// ==========================================
+// 🔌 REALTIME — Option item status watcher
+// ==========================================
+function subscribeToOptionItemUpdates() {
+    supabaseClient
+        .channel('option-items-watch')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'option_items' }, (payload) => {
+            const updated = payload.new;
+            if (!updated || !updated.id) return;
+
+            // Update global map
+            const existing = optItemsMap.get(updated.id);
+            if (!existing) return;
+            Object.assign(existing, updated);
+
+            // Patch in-memory optionGroups in both flatMenu and menuData
+            const patchChoice = (choice) => {
+                if (choice.id !== updated.id) return;
+                choice.name_th = updated.name_th;
+                choice.name_en = updated.name_en || updated.name_th;
+                choice.name_cn = updated.name_cn || updated.name_th;
+                choice.price = parseFloat(updated.extra_price) || 0;
+                choice.isOutOfStock = updated.status === 'หมด';
+            };
+            Object.values(flatMenu).forEach(m => (m.optionGroups || []).forEach(g => g.choices.forEach(patchChoice)));
+            (menuData || []).forEach(st => (st.items || []).forEach(m => (m.optionGroups || []).forEach(g => g.choices.forEach(patchChoice))));
+
+            // Re-render open modal if affected
+            const isModalOpen = document.getElementById('bottomSheet')?.style.display === 'block';
+            if (isModalOpen && activeMenuItem) {
+                const affected = (activeMenuItem.optionGroups || []).some(g => g.choices.some(c => c.id === updated.id));
+                if (affected) {
+                    const checkedIds = Array.from(document.querySelectorAll('#bs-radio-container input:checked')).map(i => i.value);
+                    renderOptionsHTML(activeMenuItem);
+                    checkedIds.forEach(uuid => {
+                        const inp = document.querySelector(`#bs-radio-container input[value="${uuid}"]`);
+                        if (inp && !inp.disabled) inp.checked = true;
+                    });
+                    validateFormAndCalcPrice();
+                }
+            }
+
+            // Prune cart items that selected a now-sold-out option
+            if (updated.status === 'หมด' && Array.isArray(cart) && cart.length) {
+                const before = cart.length;
+                cart = cart.filter(c => !c.options || !c.options.some(o => o.id === updated.id));
+                if (cart.length !== before) {
+                    renderCart();
+                    updateSmartCartBar();
+                    showToast('มีการเปลี่ยนแปลง! ตัวเลือกที่คุณหยิบใส่ตะกร้าหมดกะทันหัน', 'error');
+                }
+            }
+        })
+        .subscribe();
 }
 
 // ==========================================
@@ -2565,46 +2547,38 @@ async function preflightValidateOrder() {
     const menuIds = [...new Set(cart.map(c => flatMenu[c.itemKey]?.db_id).filter(Boolean))];
     if (menuIds.length === 0) return { ok: false, reason: 'invalid_cart' };
 
-    // ✅ โหลด disabled_options มาตรวจด้วย
-    const { data: menus, error: mErr } = await supabaseClient.from('menus').select('id, status, item_th, option_th, disabled_options').in('id', menuIds);
+    const { data: menus, error: mErr } = await supabaseClient.from('menus').select('id, status, item_th').in('id', menuIds);
     if (mErr || !menus) return { ok: false, reason: 'menu_check_failed' };
+
+    // Fetch fresh status for all option UUIDs referenced in cart
+    const optionIds = [...new Set(cart.flatMap(c => (c.options || []).map(o => o.id).filter(Boolean)))];
+    let freshOptMap = new Map();
+    if (optionIds.length > 0) {
+        const { data: freshOpts } = await supabaseClient.from('option_items').select('id, status').in('id', optionIds);
+        if (freshOpts) freshOptMap = new Map(freshOpts.map(o => [o.id, o]));
+    }
 
     const blockedStatuses = ['หมด', 'ไม่พร้อม', 'ลบ'];
     let badItems = [];
 
     for (const c of cart) {
         const menuItem = flatMenu[c.itemKey];
-        if (!menuItem) continue; 
+        if (!menuItem) continue;
 
         const dbMenu = menus.find(m => m.id === menuItem.db_id);
-        if (!dbMenu) {
-            badItems.push({ id: menuItem.db_id, name: c.itemKey, status: 'missing' });
-            continue;
-        }
+        if (!dbMenu) { badItems.push({ id: menuItem.db_id, name: c.itemKey, status: 'missing' }); continue; }
 
         if (blockedStatuses.includes(dbMenu.status)) {
             badItems.push({ id: dbMenu.id, name: dbMenu.item_th, status: dbMenu.status });
             continue;
         }
 
-        if (c.options && c.options.length > 0) {
-            // ✅ เอาข้อมูลที่ได้จาก DB มาเช็คชัวร์ๆ ก่อนส่ง
-            const disabledList = Array.isArray(dbMenu.disabled_options) ? dbMenu.disabled_options : [];
-            const latestOptions = parseOptionString(dbMenu.option_th, disabledList);
-            
-            for (const opt of c.options) {
-                const selectedThName = opt.choice.th;
-                let isOptionValid = false;
-
-                for (const group of latestOptions) {
-                    const match = group.choices.find(ch => ch.name === selectedThName);
-                    if (match && !match.isOutOfStock) { isOptionValid = true; break; }
-                }
-
-                if (!isOptionValid) {
-                    badItems.push({ id: dbMenu.id, name: `${dbMenu.item_th} (ตัวเลือกหมด)`, status: 'option_out' });
-                    break;
-                }
+        for (const opt of (c.options || [])) {
+            if (!opt.id) continue;
+            const freshOpt = freshOptMap.get(opt.id);
+            if (freshOpt && freshOpt.status === 'หมด') {
+                badItems.push({ id: dbMenu.id, name: `${dbMenu.item_th} (ตัวเลือกหมด)`, status: 'option_out' });
+                break;
             }
         }
     }
