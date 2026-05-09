@@ -508,6 +508,7 @@ let editingIndex = null;
 let activeMenuItem = null; 
 let globalCartTotalQty = 0;
 let globalCartTotalPrice = 0;
+let hasOrderedStarter = false;
 
 // SERVER_DATA from URL Params / LocalStorage
 const urlParams = new URLSearchParams(window.location.search);
@@ -1143,6 +1144,7 @@ async function loadMenusFromServer() {
     });
 
     const finalData = Object.values(grouped).filter(cat => cat.items.length > 0);
+    await checkStarterSetStatus();
     onMenuLoaded(finalData);
 }
 
@@ -1478,6 +1480,24 @@ async function updateHistoryBadge() {
     }
 }
 
+async function checkStarterSetStatus() {
+    if (!SERVER_DATA.sessionId) return;
+    try {
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('order_items(item_name_th, status)')
+            .eq('session_id', SERVER_DATA.sessionId);
+        if (error || !data) return;
+        hasOrderedStarter = data.some(order =>
+            (order.order_items || []).some(item =>
+                item.item_name_th === 'หมูกระทะเจงกิสข่าน' && item.status !== 'cancel'
+            )
+        );
+    } catch (e) {
+        console.error('checkStarterSetStatus error:', e);
+    }
+}
+
 function getBadgeHTML(status) {
     if (!status) return '';
     const cleanStatus = String(status).trim();
@@ -1589,8 +1609,16 @@ function createMenuItemCard(item, categoryName) {
     const statusConfig = STATUS_MAP[itemStatus] || STATUS_MAP['ปกติ'];
     let isOrderable = statusConfig.isOrderable;
     let overlayText = '';
-    let overlayGlassClass = ''; 
-    
+    let overlayGlassClass = '';
+
+    // หมูกระทะ Starter Set Gate
+    const starterInCart = cart.some(c => c.itemKey === 'หมูกระทะเจงกิสข่าน');
+    const starterLocked = item.station === 'หมูกระทะ'
+        && item.item.th !== 'หมูกระทะเจงกิสข่าน'
+        && isOrderable
+        && !hasOrderedStarter
+        && !starterInCart;
+
     if (itemStatus === 'TH_Only') {
         if (isTakehomeMode()) {
             isOrderable = true;
@@ -1629,7 +1657,11 @@ function createMenuItemCard(item, categoryName) {
     card.className = "group flex flex-col gap-2 relative transition-transform duration-200 active:scale-95"; 
     
     if (!isOrderable) {
-        card.classList.add('pointer-events-none'); 
+        card.classList.add('pointer-events-none');
+    } else if (starterLocked) {
+        card.classList.add('cursor-pointer');
+        card.style.opacity = '0.5';
+        card.style.filter = 'grayscale(1)';
     } else {
         card.classList.add('cursor-pointer');
     }
@@ -1664,14 +1696,35 @@ function createMenuItemCard(item, categoryName) {
     let buttonHTML = '';
     if (!isOrderable) {
         buttonHTML = `<div class="absolute inset-0 flex items-center justify-center z-20 bg-black/60 transition-colors duration-300"><span class="text-white font-bold px-6 py-2.5 rounded-full text-sm tracking-wide shadow-2xl ${overlayGlassClass} backdrop-blur-md border border-white/30">${overlayText}</span></div>`;
-    } else {
+    } else if (starterLocked) {
+    // กำหนดคำแปลสำหรับข้อความล็อก
+    const lockTextMap = { 
+        th: 'สั่งชุดเปิดเตาก่อน', 
+        en: 'Order Starter First', 
+        cn: '请先点套餐' 
+    };
+    const lockText = lockTextMap[currentLang] || lockTextMap.th;
+
+    buttonHTML = `
+        <div class="absolute inset-0 flex items-center justify-center z-20 bg-black/40 backdrop-blur-[2px] transition-all duration-300">
+            <div class="bg-zinc-900/90 text-white px-3 py-2 rounded-2xl border border-white/20 flex flex-col items-center shadow-2xl scale-90">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 mb-1 text-orange-400">
+                    <path fill-rule="evenodd" d="M12 1.5a5.25 5.25 0 0 0-5.25 5.25v3a3 3 0 0 0-3 3v6.75a3 3 0 0 0 3 3h10.5a3 3 0 0 0 3-3v-6.75a3 3 0 0 0-3-3v-3c0-2.9-2.35-5.25-5.25-5.25Zm3.75 8.25v-3a3.75 3.75 0 1 0-7.5 0v3h7.5Z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-[14px] font-black uppercase tracking-tight text-center leading-none">
+                    ${lockText}
+                </span>
+            </div>
+        </div>
+    `;
+} else {
         buttonHTML = `<button class="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-orange-600/70 backdrop-blur-md border border-white/40 text-white shadow-lg flex items-center justify-center z-20 hover:bg-orange-600 hover:border-transparent active:scale-90 transition-all duration-300"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg></button>`;
     }
 
     card.innerHTML = `
         <div class="relative w-full pt-[100%] rounded-3xl overflow-hidden bg-gray-100 shadow-sm">
             <img src="${imageSrc}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${itemName}">
-            ${isOrderable ? '<div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>' : ''}
+            ${(isOrderable && !starterLocked) ? '<div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>' : ''}
             ${badgesHTML}
             ${buttonHTML}
         </div>
@@ -1681,9 +1734,14 @@ function createMenuItemCard(item, categoryName) {
         </div>
     `;
 
-    if (isOrderable) {
+    if (starterLocked) {
+        card.onclick = () => {
+            showToast('กรุณาสั่งชุดเปิดเตาหมูกระทะเจงกิสข่านก่อนสั่งรายการนี้', 'error');
+            if (navigator.vibrate) navigator.vibrate(10);
+        };
+    } else if (isOrderable) {
         card.onclick = (e) => {
-            lastClickedImageElement = card.querySelector('img'); 
+            lastClickedImageElement = card.querySelector('img');
             openBottomSheet(item, categoryName);
             if (navigator.vibrate) navigator.vibrate(10);
         };
@@ -1952,8 +2010,11 @@ function handleCommitTransaction() {
     } else {
         const exist = cart.find(c => c.cartKey === uniqueKey);
         if (exist) exist.quantity += qty;
-        else cart.push(newItem);
-        
+        else {
+            cart.push(newItem);
+            if (newItem.itemKey === 'หมูกระทะเจงกิสข่าน') renderMenu();
+        }
+
         const imgSrc = document.getElementById('bs-image').src;
         const startEl = lastClickedImageElement || btn;
         animateAddToCart(startEl, imgSrc);
@@ -2120,10 +2181,12 @@ function renderCart() {
         btn.onclick = (e) => {
             e.stopPropagation();
             var index = parseInt(e.currentTarget.dataset.index);
-            if (!cart[index]) return renderCart(); 
+            if (!cart[index]) return renderCart();
+            const wasStarter = cart[index].itemKey === 'หมูกระทะเจงกิสข่าน';
             cart[index].quantity--;
             if (cart[index].quantity <= 0) { cart.splice(index, 1); }
             renderCart();
+            if (wasStarter) renderMenu();
         };
     });
     document.querySelectorAll('.qty-plus-btn').forEach(btn => {
@@ -2314,10 +2377,12 @@ async function processSubmission() {
 
         showToast(typeof t === 'function' ? t('toast_success') : 'สั่งอาหารสำเร็จ!', 'success');
         if (typeof saveOrderToHistory === 'function') saveOrderToHistory(cart);
-        cart = []; renderCart(); 
-        if (typeof closeCartSheet === 'function') closeCartSheet(); 
+        cart = []; renderCart();
+        if (typeof closeCartSheet === 'function') closeCartSheet();
 
-        updateHistoryBadge(); 
+        updateHistoryBadge();
+        await checkStarterSetStatus();
+        renderMenu();
 
     } catch (err) {
         console.error("Submission Error:", err);
