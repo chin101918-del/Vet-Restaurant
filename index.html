@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>VETRES | Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="./dist/output.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@200;400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -169,10 +169,12 @@
         
         /* ข้อความแจ้งเตือนด้านล่างจุด PIN */
         #pinErrorMessage {
-            color: #ff453a; /* สีแดงสไตล์ iOS */
+            color: #ff453a;
             font-size: 0.85rem;
-            margin-top: 1.5rem;
-            height: 1.5rem; /* จองพื้นที่ไว้เพื่อไม่ให้ UI กระโดด */
+            height: 1.5rem; /* จองพื้นที่ความสูงไว้เสมอ */
+            /* ✅ ตั้งค่า margin แนวตั้งให้เท่ากันเพื่อความสมมาตร */
+            margin-top: 0.375rem; /* ระยะห่างบนข้อความสีแดง */
+            margin-bottom: 0.375rem; /* ระยะห่างล่างข้อความสีแดง */
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -277,7 +279,7 @@
         </button>
 
         <div id="pinCard" class="w-full max-w-[320px] flex flex-col items-center">
-            <div id="pinTitle" class="mb-10 text-center"></div>
+            <div id="pinTitle" class="mb-6 text-center"></div>
             
             <div class="flex flex-col items-center">
                 <div id="pinDotContainer" class="flex justify-center gap-6 mb-4">
@@ -289,7 +291,7 @@
                 <div id="pinErrorMessage" class="text-center"></div>
             </div>
             
-            <div class="grid grid-cols-3 gap-y-6 gap-x-4 w-full justify-items-center mt-12">
+            <div class="grid grid-cols-3 gap-6 w-fit justify-items-center mt-1">
                 <button onclick="pressKey('1')" class="numpad-btn">1</button>
                 <button onclick="pressKey('2')" class="numpad-btn">2</button>
                 <button onclick="pressKey('3')" class="numpad-btn">3</button>
