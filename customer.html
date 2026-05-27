@@ -181,6 +181,28 @@
       30%, 50%, 70% { transform: translate3d(-3px, 0, 0); } 40%, 60% { transform: translate3d(3px, 0, 0); }
     }
     .shake { animation: shake 0.7s cubic-bezier(.36,.07,.19,.97) both; }
+
+.nav-category-item {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 110px !important;
+    height: 44px !important;
+    border-radius: 9999px !important;    /* ← pill shape */
+    position: relative !important;
+    overflow: hidden !important;
+    border: 2px solid transparent !important;
+    background: transparent !important;
+    flex-shrink: 0 !important;
+}
+.nav-category-item img {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: 0 !important;
+}
   </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
@@ -233,21 +255,24 @@
 <div class="relative w-full bg-gray-200 z-30">
   <div class="max-w-5xl mx-auto">
     <div class="relative w-full h-48 sm:h-56 group overflow-hidden">
-      <div id="bannerScrollContainer" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full w-full scroll-smooth touch-pan-x z-0"></div>
-      <div id="bannerDotsContainer" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none overflow-hidden"></div>
-      <div class="absolute bottom-0 left-0 right-0 h-full pointer-events-none z-20">
-          <div class="absolute left-4 bottom-4 pointer-events-auto">
-              <div class="bg-white/95 backdrop-blur-md text-gray-900 px-2.5 py-1.5 rounded-xl shadow-lg flex items-center gap-2 border border-white/50">
-                 <div class="bg-red-500 rounded-full p-1 shadow-sm text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
-                 </div>
-                 <span id="table-display-number" class="text-lg font-black leading-none">N/A</span>
-              </div>
+  <div id="bannerScrollContainer" class="flex overflow-x-auto snap-x snap-mandatory no-scrollbar h-full w-full scroll-smooth touch-pan-x z-0"></div>
+  <div id="bannerDotsContainer" class="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none overflow-hidden"></div>
+  
+  <div class="absolute bottom-0 left-0 right-0 h-full pointer-events-none z-20">
+      <div class="absolute left-4 bottom-4 pointer-events-auto">
+          <div class="bg-white/95 backdrop-blur-md text-gray-900 px-2.5 py-1.5 rounded-xl shadow-lg flex items-center gap-2 border border-white/50">
+             <div class="bg-red-500 rounded-full p-1 shadow-sm text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-3.5 h-3.5"><path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" /></svg>
+             </div>
+             <span id="table-display-number" class="text-lg font-black leading-none">N/A</span>
           </div>
-          <div id="discount-display" class="hidden absolute right-4 bottom-4 pointer-events-auto bg-green-600 text-white px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg border-2 border-white/80 shimmer-effect"></div>
       </div>
-    </div>
+      
+      <div class="absolute right-4 bottom-4 pointer-events-auto">
+          <div id="discount-display" class="hidden bg-green-600 text-white px-3 py-1.5 rounded-xl text-sm font-bold shadow-lg border-2 border-white/80 shimmer-effect whitespace-nowrap"></div>
+      </div>
   </div>
+</div>
 </div>
 
 <div class="sticky top-0 z-40 bg-white shadow-md">
@@ -1148,7 +1173,18 @@ function onMenuLoaded(data) {
   showLoader(false);
 }
 
-function renderAll() { applyTranslations(); renderCategoryNavbar(); renderMenu(); renderCart(); }
+// ใหม่
+let _scrollSpyInit = false;
+function renderAll() { 
+    applyTranslations(); 
+    renderCategoryNavbar(); 
+    renderMenu(); 
+    renderCart(); 
+    if (!_scrollSpyInit) { 
+        setupScrollSpy(); 
+        _scrollSpyInit = true; 
+    }
+}
 
 function applyTranslations() { 
     const tableLabelEl = document.getElementById('table-label');
@@ -1303,44 +1339,45 @@ function updateBannerDots(activeIndex) {
 
 function renderCategoryNavbar() { 
     const navContainer = document.getElementById('categoryNavbar').querySelector('div'); 
+    if (!navContainer) return;
     navContainer.innerHTML = ''; 
 
     menuData.forEach((category) => { 
         const categoryName = category.name[currentLang] || category.name.th; 
         const rawId = (category.name.th).replace(/\s+/g, '-');
-        const anchorId = `#category-${rawId}`; 
+        const imgSrc = category.image || placeholderImage;
         
         const navItem = document.createElement('a'); 
-        navItem.href = anchorId; 
+        navItem.href = `#category-${rawId}`; 
         navItem.id = `nav-btn-${rawId}`;
-        navItem.dataset.target = `category-${rawId}`; 
-        navItem.className = `nav-category-item relative flex-shrink-0 w-auto h-10 px-1 rounded-full overflow-hidden cursor-pointer select-none transition-all duration-300 active:scale-95 border-2 border-transparent hover:border-orange-300`;
-        navItem.style.minWidth = "100px";
+        // ใช้คลาส nav-category-item ที่เราสร้าง CSS ไว้ข้างบนแทน Tailwind Class ที่อาจถูกลบ
+        navItem.className = 'nav-category-item'; 
 
         navItem.innerHTML = `
-            <img src="${category.image || placeholderImage}" class="absolute inset-0 w-full h-full object-cover">
-            <div class="nav-overlay absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-300"></div>
-            <div class="relative z-10 flex items-center justify-center h-full px-4">
-                <span class="text-white font-bold text-sm whitespace-nowrap shadow-sm drop-shadow-md">${categoryName}</span>
-            </div>
-        `; 
+    <img src="${imgSrc}" 
+         onerror="this.src='${placeholderImage}'"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;">
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);z-index:1;border-radius:9999px;"></div>
+    <span style="position:relative;z-index:2;color:#fff;font-weight:700;font-size:0.8rem;
+                 white-space:nowrap;padding:0 16px;letter-spacing:0.01em;
+                 text-shadow:0 1px 3px rgba(0,0,0,0.5);">
+        ${categoryName}
+    </span>
+`;
         
+        // ใหม่
         navItem.onclick = (e) => {
             e.preventDefault();
-            highlightNavButton(rawId);
             isClickScrolling = true;
-            const targetElement = document.getElementById(navItem.dataset.target);
+            highlightNavButton(rawId);
+            const targetElement = document.getElementById(`category-${rawId}`);
             if (targetElement) {
-                const headerOffset = 140; 
-                const elementPosition = targetElement.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                window.scrollTo({ top: offsetPosition, behavior: "smooth" });
-                setTimeout(() => { isClickScrolling = false; }, 1000);
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
+            setTimeout(() => { isClickScrolling = false; }, 800);
         };
         navContainer.appendChild(navItem); 
     }); 
-    setupScrollSpy();
 }
 
 let isClickScrolling = false; 
@@ -1390,37 +1427,32 @@ function animateScrollLeft(element, to, duration) {
 
 let lastActiveId = null; 
 
+// ใหม่
 function highlightNavButton(rawId) {
     document.querySelectorAll('.nav-category-item').forEach(btn => {
-        btn.classList.remove('border-orange-500', 'ring-2', 'ring-orange-200');
-        btn.classList.add('border-transparent');
-        const overlay = btn.querySelector('.nav-overlay');
-        if(overlay) {
-            overlay.classList.remove('bg-opacity-30');
-            overlay.classList.add('bg-opacity-50');
-        }
+        btn.style.border = '2px solid transparent';
+        btn.style.boxShadow = 'none';
+        const overlay = btn.querySelector('div');
+        if (overlay) overlay.style.background = 'rgba(0,0,0,0.52)';
     });
 
     const activeBtn = document.getElementById(`nav-btn-${rawId}`);
     if (activeBtn) {
-        activeBtn.classList.remove('border-transparent');
-        activeBtn.classList.add('border-orange-500', 'ring-2', 'ring-orange-200');
-        const overlay = activeBtn.querySelector('.nav-overlay');
-        if(overlay) {
-            overlay.classList.remove('bg-opacity-50');
-            overlay.classList.add('bg-opacity-30');
-        }
+        activeBtn.style.border = '2px solid #f97316';
+        activeBtn.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.25)';
+        const overlay = activeBtn.querySelector('div');
+        if (overlay) overlay.style.background = 'rgba(234,88,12,0.35)';
 
         const navContainer = document.getElementById('categoryNavbar').querySelector('div');
         const scrollLeft = activeBtn.offsetLeft - (navContainer.clientWidth / 2) + (activeBtn.clientWidth / 2);
-        
+
         if (isClickScrolling) {
             navContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
             lastActiveId = rawId;
         } else {
             if (lastActiveId !== rawId) {
-                animateScrollLeft(navContainer, scrollLeft, 150); 
-                lastActiveId = rawId; 
+                animateScrollLeft(navContainer, scrollLeft, 150);
+                lastActiveId = rawId;
             }
         }
     }
@@ -1798,9 +1830,14 @@ function openProductModal(item, mode = 'ADD', index = null) {
     activeMenuItem = item;
     editingIndex = (mode === 'EDIT') ? index : null;
 
-    document.getElementById('bs-note-label').textContent = t('note_label');
-    document.getElementById('bs-note').placeholder = t('note_placeholder');
-    document.getElementById('bs-validation-message').textContent = t('select_options_alert');
+    const bsNoteLabel = document.getElementById('bs-note-label');
+    if (bsNoteLabel) bsNoteLabel.textContent = t('note_label');
+
+    const bsNote = document.getElementById('bs-note');
+    if (bsNote) bsNote.placeholder = t('note_placeholder');
+
+    const bsValidationMsg = document.getElementById('bs-validation-message');
+    if (bsValidationMsg) bsValidationMsg.textContent = t('select_options_alert');
 
     document.getElementById('bs-image').src = item.imageURL || placeholderImage;
     document.getElementById('bs-title').textContent = item.item[currentLang] || item.item.th;
@@ -1833,18 +1870,53 @@ function openProductModal(item, mode = 'ADD', index = null) {
         document.getElementById('bs-note').value = '';
     }
 
+    // ✅ ปลดล็อก Tailwind: เอา hidden ออกก่อน
     const sheet = document.getElementById('bottomSheet');
     const scrollContainer = document.getElementById('bs-scroll-container');
+    const content = document.getElementById('bottomSheetContent');
     
-    sheet.style.display = 'block';
+    if (sheet) {
+        sheet.classList.remove('hidden');
+        sheet.style.display = 'block'; 
+    }
+
     if (scrollContainer) scrollContainer.scrollTop = 0;
     document.body.classList.add('overflow-hidden');
 
+    // ✅ ปลดล็อก Tailwind: เอา translate-y-full ที่กดมันไว้ออก
     requestAnimationFrame(() => {
-        document.getElementById('bottomSheetContent').style.transform = 'translateY(0)';
+        if (content) {
+            content.classList.remove('translate-y-full');
+            content.style.transform = 'translateY(0)';
+        }
     });
 
     validateFormAndCalcPrice();
+}
+
+function closeBottomSheet() {
+    const content = document.getElementById('bottomSheetContent');
+    const sheet = document.getElementById('bottomSheet');
+    
+    // ✅ สั่งให้มุดลงไปก่อน
+    if (content) {
+        content.style.transform = '';
+        content.classList.add('translate-y-full');
+    }
+    
+    document.body.classList.remove('overflow-hidden'); 
+
+    setTimeout(() => {
+        // ✅ ปิดซ่อนหลัง Animation จบ
+        if (sheet) {
+            sheet.style.display = '';
+            sheet.classList.add('hidden');
+        }
+        if (editingIndex !== null) {
+            openCartSheet();
+            editingIndex = null; 
+        }
+    }, 300);
 }
 
 function validateFormAndCalcPrice() {
@@ -2784,24 +2856,17 @@ function showEmptyHistory(container) {
         </div>`;
 }
 
-// ✅ เมื่อกดเปิดหน้าประวัติ
 async function openHistorySheet() {
-    // 1. โหลดข้อมูลประวัติมาแสดง (ดึงจาก DB)
     await renderHistory(); 
     
-    // 2. ดึงจำนวนออเดอร์ล่าสุดใน DB ณ ตอนที่กดเปิด
     const { count } = await supabaseClient
         .from('orders')
         .select('*', { count: 'exact', head: true })
         .eq('session_id', SERVER_DATA.sessionId);
     
-    // 3. บันทึกจำนวนที่เห็นแล้วลงเครื่อง
     localStorage.setItem('vet_history_seen_count', count || 0);
-    
-    // 4. อัปเดต UI Badge ทันที (เพื่อให้จุดแดงหายไป)
     updateHistoryBadge();
 
-    // ส่วนเปิด UI (โค้ดเดิมของคุณ)
     const sheet = document.getElementById('historyContent');
     const backdrop = document.getElementById('historyBackdrop');
     const wrapper = document.getElementById('historySheet');
@@ -2811,8 +2876,12 @@ async function openHistorySheet() {
     backdrop.classList.remove('pointer-events-none', 'opacity-0');
     backdrop.classList.add('pointer-events-auto', 'opacity-100');
     
+    // ✅ ปลดล็อก Tailwind หน้าประวัติ
     requestAnimationFrame(() => {
-        sheet.style.transform = 'translateY(0)';
+        if (sheet) {
+            sheet.classList.remove('translate-y-full');
+            sheet.style.transform = 'translateY(0)';
+        }
     });
 }
 
@@ -2822,7 +2891,13 @@ function closeHistorySheet() {
     const wrapper = document.getElementById('historySheet');
 
     document.body.classList.remove('overflow-hidden');
-    sheet.style.transform = 'translateY(100%)';
+    
+    // ✅ คืนค่าคลาสให้ประวัติมุดลง
+    if (sheet) {
+        sheet.style.transform = '';
+        sheet.classList.add('translate-y-full');
+    }
+    
     backdrop.classList.remove('opacity-100');
     backdrop.classList.add('opacity-0');
     
@@ -2918,21 +2993,6 @@ function showModal(title, message) {
     };
 }
 
-function closeBottomSheet() {
-    const content = document.getElementById('bottomSheetContent');
-    if(content) content.style.transform = 'translateY(100%)';
-    
-    document.body.classList.remove('overflow-hidden'); 
-
-    setTimeout(() => {
-        document.getElementById('bottomSheet').style.display = 'none';
-        if (editingIndex !== null) {
-            openCartSheet();
-            editingIndex = null; 
-        }
-    }, 300);
-}
-
 function openCartSheet() {
     const smartBar = document.getElementById('smart-cart-bar');
     const backdrop = document.getElementById('cartBackdrop');
@@ -2952,7 +3012,12 @@ function openCartSheet() {
         requestAnimationFrame(() => {
             backdrop.classList.remove('opacity-0');
             backdrop.classList.add('opacity-100');
-            sheet.style.transform = 'translateY(0)';
+            
+            // ✅ ปลดล็อก Tailwind ตะกร้า
+            if (sheet) {
+                sheet.classList.remove('translate-y-full');
+                sheet.style.transform = 'translateY(0)';
+            }
         });
     });
 
@@ -2964,7 +3029,11 @@ function closeCartSheet() {
     const backdrop = document.getElementById('cartBackdrop');
     const sheet = document.getElementById('cartSheetContent');
 
-    sheet.style.transform = 'translateY(100%)';
+    // ✅ คืนค่าคลาสให้ตะกร้ามุดลง
+    if (sheet) {
+        sheet.style.transform = '';
+        sheet.classList.add('translate-y-full');
+    }
 
     backdrop.classList.remove('pointer-events-auto', 'opacity-100');
     backdrop.classList.add('pointer-events-none', 'opacity-0');
