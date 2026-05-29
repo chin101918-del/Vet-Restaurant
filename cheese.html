@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheese Thief - Local Game</title>
+    <style>
+        body { font-family: 'Kanit', sans-serif; background: #2c3e50; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .card { background: white; color: #333; padding: 20px; border-radius: 15px; margin: 10px; width: 80%; max-width: 300px; text-align: center; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .btn { padding: 15px 30px; border-radius: 10px; border: none; background: #e74c3c; color: white; cursor: pointer; font-size: 18px; margin-top: 20px; }
+        .input-box { margin-bottom: 20px; text-align: center; }
+        input { padding: 10px; border-radius: 5px; border: none; font-size: 16px; text-align: center; width: 200px; }
+        #diceArea { display: none; text-align: center; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .modal-content { background: white; color: #333; padding: 40px; border-radius: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1>Cheese Thief 🧀</h1>
+    
+    <div class="input-box" id="setupArea">
+        <label>รหัสห้อง (ทุกคนต้องใส่เหมือนกัน):</label><br>
+        <input type="text" id="roomCode" placeholder="เช่น 1234">
+        <br>
+        <button class="btn" onclick="initGame()">เริ่มแจกบทบาท</button>
+    </div>
+
+    <div id="roleArea" style="display:none;">
+        <p>แตะชื่อเพื่อดูบทบาทตัวเอง</p>
+        <div id="playerList"></div>
+        <button class="btn" style="background:#27ae60" onclick="goToDice()">ทอยลูกเต๋า</button>
+    </div>
+
+    <div id="diceArea">
+        <h2>ลูกเต๋า</h2>
+        <div id="diceResult" style="font-size: 80px; margin: 20px;">🎲</div>
+        <button class="btn" onclick="rollDice()">ทอยเต๋า</button>
+    </div>
+
+    <div class="modal" id="modal" onclick="closeModal()">
+        <div class="modal-content">
+            <h2 id="playerName">ชื่อ</h2>
+            <div id="roleText" style="font-size: 24px; margin: 20px 0;"></div>
+        </div>
+    </div>
+
+    <script>
+        const playersData = ["ชิน", "ดาวาว", "เจนนี่", "แนด", "โบ๊ท", "เหนือ"];
+        let game = [];
+
+        // ฟังก์ชันสุ่มจาก Seed
+        function seededRandom(seed) {
+            let x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function initGame() {
+            const code = document.getElementById('roomCode').value;
+            if (!code) { alert("กรุณาใส่รหัสห้องก่อนครับ!"); return; }
+
+            // แปลงรหัสห้องเป็นตัวเลข Seed
+            let seed = 0;
+            for(let i=0; i<code.length; i++) seed += code.charCodeAt(i);
+
+            // แจกบทบาทโดยใช้ Seed
+            let roles = Array(playersData.length).fill("หนูบ้าน");
+            // ใช้ seededRandom แทน Math.random เพื่อให้ผลลัพธ์เหมือนกันทุกเครื่อง
+            let thiefIndex = Math.floor(seededRandom(seed) * playersData.length);
+            roles[thiefIndex] = "หนูชีส 🧀";
+
+            game = playersData.map((name, i) => ({ name, role: roles[i] }));
+            
+            document.getElementById('setupArea').style.display = 'none';
+            document.getElementById('roleArea').style.display = 'block';
+            
+            const list = document.getElementById('playerList');
+            list.innerHTML = '';
+            game.forEach((p, i) => {
+                let div = document.createElement('div');
+                div.className = 'card';
+                div.innerText = p.name;
+                div.onclick = () => openModal(p.name, p.role);
+                list.appendChild(div);
+            });
+        }
+
+        function openModal(name, role) {
+            document.getElementById('playerName').innerText = name;
+            document.getElementById('roleText').innerText = role;
+            document.getElementById('modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function goToDice() {
+            document.getElementById('roleArea').style.display = 'none';
+            document.getElementById('diceArea').style.display = 'block';
+        }
+
+        function rollDice() {
+            // ลูกเต๋าเรายังใช้สุ่มปกติได้ เพราะคือการวัดดวงหน้างาน
+            let dice = Math.floor(Math.random() * 6) + 1;
+            document.getElementById('diceResult').innerText = dice;
+        }
+    </script>
+</body>
+</html>
