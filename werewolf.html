@@ -3,59 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Werewolf Cards</title>
+    <title>Werewolf Sync Cards</title>
     <style>
         body { font-family: sans-serif; background: #2c3e50; color: white; display: flex; flex-direction: column; align-items: center; padding: 20px; }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; max-width: 400px; }
-        .card { background: white; color: #333; padding: 30px; border-radius: 15px; text-align: center; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .card { background: white; color: #333; padding: 20px; border-radius: 15px; text-align: center; font-weight: bold; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .card.host { background: #f1c40f; color: black; grid-column: span 2; }
-        
-        /* Modal Style */
+        input { padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; width: 200px; text-align: center;}
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; }
         .modal-content { background: white; color: #333; padding: 30px; border-radius: 20px; width: 80%; max-width: 300px; text-align: center; }
-        button { margin-top: 20px; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <h1>Werewolf</h1>
-    <div class="grid" id="cardGrid">
-        </div>
+    <input type="text" id="gameCode" placeholder="ใส่รหัสห้อง (เช่น 1234)" oninput="initGame()">
+    <div class="grid" id="cardGrid"></div>
 
     <div class="modal" id="modal">
         <div class="modal-content">
             <h2 id="modalTitle">Role</h2>
             <p id="modalBody"></p>
-            <button onclick="closeModal()">ปิด</button>
+            <button onclick="document.getElementById('modal').style.display='none'">ปิด</button>
         </div>
     </div>
 
     <script>
         const players = ["ดาวาว", "เจนนี่", "แนด", "โบ๊ท", "เหนือ"];
-        let gameData = [];
+        
+        // ฟังก์ชันสุ่มที่กำหนดผลลัพธ์ด้วย seed
+        function seededRandom(seed) {
+            let x = Math.sin(seed++) * 10000;
+            return x - Math.floor(x);
+        }
 
         function initGame() {
+            const code = document.getElementById('gameCode').value;
+            if(!code) return;
+            
+            let seed = 0;
+            for(let i=0; i<code.length; i++) seed += code.charCodeAt(i);
+
             let roles = ["หมาป่า (Werewolf)", "ผู้หยั่งรู้ (Seer)", "บอดี้การ์ด (Bodyguard)", "ชาวบ้าน", "ชาวบ้าน", "ชาวบ้าน"];
-            roles.sort(() => Math.random() - 0.5);
-            gameData = players.map((name, i) => ({ name, role: roles[i] }));
+            
+            // สุ่มด้วยการใช้ seed
+            roles.sort((a, b) => seededRandom(seed++) - 0.5);
             
             const grid = document.getElementById('cardGrid');
             grid.innerHTML = '';
             
-            // สร้างการ์ดผู้เล่น
-            gameData.forEach((p, i) => {
+            players.forEach((name, i) => {
                 let div = document.createElement('div');
                 div.className = 'card';
-                div.innerText = p.name;
-                div.onclick = () => openModal(p.name, p.role);
+                div.innerText = name;
+                div.onclick = () => openModal(name, roles[i]);
                 grid.appendChild(div);
             });
 
-            // สร้างการ์ด Host
             let hostDiv = document.createElement('div');
             hostDiv.className = 'card host';
             hostDiv.innerText = "HOST / MODERATOR";
-            hostDiv.onclick = showHostModal;
+            hostDiv.onclick = () => showHostModal(players, roles);
             grid.appendChild(hostDiv);
         }
 
@@ -65,18 +73,12 @@
             document.getElementById('modal').style.display = 'flex';
         }
 
-        function showHostModal() {
-            let list = gameData.map(p => `<li>${p.name}: <b>${p.role}</b></li>`).join('');
+        function showHostModal(names, roles) {
+            let list = names.map((n, i) => `<li>${n}: <b>${roles[i]}</b></li>`).join('');
             document.getElementById('modalTitle').innerText = "เฉลยทั้งหมด";
             document.getElementById('modalBody').innerHTML = `<ul style="text-align:left">${list}</ul>`;
             document.getElementById('modal').style.display = 'flex';
         }
-
-        function closeModal() {
-            document.getElementById('modal').style.display = 'none';
-        }
-
-        initGame();
     </script>
 </body>
 </html>
