@@ -29,7 +29,7 @@
     </div>
 
     <script>
-        const players = ["ดาวาว", "เจนนี่", "แนด", "โบ๊ท", "เหนือ"];
+        const players = ["ดาวาว", "เจนนี่", "แนด", "โบ๊ท", "เหนือ", "กิ่งไผ่", "บอส", "เป้", "ซอ", "ชิน"];
         
         // ฟังก์ชันสุ่มที่กำหนดผลลัพธ์ด้วย seed
         function seededRandom(seed) {
@@ -44,7 +44,7 @@
             let seed = 0;
             for(let i=0; i<code.length; i++) seed += code.charCodeAt(i);
 
-            let roles = ["หมาป่า (Werewolf)", "ผู้หยั่งรู้ (Seer)", "บอดี้การ์ด (Bodyguard)", "คนบ้า", "ชาวบ้าน", "ชาวบ้าน"];
+            let roles = ["หมาป่า (Werewolf)", "ผู้หยั่งรู้ (Seer)", "บอดี้การ์ด (Bodyguard)", "คนบ้า", "สั่งใบ้", "ฆาตกร", "ลูกครึ่งหมาป่า", "ชาวบ้าน", "ชาวบ้าน", "ชาวบ้าน"];
             
             // สุ่มด้วยการใช้ seed
             roles.sort((a, b) => seededRandom(seed++) - 0.5);
