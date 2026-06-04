@@ -39,7 +39,7 @@
     </div>
 
     <script>
-        const playersData = ["ชิน", "ดาวาว", "เจนนี่", "แนด", "โบ๊ท", "เหนือ", "กิ่งไผ่", "บอส", "เป้", "ซอ"];
+        const playersData = ["ชิน", "ดาวาว", "แนด", "เหนือ", "กิ่งไผ่", "บอส", "เป้", "ซอ"];
         let game = [];
 
         function seededRandom(seed) {
@@ -60,7 +60,7 @@
             roles[thiefIndex] = "หนูชีส 🧀";
 
             // 2. สุ่มเลขเต๋า (1-6) สำหรับทุกคน
-            let diceValues = playersData.map(() => Math.floor(seededRandom(seed++) * 8) + 1);
+            let diceValues = playersData.map(() => Math.floor(seededRandom(seed++) * 6) + 1);
 
             // เก็บข้อมูล
             game = playersData.map((name, i) => ({ 
