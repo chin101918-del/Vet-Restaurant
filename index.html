@@ -3,96 +3,577 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="VetRestaurant staff login — choose your role to continue.">
+    <meta name="theme-color" content="#09090b">
+    <meta name="color-scheme" content="dark">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%2309090b'/%3E%3Ccircle cx='12' cy='12' r='5' fill='%236B7FD7'/%3E%3C/svg%3E">
     <title>VETRES | Login</title>
-    <link href="./dist/output.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Kanit:wght@200;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..700&family=Kanit:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ────────────────────────────────────────
+           MINIMAL UTILITY LAYER
+           Self-contained replacement for the missing
+           Tailwind build (./dist/output.css). Covers
+           only the utility classes this page actually
+           uses, so the page renders correctly with no
+           external build step.
+           ──────────────────────────────────────── */
+        .fixed { position: fixed; }
+        .inset-0 { inset: 0; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .grid { display: grid; }
+        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        @media (min-width: 768px) { .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .justify-items-center { justify-items: center; }
+        .text-center { text-align: center; }
+        .min-h-screen { min-height: 100vh; }
+        .w-full { width: 100%; }
+        .w-fit { width: fit-content; }
+        .max-w-4xl { max-width: 56rem; }
+        .max-w-\[320px\] { max-width: 320px; }
+        .gap-4 { gap: 1rem; }
+        .gap-6 { gap: 1.5rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-12 { margin-bottom: 3rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .z-50 { z-index: 50; }
+        .uppercase { text-transform: uppercase; }
+        .lowercase { text-transform: lowercase; }
+        .tracking-tight { letter-spacing: -0.025em; }
+        .tracking-widest { letter-spacing: 0.1em; }
+        .font-normal { font-weight: 400; }
+        .font-medium { font-weight: 500; }
+        .font-semibold { font-weight: 600; }
+        .text-white { color: #ffffff; }
+        .text-zinc-500 { color: #71717a; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-\[10px\] { font-size: 10px; }
+        .text-\[13px\] { font-size: 13px; }
+        .transition-colors { transition: color var(--duration-fast) ease; }
+        .hover\:text-white:hover { color: #ffffff; }
+        button.text-zinc-500, button.text-zinc-500 * { background: none; border: 0; cursor: pointer; font: inherit; }
+
         :root {
-            /* สีพื้นหลังเป๊ะๆ จาก Disney+ */
-            --disney-bg: #0f111a;
-            --disney-text: #f9f9f9;
-            --disney-gray: #a8a9ad;
+            /* ---- Surface ---- */
+            --bg: #09090b;
+            --surface: #101013;
+            --surface-hover: #17171b;
+
+            /* ---- Structure ---- */
+            --border: rgba(255, 255, 255, 0.06);
+            --border-strong: rgba(255, 255, 255, 0.16);
+
+            /* ---- Text ---- */
+            --text: #f5f6fa;
+            --text-dim: #8c90a3;
+            --text-dim-bright: #9a9eb3;
+            --text-subtle: #9fa1ac;
+            --text-faint: #55565c;
+
+            /* ---- Accent: muted veterinary blue ---- */
+            --accent: #6B7FD7;
+            --accent-hover: #7C8FE3;
+            --accent-active: #93A5F3;
+            --accent-glow: rgba(107, 127, 215, 0.18);
+            --accent-soft: rgba(107, 127, 215, 0.12);
+            --accent-soft-strong: rgba(107, 127, 215, 0.2);
+
+            /* ---- Mesh gradient background: same blue family, pushed brighter ---- */
+            --mesh-dark: #060c1f;
+            --mesh-royal: #2a4fc4;
+            --mesh-teal: #4f97bb;
+
+            --danger: #f1666a;
+
+            /* ---- Motion ---- */
+            --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+            --duration-fast: 200ms;
+            --duration-entrance: 250ms;
+            --stagger-step: 50ms;
         }
 
-        body { 
-            font-family: 'Inter', 'Kanit', sans-serif; 
-            background-color: var(--disney-bg);
-            color: var(--disney-text); 
+        body {
+            font-family: 'Inter', 'Kanit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            position: relative;
         }
 
         /* ────────────────────────────────────────
-           TOP NAVIGATION (DISNEY STYLE)
+           MESH GRADIENT BACKGROUND
+           A full-bleed animated mesh instead of a few
+           faint accent lights: a deep navy base with a
+           royal-blue sweep from bottom-left through the
+           upper-middle, and lighter teal-blue glows in
+           the top-right and bottom-right corners — same
+           blue family as the rest of the UI, just turned
+           up to fill the whole canvas.
+           Each patch drifts independently and slowly
+           (transform-only: translate3d + scale + a hair
+           of rotation) so it stays on the compositor
+           thread at 60fps and never needs its blur or
+           gradient repainted.
+           ──────────────────────────────────────── */
+        /* Typed properties make the multi-stop mesh interpolate smoothly. */
+        @property --mesh-x-a { syntax: '<percentage>'; inherits: false; initial-value: 92%; }
+        @property --mesh-y-a { syntax: '<percentage>'; inherits: false; initial-value: 8%; }
+        @property --mesh-x-b { syntax: '<percentage>'; inherits: false; initial-value: 12%; }
+        @property --mesh-y-b { syntax: '<percentage>'; inherits: false; initial-value: 84%; }
+        @property --mesh-x-c { syntax: '<percentage>'; inherits: false; initial-value: 42%; }
+        @property --mesh-y-c { syntax: '<percentage>'; inherits: false; initial-value: 16%; }
+        @property --mesh-x-d { syntax: '<percentage>'; inherits: false; initial-value: 94%; }
+        @property --mesh-y-d { syntax: '<percentage>'; inherits: false; initial-value: 84%; }
+        @property --mesh-x-e { syntax: '<percentage>'; inherits: false; initial-value: 4%; }
+        @property --mesh-y-e { syntax: '<percentage>'; inherits: false; initial-value: 48%; }
+        @property --mesh-x-f { syntax: '<percentage>'; inherits: false; initial-value: 58%; }
+        @property --mesh-y-f { syntax: '<percentage>'; inherits: false; initial-value: 62%; }
+
+        .ambient-initial {
+            --mesh-x-a: 92%; --mesh-y-a: 8%;
+            --mesh-x-b: 12%; --mesh-y-b: 84%;
+            --mesh-x-c: 42%; --mesh-y-c: 16%;
+            --mesh-x-d: 94%; --mesh-y-d: 84%;
+            --mesh-x-e: 4%; --mesh-y-e: 48%;
+            --mesh-x-f: 58%; --mesh-y-f: 62%;
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+            background-color: #070a19;
+            background-image:
+                radial-gradient(circle at var(--mesh-x-a) var(--mesh-y-a), rgba(54, 148, 194, 0.68) 0%, transparent 50%),
+                radial-gradient(circle at var(--mesh-x-b) var(--mesh-y-b), rgba(51, 78, 190, 0.72) 0%, transparent 52%),
+                radial-gradient(circle at var(--mesh-x-c) var(--mesh-y-c), rgba(46, 79, 177, 0.58) 0%, transparent 47%),
+                radial-gradient(circle at var(--mesh-x-d) var(--mesh-y-d), rgba(54, 151, 190, 0.52) 0%, transparent 48%),
+                radial-gradient(circle at var(--mesh-x-e) var(--mesh-y-e), rgba(19, 36, 103, 0.92) 0%, transparent 54%),
+                radial-gradient(circle at var(--mesh-x-f) var(--mesh-y-f), rgba(17, 30, 77, 0.72) 0%, transparent 58%);
+            background-blend-mode: screen, screen, screen, screen, normal, normal;
+            /* Preserve the requested 20% reduction across the full background. */
+            filter: brightness(0.8);
+            animation: ambientMesh 14s linear infinite;
+            contain: paint;
+        }
+        .mesh-patch {
+            position: absolute;
+            border-radius: 50%;
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+        }
+        .mesh-patch--royal-a {
+            bottom: -30%;
+            left: -22%;
+            width: min(105vw, 1400px);
+            height: min(105vw, 1400px);
+            background: radial-gradient(circle at center, var(--mesh-royal) 0%, var(--mesh-royal) 52%, transparent 78%);
+            filter: blur(95px);
+            animation: driftRoyalA 34s ease-in-out infinite;
+        }
+        .mesh-patch--royal-b {
+            top: -22%;
+            left: 22%;
+            width: min(70vw, 980px);
+            height: min(70vw, 980px);
+            background: radial-gradient(circle at center, var(--mesh-royal) 0%, var(--mesh-royal) 46%, transparent 78%);
+            filter: blur(100px);
+            opacity: 0.85;
+            animation: driftRoyalB 41s ease-in-out infinite;
+        }
+        .mesh-patch--teal-tr {
+            top: -20%;
+            right: -18%;
+            width: min(78vw, 1080px);
+            height: min(78vw, 1080px);
+            background: radial-gradient(circle at center, var(--mesh-teal) 0%, var(--mesh-teal) 48%, transparent 78%);
+            filter: blur(95px);
+            animation: driftTealTR 29s ease-in-out infinite;
+        }
+        .mesh-patch--teal-br {
+            bottom: -26%;
+            right: -16%;
+            width: min(68vw, 940px);
+            height: min(68vw, 940px);
+            background: radial-gradient(circle at center, var(--mesh-teal) 0%, var(--mesh-teal) 46%, transparent 78%);
+            filter: blur(95px);
+            animation: driftTealBR 37s ease-in-out infinite;
+        }
+        .mesh-patch--core {
+            top: 18%;
+            left: 32%;
+            width: min(46vw, 640px);
+            height: min(46vw, 640px);
+            background: radial-gradient(circle at center, var(--mesh-dark) 0%, var(--mesh-dark) 32%, transparent 70%);
+            filter: blur(110px);
+            opacity: 0.7;
+            animation: driftCore 45s ease-in-out infinite;
+        }
+        .mesh-patch--dark-tl {
+            top: -18%;
+            left: -18%;
+            width: min(56vw, 780px);
+            height: min(56vw, 780px);
+            background: radial-gradient(circle at center, var(--mesh-dark) 0%, var(--mesh-dark) 45%, transparent 78%);
+            filter: blur(100px);
+            opacity: 0.9;
+            animation: driftDarkTL 39s ease-in-out infinite;
+        }
+        .ambient-noise {
+            position: absolute;
+            inset: -20%;
+            opacity: 0.018;
+            mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1, 0 0 0 0 1, 0 0 0 0 1, 0 0 0 0.5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 180px 180px;
+        }
+        .ambient-edge-fade {
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to bottom, rgba(0, 0, 0, 0.32) 0%, transparent 20%, transparent 80%, rgba(0, 0, 0, 0.36) 100%),
+                linear-gradient(to right, rgba(0, 0, 0, 0.26) 0%, transparent 16%, transparent 84%, rgba(0, 0, 0, 0.3) 100%);
+        }
+        .ambient-readability {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse 80% 64% at 50% 50%, rgba(3, 6, 16, 0.12) 0%, rgba(3, 6, 16, 0.06) 42%, transparent 50%);
+        }
+        @keyframes ambientMesh {
+            0%, 100% {
+                --mesh-x-a: 92%; --mesh-y-a: 8%;
+                --mesh-x-b: 12%; --mesh-y-b: 84%;
+                --mesh-x-c: 42%; --mesh-y-c: 16%;
+                --mesh-x-d: 94%; --mesh-y-d: 84%;
+                --mesh-x-e: 4%; --mesh-y-e: 48%;
+                --mesh-x-f: 58%; --mesh-y-f: 62%;
+            }
+            34% {
+                --mesh-x-a: 76%; --mesh-y-a: 29%;
+                --mesh-x-b: 27%; --mesh-y-b: 66%;
+                --mesh-x-c: 60%; --mesh-y-c: 7%;
+                --mesh-x-d: 83%; --mesh-y-d: 62%;
+                --mesh-x-e: 14%; --mesh-y-e: 71%;
+                --mesh-x-f: 43%; --mesh-y-f: 44%;
+            }
+            68% {
+                --mesh-x-a: 99%; --mesh-y-a: 42%;
+                --mesh-x-b: 3%; --mesh-y-b: 71%;
+                --mesh-x-c: 27%; --mesh-y-c: 31%;
+                --mesh-x-d: 70%; --mesh-y-d: 96%;
+                --mesh-x-e: 21%; --mesh-y-e: 29%;
+                --mesh-x-f: 67%; --mesh-y-f: 79%;
+            }
+        }
+        @keyframes driftRoyalA {
+            0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+            50%  { transform: translate3d(70px, -55px, 0) scale(1.1) rotate(1deg); }
+            100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @keyframes driftRoyalB {
+            0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+            50%  { transform: translate3d(-64px, 48px, 0) scale(1.08) rotate(-0.9deg); }
+            100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @keyframes driftTealTR {
+            0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+            50%  { transform: translate3d(-68px, 52px, 0) scale(1.1) rotate(-1deg); }
+            100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @keyframes driftTealBR {
+            0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+            50%  { transform: translate3d(58px, -46px, 0) scale(1.07) rotate(0.9deg); }
+            100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @keyframes driftCore {
+            0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+            50%  { transform: translate3d(-46px, 36px, 0) scale(1.14) rotate(0.8deg); }
+            100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @keyframes driftDarkTL {
+            0%   { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+            50%  { transform: translate3d(42px, 34px, 0) scale(1.08) rotate(-0.8deg); }
+            100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+        }
+        @media (max-width: 1024px) {
+            .mesh-patch { filter: blur(110px) brightness(1.08); }
+            .mesh-patch--royal-a { width: 130vw; height: 130vw; }
+            .mesh-patch--teal-tr { width: 100vw; height: 100vw; }
+            .mesh-patch--teal-br { width: 90vw; height: 90vw; }
+            .ambient-noise { opacity: 0.022; }
+        }
+
+        main, .brand-logo, .status-pill {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* staggered entrance */
+        .entrance {
+            opacity: 0;
+            animation: staggerIn var(--duration-entrance) var(--ease-premium) forwards;
+        }
+        @keyframes staggerIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* respect the user's motion preference everywhere */
+        @media (prefers-reduced-motion: reduce) {
+            .ambient-initial { animation: none !important; }
+            .mesh-patch { animation: none !important; }
+            .entrance { animation-duration: 1ms !important; animation-delay: 0ms !important; }
+            *, *::before, *::after {
+                animation-duration: 1ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 1ms !important;
+            }
+        }
+
+        /* ────────────────────────────────────────
+           TOP BAR
            ──────────────────────────────────────── */
         .brand-logo {
             position: fixed;
-            top: 2.5rem;
-            left: 3rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.04em;
+            top: 2rem;
+            left: 2.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            letter-spacing: -0.02em;
             cursor: pointer;
+            color: var(--text);
         }
-        .brand-logo span { font-weight: 300; opacity: 0.7; }
+        .brand-logo .accent { color: var(--accent); }
+        .brand-logo .muted { color: var(--text-dim); font-weight: 400; }
+        .brand-logo .version {
+            color: var(--text-faint);
+            font-weight: 400;
+            font-size: 0.75rem;
+            letter-spacing: 0;
+            margin-left: 0.375rem;
+        }
+
+        .status-pill {
+            position: fixed;
+            top: 1.75rem;
+            right: 2.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.9375rem 0.5rem 0.75rem;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.12),
+                0 8px 24px rgba(3, 6, 16, 0.28);
+            font-size: 0.8125rem;
+            color: var(--text-dim);
+            font-weight: 500;
+            transition: background var(--duration-fast) ease,
+                        border-color var(--duration-fast) ease;
+        }
+        .status-pill.is-offline {
+            background: rgba(255, 255, 255, 0.045);
+            border-color: rgba(255, 255, 255, 0.09);
+        }
+        .status-dot {
+            position: relative;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 4px rgba(107, 127, 215, 0.5);
+            transition: background var(--duration-fast) ease, box-shadow var(--duration-fast) ease;
+        }
+        .status-dot::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0;
+            transition: opacity var(--duration-fast) ease;
+        }
+
+        /* offline: dot goes neutral gray, glow switches off */
+        .status-pill.is-offline .status-dot {
+            background: var(--text-faint);
+            box-shadow: none;
+        }
+        .status-pill.is-offline .status-dot::after {
+            animation: none;
+            opacity: 0;
+        }
+        .status-pill.is-reconnecting .status-dot::after { animation: statusReconnect 900ms var(--ease-premium) 1; }
+        @keyframes statusReconnect { from { transform: scale(.55); opacity: .5; } to { transform: scale(2.15); opacity: 0; } }
 
         /* ────────────────────────────────────────
            MAIN CONTENT
            ──────────────────────────────────────── */
-        .who-is-using {
-            font-size: 2.75rem; /* ขนาดฟอนต์เป๊ะๆ */
-            font-weight: 700;
-            margin-bottom: 4rem;
-            letter-spacing: -0.01em;
+        .eyebrow {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-faint);
+            margin-bottom: 1.25rem;
         }
 
-        .profile-group {
+        .who-is-using {
+            font-size: 2.375rem;
+            font-weight: 650;
+            letter-spacing: -0.04em;
+            line-height: 1.15;
+            margin-bottom: 1.375rem;
+            color: var(--text);
+        }
+        .who-is-using .accent { color: var(--accent); }
+
+        .subtext {
+            font-size: 0.9375rem;
+            color: var(--text-subtle);
+            font-weight: 400;
+            margin-bottom: 5rem;
+        }
+
+        .role-group {
             display: flex;
-            gap: 2.5rem;
+            align-items: center;
             justify-content: center;
-            align-items: flex-start;
+        }
+
+        .role-divider {
+            width: 1px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.03);
+            transition: background var(--duration-fast) var(--ease-premium);
         }
 
         .role-item {
             display: flex;
             flex-direction: column;
             align-items: center;
-            cursor: pointer;
-            width: 160px;
-            transition: transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-
-        /* เอฟเฟกต์ขยายไอคอนแบบ Disney+ */
-        .icon-circle {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            background: rgba(255, 255, 255, 0.05);
-            margin-bottom: 1.5rem;
-            position: relative;
-            transition: all 0.3s ease;
-            border: 4px solid transparent;
+            gap: 1.125rem;
+            cursor: pointer;
+            width: 168px;
+            padding: 1.75rem 0;
+            border-radius: 12px;
+            border: 0;
+            background: transparent;
+            font: inherit;
+        }
+        .role-item:hover + .role-divider,
+        .role-divider:has(+ .role-item:hover) {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .role-item:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-glow), 0 0 0 4px rgba(107, 127, 215, 0.5);
+        }
+        .role-item:focus-visible .role-icon {
+            color: var(--accent-hover);
+            opacity: 1;
+        }
+        .role-item:focus-visible .role-label {
+            color: var(--text);
         }
 
-        .role-item:hover .icon-circle {
-            transform: scale(1.1);
-            border-color: #f9f9f9;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            background: rgba(255, 255, 255, 0.1);
+        .role-icon {
+            width: 30px;
+            height: 30px;
+            color: var(--text-dim);
+            opacity: 0.98;
+            transition: color var(--duration-fast) var(--ease-premium),
+                        opacity var(--duration-fast) var(--ease-premium),
+                        transform var(--duration-fast) var(--ease-premium),
+                        filter var(--duration-fast) var(--ease-premium);
+            filter: drop-shadow(0 0 0 rgba(107, 127, 215, 0));
+        }
+        .role-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.75;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            shape-rendering: geometricPrecision;
+        }
+        .role-item:hover .role-icon {
+            color: var(--accent-hover);
+            opacity: 1;
+            transform: translateY(-2px) scale(1.05);
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+        .role-item:active .role-icon {
+            transform: translateY(-1px) scale(1.02);
+        }
+        .role-item.is-active .role-icon {
+            color: var(--accent-active);
+            opacity: 1;
+            filter: drop-shadow(0 0 10px var(--accent-glow));
+        }
+        .role-item.is-active + .role-divider,
+        .role-divider:has(+ .role-item.is-active) {
+            background: rgba(255, 255, 255, 0.07);
         }
 
         .role-label {
-            font-size: 1.15rem;
-            font-weight: 600;
-            color: var(--disney-gray);
-            transition: color 0.3s;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--text-dim-bright);
+            letter-spacing: -0.01em;
+            transition: color var(--duration-fast) var(--ease-premium);
         }
 
+        @media (hover: none) {
+            .role-item:active .role-icon { color: var(--accent-active); opacity: 1; transform: translateY(-1px) scale(1.03); filter: drop-shadow(0 0 10px var(--accent-glow)); }
+            .role-item:active .role-label { color: var(--text); }
+        }
+
+        @media (max-width: 1024px) {
+            .brand-logo { top: 1.5rem; left: 1.5rem; }
+            .status-pill { top: 1.5rem; right: 1.5rem; }
+            .subtext { margin-bottom: 4.25rem; color: var(--text-subtle); filter: brightness(1.08); }
+            .role-item { width: 156px; min-height: 126px; padding: 1.5rem 0; }
+            .role-icon { width: 34px; height: 34px; }
+        }
+        /* short viewports (landscape phones, split-view iPad) need
+           scroll room even above the 700px width breakpoint */
+        @media (max-height: 560px) {
+            body { overflow: auto; }
+            main { padding-block: 2rem; }
+            .subtext { margin-bottom: 2.5rem; }
+        }
+        @media (max-width: 700px) {
+            body { overflow: auto; }
+            .brand-logo { left: 1.25rem; }
+            .status-pill { right: 1.25rem; }
+            main { padding: 7.5rem 1.25rem 2rem; }
+            .who-is-using { font-size: clamp(2rem, 8vw, 2.375rem); }
+            .subtext { margin-bottom: 2.5rem; }
+            .role-group { flex-wrap: wrap; max-width: 360px; margin-inline: auto; }
+            .role-item { width: 50%; min-height: 112px; }
+            .role-divider { display: none; }
+        }
         .role-item:hover .role-label {
+            color: var(--text);
+        }
+        .role-item.is-active .role-label {
             color: #ffffff;
         }
 
@@ -100,123 +581,232 @@
            PIN & MODAL OVERLAY
            ──────────────────────────────────────── */
         .modal-overlay {
-            background: rgba(0, 0, 0, 0.4) !important; /* มืดลงแค่ 40% */
-            backdrop-filter: blur(15px) !important; /* เบลอพื้นหลัง */
-            -webkit-backdrop-filter: blur(15px) !important;
+            background: rgba(6, 6, 8, 0.7) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
         }
         .btn-close-top {
             position: absolute;
-            top: 2.5rem;
-            left: 3rem;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 1.5rem;
-            transition: all 0.2s;
+            top: 1.1875rem;
+            left: 1.6875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015));
+            backdrop-filter: blur(18px) saturate(140%);
+            -webkit-backdrop-filter: blur(18px) saturate(140%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 1px 2px rgba(0, 0, 0, 0.2);
+            color: var(--text-dim);
+            font-size: 1rem;
+            transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
             z-index: 60;
         }
         .btn-close-top:hover {
-            color: #ffffff;
-            transform: scale(1.1);
+            color: var(--text);
+            border-color: rgba(255, 255, 255, 0.14);
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+        }
+        .btn-close-top:active {
+            transform: scale(0.94);
+        }
+        .btn-close-top:focus-visible {
+            outline: none;
+            border-radius: 8px;
+            box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-glow), 0 0 0 4px rgba(107, 127, 215, 0.5);
+        }
+
+        /* ────────────────────────────────────────
+           HIGH CONTRAST / FORCED COLORS
+           Windows High Contrast Mode and prefers-contrast:
+           ambient lighting and glows are decorative and
+           carry no information, so they step aside and
+           borders/text take over as the source of truth.
+           ──────────────────────────────────────── */
+        @media (forced-colors: active) {
+            .ambient { display: none; }
+            .role-item, .numpad-btn, .station-option, .role-divider {
+                border: 1px solid CanvasText;
+            }
+            .role-item:focus-visible, .numpad-btn:focus-visible,
+            .station-option:focus-visible, .btn-close-top:focus-visible {
+                outline: 2px solid Highlight;
+                box-shadow: none;
+            }
+            .status-pill {
+                background: Canvas;
+                border: 1px solid CanvasText;
+                backdrop-filter: none;
+                box-shadow: none;
+            }
+        }
+        @media (prefers-contrast: more) {
+            :root {
+                --text-dim: #b7bacc;
+                --text-subtle: #c3c5d1;
+                --border: rgba(255, 255, 255, 0.18);
+                --border-strong: rgba(255, 255, 255, 0.4);
+            }
         }
 
         .pin-dot {
-            width: 14px; height: 14px;
-            border: 2px solid #555;
+            width: 11px; height: 11px;
+            border: 1.5px solid var(--border-strong);
             border-radius: 50%;
             transition: all 0.2s;
         }
         .pin-dot.active {
-            background: #fff;
-            border-color: #fff;
-            box-shadow: 0 0 10px #fff;
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 10px var(--accent-soft-strong);
         }
 
-
         .numpad-btn {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.03);
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.015));
+            backdrop-filter: blur(18px) saturate(140%);
+            -webkit-backdrop-filter: blur(18px) saturate(140%);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.07),
+                0 1px 2px rgba(0, 0, 0, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
+            font-size: 1.375rem;
             font-weight: 500;
-            color: #f9f9f9;
-            transition: all 0.2s;
-            margin: 0 auto; /* จัดกลางในช่อง grid */
+            color: var(--text);
+            transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+            margin: 0 auto;
         }
         .numpad-btn:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: rgba(255,255,255,0.4);
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+            border-color: rgba(255, 255, 255, 0.14);
         }
 
         .numpad-btn:active {
-            transform: scale(0.9);
-            background: rgba(255,255,255,0.2);
+            transform: scale(0.94);
+            background: linear-gradient(165deg, var(--accent-soft-strong), var(--accent-soft));
+            border-color: var(--accent);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
-        /* เอฟเฟกต์เขย่าเมื่อรหัสผิด */
+        .numpad-btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-glow), 0 0 0 4px rgba(107, 127, 215, 0.5);
+        }
+
+        /* Clear / backspace share the numpad's 64px touch target
+           but stay visually quiet (no border, no fill) */
+        .numpad-key-ghost {
+            width: 64px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            margin: 0 auto;
+        }
+        .numpad-key-ghost:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-glow), 0 0 0 4px rgba(107, 127, 215, 0.5);
+        }
+        .icon-delete {
+            width: 22px;
+            height: 22px;
+        }
+
         .shake {
             animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
         }
-        
+
         @keyframes shake {
             10%, 90% { transform: translate3d(-1px, 0, 0); }
             20%, 80% { transform: translate3d(2px, 0, 0); }
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
-        
-        /* ข้อความแจ้งเตือนด้านล่างจุด PIN */
+
         #pinErrorMessage {
-            color: #ff453a;
-            font-size: 0.85rem;
-            height: 1.5rem; /* จองพื้นที่ความสูงไว้เสมอ */
-            /* ✅ ตั้งค่า margin แนวตั้งให้เท่ากันเพื่อความสมมาตร */
-            margin-top: 0.375rem; /* ระยะห่างบนข้อความสีแดง */
-            margin-bottom: 0.375rem; /* ระยะห่างล่างข้อความสีแดง */
+            color: var(--danger);
+            font-size: 0.8125rem;
+            height: 1.5rem;
+            margin-top: 0.375rem;
+            margin-bottom: 0.375rem;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
         .show-error { opacity: 1 !important; }
-        /* หัวข้อ: ปรับขนาดลงให้ดูแพง ไม่ตะโกน */
-        .station-header {
-            font-size: 1rem;
+
+        .station-eyebrow {
+            font-family: 'Kanit', 'Inter', sans-serif;
+            font-size: 0.75rem;
             font-weight: 500;
-            letter-spacing: 0.25em; /* เพิ่มระยะห่างให้ดูหรู */
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 3rem;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
         }
 
-        /* ปุ่มแบบ Compact Tile: ลด Padding และความหนาลง */
+        .station-header {
+            font-family: 'Kanit', 'Inter', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text);
+            margin-bottom: 2.5rem;
+        }
+
         .station-option {
             position: relative;
-            padding: 1.25rem 0.5rem; /* ลดจาก 2.5rem เหลือครึ่งเดียว */
-            font-size: 1.1rem; /* ขนาดฟอนต์กำลังดี ไม่ใหญ่เกินหน้าแรก */
-            font-weight: 400;
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.03); /* จางลงอีกเพื่อให้ดูเบา */
-            border: 1px solid rgba(255, 255, 255, 0.05); /* เส้นขอบบางมาก */
-            border-radius: 12px; /* มุมโค้งเล็กลงให้ดู Sharp */
-            transition: all 0.2s ease;
+            padding: 1.125rem 0.5rem;
+            font-family: 'Kanit', 'Inter', sans-serif;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: var(--text);
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.012));
+            backdrop-filter: blur(18px) saturate(140%);
+            -webkit-backdrop-filter: blur(18px) saturate(140%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.06),
+                0 1px 2px rgba(0, 0, 0, 0.2);
+            transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
             cursor: pointer;
-            backdrop-filter: blur(10px);
         }
 
-        /* แตะแล้วให้แค่เข้มขึ้นและยุบตัวจางๆ */
+        .station-option:hover {
+            background: linear-gradient(165deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.025));
+            border-color: rgba(255, 255, 255, 0.14);
+            transform: translateY(-1px);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 6px 16px rgba(0, 0, 0, 0.22);
+        }
         .station-option:active {
-            transform: scale(0.97);
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(0.97) translateY(0);
+            background: linear-gradient(165deg, var(--accent-soft-strong), var(--accent-soft));
+            border-color: var(--accent);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .station-option:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent-glow), 0 0 0 4px rgba(107, 127, 215, 0.5);
         }
 
-        /* ปรับ Modal Container ให้ดูกระชับ ไม่บานเต็มจอเกินไป */
         #stationCard {
             max-width: 800px;
             width: 85%;
             padding: 1rem;
         }
-        /* สไตล์หน้าจอเมื่อถูกล็อค */
+
         .system-locked-overlay {
             position: fixed;
             inset: 0;
@@ -230,51 +820,312 @@
             text-align: center;
         }
 
-        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
-        @keyframes fadeIn { from { opacity: 0; transform: scale(1.05); } to { opacity: 1; transform: scale(1); } }
+        /* Exact mesh reference supplied by the product team. */
+        @property --ref-y-0 { syntax: '<percentage>'; inherits: false; initial-value: 93%; }
+        @property --ref-c-0 { syntax: '<color>'; inherits: false; initial-value: hsla(0, 0%, 13%, 1); }
+        @property --ref-s-start-0 { syntax: '<percentage>'; inherits: false; initial-value: 14.489998991212337%; }
+        @property --ref-s-end-0 { syntax: '<percentage>'; inherits: false; initial-value: 72%; }
+        @property --ref-x-0 { syntax: '<percentage>'; inherits: false; initial-value: 93%; }
+        @property --ref-x-1 { syntax: '<percentage>'; inherits: false; initial-value: 26%; }
+        @property --ref-s-start-1 { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+        @property --ref-s-end-1 { syntax: '<percentage>'; inherits: false; initial-value: 45%; }
+        @property --ref-c-1 { syntax: '<color>'; inherits: false; initial-value: hsla(0, 0%, 10%, 0.9); }
+        @property --ref-y-1 { syntax: '<percentage>'; inherits: false; initial-value: 9%; }
+        @property --ref-x-2 { syntax: '<percentage>'; inherits: false; initial-value: 15%; }
+        @property --ref-s-start-2 { syntax: '<percentage>'; inherits: false; initial-value: 2.9253667596993065%; }
+        @property --ref-s-end-2 { syntax: '<percentage>'; inherits: false; initial-value: 22.388851682060018%; }
+        @property --ref-c-2 { syntax: '<color>'; inherits: false; initial-value: hsla(257, 91%, 27%, 0.35); }
+        @property --ref-y-2 { syntax: '<percentage>'; inherits: false; initial-value: 79%; }
+        @property --ref-x-3 { syntax: '<percentage>'; inherits: false; initial-value: 40%; }
+        @property --ref-s-start-3 { syntax: '<percentage>'; inherits: false; initial-value: 3.985353824694249%; }
+        @property --ref-s-end-3 { syntax: '<percentage>'; inherits: false; initial-value: 47.580278608924694%; }
+        @property --ref-c-3 { syntax: '<color>'; inherits: false; initial-value: hsla(212, 97%, 70%, 0.5); }
+        @property --ref-y-3 { syntax: '<percentage>'; inherits: false; initial-value: 104%; }
+        @property --ref-y-4 { syntax: '<percentage>'; inherits: false; initial-value: 60%; }
+        @property --ref-c-4 { syntax: '<color>'; inherits: false; initial-value: hsla(224, 42%, 33%, 1); }
+        @property --ref-s-start-4 { syntax: '<percentage>'; inherits: false; initial-value: 2.391200382592061%; }
+        @property --ref-s-end-4 { syntax: '<percentage>'; inherits: false; initial-value: 29.307684556768592%; }
+        @property --ref-x-4 { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
+        @property --ref-c-5 { syntax: '<color>'; inherits: false; initial-value: hsla(248, 56%, 18%, 1); }
+        @property --ref-s-start-5 { syntax: '<percentage>'; inherits: false; initial-value: 2.9253667596993065%; }
+        @property --ref-s-end-5 { syntax: '<percentage>'; inherits: false; initial-value: 22.388851682060018%; }
+        @property --ref-y-5 { syntax: '<percentage>'; inherits: false; initial-value: 37%; }
+        @property --ref-x-5 { syntax: '<percentage>'; inherits: false; initial-value: 92%; }
+        @property --ref-s-start-6 { syntax: '<percentage>'; inherits: false; initial-value: 13.173642363290591%; }
+        @property --ref-s-end-6 { syntax: '<percentage>'; inherits: false; initial-value: 31.747336520355095%; }
+        @property --ref-c-6 { syntax: '<color>'; inherits: false; initial-value: hsla(212, 100%, 50%, 0.19); }
+        @property --ref-y-6 { syntax: '<percentage>'; inherits: false; initial-value: 16%; }
+        @property --ref-x-6 { syntax: '<percentage>'; inherits: false; initial-value: 101%; }
+        @property --ref-x-7 { syntax: '<percentage>'; inherits: false; initial-value: 90%; }
+        @property --ref-y-7 { syntax: '<percentage>'; inherits: false; initial-value: 13%; }
+        @property --ref-c-7 { syntax: '<color>'; inherits: false; initial-value: hsla(213, 65%, 58%, 1); }
+        @property --ref-s-start-7 { syntax: '<percentage>'; inherits: false; initial-value: 1%; }
+        @property --ref-s-end-7 { syntax: '<percentage>'; inherits: false; initial-value: 31%; }
+        @property --ref-x-8 { syntax: '<percentage>'; inherits: false; initial-value: 104%; }
+        @property --ref-y-8 { syntax: '<percentage>'; inherits: false; initial-value: 56%; }
+        @property --ref-c-8 { syntax: '<color>'; inherits: false; initial-value: hsla(166, 71%, 60%, 0.32); }
+        @property --ref-s-start-8 { syntax: '<percentage>'; inherits: false; initial-value: 3.985353824694249%; }
+        @property --ref-s-end-8 { syntax: '<percentage>'; inherits: false; initial-value: 13.103042116379756%; }
+        @property --ref-x-9 { syntax: '<percentage>'; inherits: false; initial-value: 97%; }
+        @property --ref-c-9 { syntax: '<color>'; inherits: false; initial-value: hsla(219, 83%, 23%, 0.18); }
+        @property --ref-s-start-9 { syntax: '<percentage>'; inherits: false; initial-value: 18.597054544690312%; }
+        @property --ref-s-end-9 { syntax: '<percentage>'; inherits: false; initial-value: 31%; }
+        @property --ref-y-9 { syntax: '<percentage>'; inherits: false; initial-value: 19%; }
+
+        .ambient-reference {
+            --ref-y-0: 93%; --ref-c-0: hsla(0, 0%, 13%, 1); --ref-x-0: 93%;
+            --ref-x-1: 26%; --ref-c-1: hsla(0, 0%, 10%, 0.9); --ref-y-1: 9%;
+            --ref-x-2: 15%; --ref-c-2: hsla(257, 91%, 27%, 0.35); --ref-y-2: 79%;
+            --ref-x-3: 40%; --ref-c-3: hsla(212, 97%, 70%, 0.5); --ref-y-3: 104%;
+            --ref-y-4: 60%; --ref-c-4: hsla(224, 42%, 33%, 1); --ref-x-4: 0%;
+            --ref-c-5: hsla(248, 56%, 18%, 1); --ref-y-5: 37%; --ref-x-5: 92%;
+            --ref-c-6: hsla(212, 100%, 50%, 0.19); --ref-y-6: 16%; --ref-x-6: 101%;
+            --ref-x-7: 90%; --ref-y-7: 13%; --ref-c-7: hsla(213, 65%, 58%, 1);
+            --ref-x-8: 104%; --ref-y-8: 56%; --ref-c-8: hsla(166, 71%, 60%, 0.32);
+            --ref-x-9: 97%; --ref-c-9: hsla(219, 83%, 23%, 0.18); --ref-y-9: 19%;
+            background-color: hsla(305, 0%, 0%, 1);
+            background-image: radial-gradient(circle at var(--ref-x-0) var(--ref-y-0), var(--ref-c-0) var(--ref-s-start-0), transparent var(--ref-s-end-0)), radial-gradient(circle at var(--ref-x-1) var(--ref-y-1), var(--ref-c-1) var(--ref-s-start-1), transparent var(--ref-s-end-1)), radial-gradient(circle at var(--ref-x-2) var(--ref-y-2), var(--ref-c-2) var(--ref-s-start-2), transparent var(--ref-s-end-2)), radial-gradient(circle at var(--ref-x-3) var(--ref-y-3), var(--ref-c-3) var(--ref-s-start-3), transparent var(--ref-s-end-3)), radial-gradient(circle at var(--ref-x-4) var(--ref-y-4), var(--ref-c-4) var(--ref-s-start-4), transparent var(--ref-s-end-4)), radial-gradient(circle at var(--ref-x-5) var(--ref-y-5), var(--ref-c-5) var(--ref-s-start-5), transparent var(--ref-s-end-5)), radial-gradient(circle at var(--ref-x-6) var(--ref-y-6), var(--ref-c-6) var(--ref-s-start-6), transparent var(--ref-s-end-6)), radial-gradient(circle at var(--ref-x-7) var(--ref-y-7), var(--ref-c-7) var(--ref-s-start-7), transparent var(--ref-s-end-7)), radial-gradient(circle at var(--ref-x-8) var(--ref-y-8), var(--ref-c-8) var(--ref-s-start-8), transparent var(--ref-s-end-8)), radial-gradient(circle at var(--ref-x-9) var(--ref-y-9), var(--ref-c-9) var(--ref-s-start-9), transparent var(--ref-s-end-9));
+            animation: ani-vetres-mesh-reference 10s linear infinite alternate;
+            background-blend-mode: normal, normal, normal, normal, normal, normal, normal, normal, normal, normal;
+            filter: none;
+            will-change: transform, opacity;
+            contain: paint;
+        }
+        .ambient-reference .mesh-patch, .ambient-reference .ambient-readability, .ambient-reference .ambient-edge-fade, .ambient-reference .ambient-noise { display: none; }
+        @keyframes ani-vetres-mesh-reference {
+            0% {
+                --ref-y-0: 93%; --ref-c-0: hsla(0, 0%, 13%, 1); --ref-s-start-0: 14.489998991212337%; --ref-s-end-0: 72%; --ref-x-0: 93%;
+                --ref-x-1: 26%; --ref-s-start-1: 0%; --ref-s-end-1: 45%; --ref-c-1: hsla(0, 0%, 10%, 0.9); --ref-y-1: 9%;
+                --ref-x-2: 15%; --ref-s-start-2: 2.9253667596993065%; --ref-s-end-2: 22.388851682060018%; --ref-c-2: hsla(257, 91%, 27%, 0.35); --ref-y-2: 79%;
+                --ref-x-3: 40%; --ref-s-start-3: 3.985353824694249%; --ref-s-end-3: 47.580278608924694%; --ref-c-3: hsla(212, 97%, 70%, 0.5); --ref-y-3: 104%;
+                --ref-y-4: 60%; --ref-c-4: hsla(224, 42%, 33%, 1); --ref-s-start-4: 2.391200382592061%; --ref-s-end-4: 29.307684556768592%; --ref-x-4: 0%;
+                --ref-c-5: hsla(248, 56%, 18%, 1); --ref-s-start-5: 2.9253667596993065%; --ref-s-end-5: 22.388851682060018%; --ref-y-5: 37%; --ref-x-5: 92%;
+                --ref-s-start-6: 13.173642363290591%; --ref-s-end-6: 31.747336520355095%; --ref-c-6: hsla(212, 100%, 50%, 0.19); --ref-y-6: 16%; --ref-x-6: 101%;
+                --ref-x-7: 90%; --ref-y-7: 13%; --ref-c-7: hsla(213, 65%, 58%, 1); --ref-s-start-7: 1%; --ref-s-end-7: 31%;
+                --ref-x-8: 104%; --ref-y-8: 56%; --ref-c-8: hsla(166, 71%, 60%, 0.32); --ref-s-start-8: 3.985353824694249%; --ref-s-end-8: 13.103042116379756%;
+                --ref-x-9: 97%; --ref-c-9: hsla(219, 83%, 23%, 0.18); --ref-s-start-9: 18.597054544690312%; --ref-s-end-9: 31%; --ref-y-9: 19%;
+            }
+            100% {
+                --ref-y-0: 9%; --ref-c-0: hsla(306, 0%, 0%, 1); --ref-s-start-0: 2.391200382592061%; --ref-s-end-0: 43.902064173373226%; --ref-x-0: 7%;
+                --ref-x-1: 96%; --ref-s-start-1: 9%; --ref-s-end-1: 54.805582404585024%; --ref-c-1: hsla(306, 0%, 0%, 1); --ref-y-1: 93%;
+                --ref-x-2: -2%; --ref-s-start-2: 3%; --ref-s-end-2: 26.722813338714598%; --ref-c-2: hsla(166, 72%, 60%, 1); --ref-y-2: 103%;
+                --ref-x-3: 33%; --ref-s-start-3: 2.391200382592061%; --ref-s-end-3: 32.0689540200964%; --ref-c-3: hsla(180, 100%, 50%, 0.26); --ref-y-3: 82%;
+                --ref-y-4: 81%; --ref-c-4: hsla(212, 88%, 26%, 0.58); --ref-s-start-4: 4.40642490323111%; --ref-s-end-4: 37.23528104246256%; --ref-x-4: 37%;
+                --ref-c-5: hsla(271, 98%, 53%, 0.31); --ref-s-start-5: 3%; --ref-s-end-5: 32.537089799783296%; --ref-y-5: 99%; --ref-x-5: 54%;
+                --ref-s-start-6: 6%; --ref-s-end-6: 42.501105312974815%; --ref-c-6: hsla(262, 100%, 50%, 0.15); --ref-y-6: 43%; --ref-x-6: 104%;
+                --ref-x-7: 104%; --ref-y-7: -16%; --ref-c-7: hsla(298, 36%, 23%, 1); --ref-s-start-7: 5%; --ref-s-end-7: 13.10107024898374%;
+                --ref-x-8: 97%; --ref-y-8: 30%; --ref-c-8: hsla(180, 100%, 50%, 0.11); --ref-s-start-8: 2.391200382592061%; --ref-s-end-8: 27.141813016850573%;
+                --ref-x-9: 78%; --ref-c-9: hsla(219, 83%, 23%, 0.59); --ref-s-start-9: 5%; --ref-s-end-9: 21.32164536610654%; --ref-y-9: 4%;
+            }
+        }
+        /* ────────────────────────────────────────
+           PREMIUM COHESIVE MESH OVERRIDE
+           All visual motion is transform-only. Layers are intentionally
+           oversized and heavily blurred so the mesh reads as one field.
+           ──────────────────────────────────────── */
+        .ambient {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+            background: #050814;
+            background-image: radial-gradient(ellipse 90% 70% at 52% 46%, rgba(75, 93, 255, 0.10), transparent 72%);
+            background-blend-mode: normal;
+            filter: none;
+            animation: none;
+            transform: none;
+            transition: none;
+            contain: paint;
+        }
+        .ambient .mesh-patch {
+            display: block;
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(135px);
+            opacity: 1;
+            will-change: transform;
+            transform: translate3d(0, 0, 0);
+        }
+        .ambient .mesh-patch--royal-a {
+            bottom: -54%; left: -24%; width: min(104vw, 1500px); height: min(104vw, 1500px);
+            background: radial-gradient(circle at 48% 45%, rgba(75, 93, 255, 0.13), rgba(75, 93, 255, 0.19) 45%, transparent 72%);
+            animation: premiumMeshA 9s ease-in-out -13s infinite alternate;
+        }
+        .ambient .mesh-patch--royal-b {
+            top: -50%; left: 9%; width: min(92vw, 1320px); height: min(92vw, 1320px);
+            background: radial-gradient(circle at 50% 53%, rgba(92, 115, 255, 0.12), rgba(92, 115, 255, 0.12) 48%, transparent 72%);
+            animation: premiumMeshB 8s ease-in-out -31s infinite alternate;
+        }
+        .ambient .mesh-patch--teal-tr {
+            top: -36%; right: -28%; width: min(82vw, 1180px); height: min(82vw, 1180px);
+            background: radial-gradient(circle at 42% 58%, rgba(127, 168, 255, 0.05), rgba(127, 215, 255, 0.06) 48%, transparent 73%);
+            animation: premiumMeshC 8s ease-in-out -18s infinite alternate;
+        }
+        .ambient .mesh-patch--teal-br {
+            bottom: -45%; right: -23%; width: min(88vw, 1260px); height: min(88vw, 1260px);
+            background: radial-gradient(circle at 42% 42%, rgba(107, 127, 215, 0.08), rgba(127, 168, 255, 0.08) 52%, transparent 74%);
+            animation: premiumMeshD 6s ease-in-out -36s infinite alternate;
+        }
+        .ambient .mesh-patch--core {
+            top: 18%; left: 28%; width: min(57vw, 840px); height: min(57vw, 840px);
+            background: radial-gradient(circle at center, rgba(107, 127, 215, 0.05), rgba(92, 115, 255, 0.05) 48%, transparent 73%);
+            animation: premiumMeshE 5s ease-in-out -22s infinite alternate;
+        }
+        .ambient .mesh-patch--dark-tl {
+            top: -42%; left: -29%; width: min(84vw, 1200px); height: min(84vw, 1200px);
+            background: radial-gradient(circle at center, rgba(9, 11, 29, 0.80), rgba(13, 20, 60, 0.58) 54%, transparent 75%);
+            animation: premiumMeshF 6s ease-in-out -44s infinite alternate;
+        }
+        .ambient .ambient-readability {
+            display: block;
+            z-index: 2;
+            background:
+            radial-gradient(
+            ellipse 60% 50% at 50% 50%,
+            rgba(0,0,0,.18),
+            rgba(0,0,0,.10) 45%,
+            transparent 80%
+            );
+        }
+        .ambient .ambient-edge-fade {
+            display: block;
+            z-index: 3;
+            background: radial-gradient(ellipse 80% 72% at 50% 48%, transparent 42%, rgba(4, 6, 18, 0.40) 76%, rgba(3, 4, 13, 0.70) 100%);
+        }
+        .ambient .ambient-noise {
+            display: block;
+            z-index: 4;
+            opacity: 0.018;
+            mix-blend-mode: soft-light;
+        }
+        @keyframes premiumMeshA { to { transform: translate3d(684px, -686px, 0) scale(1.22) rotate(0.45deg); } }
+        @keyframes premiumMeshB { to { transform: translate3d(-692px, 604px, 0) scale(1.22) rotate(-0.42deg); } }
+        @keyframes premiumMeshC { to { transform: translate3d(-616px, 682px, 0) scale(1.22) rotate(-0.5deg); } }
+        @keyframes premiumMeshD { to { transform: translate3d(688px, -312px, 0) scale(1.22) rotate(0.4deg); } }
+        @keyframes premiumMeshE { to { transform: translate3d(-682px, 390px, 0) scale(1.22) rotate(0.34deg); } }
+        @keyframes premiumMeshF { to { transform: translate3d(698px, 384px, 0) scale(1.22) rotate(-0.38deg); } }
+
+        .status-pill {
+            top: 2rem;
+            right: 2.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 10px 28px rgba(2, 4, 14, 0.22), 0 0 24px rgba(107, 127, 215, 0.08);
+        }
+        .status-dot {
+            animation: statusBreathe 2s ease-in-out infinite;
+            box-shadow: 0 0 8px rgba(107, 127, 215, 0.38);
+        }
+        .status-dot::after { opacity: 0.10; }
+        .status-pill.is-offline .status-dot { animation: none; }
+        @keyframes statusBreathe { 0%, 100% { transform: scale(0.95); } 50% { transform: scale(1.08); } }
+
+        .eyebrow { color: #7f8499; }
+        .who-is-using { margin-bottom: 0.6875rem; }
+        .subtext { color: #a8adbd; }
+
+        .role-icon { position: relative; isolation: isolate; filter: none; }
+        .role-icon::before {
+            content: '';
+            position: absolute;
+            inset: 50% auto auto 50%;
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(107, 127, 215, 0.24), rgba(107, 127, 215, 0.08) 38%, transparent 72%);
+            opacity: 0;
+            transform: translate3d(-50%, -50%, 0) scale(0.82);
+            transition: opacity 220ms var(--ease-premium), transform 260ms var(--ease-premium);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .role-icon svg { position: relative; z-index: 1; }
+        .role-item:hover .role-icon,
+        .role-item:active .role-icon,
+        .role-item.is-active .role-icon { filter: none; }
+        .role-item:hover .role-icon::before,
+        .role-item:focus-visible .role-icon::before { opacity: 1; transform: translate3d(-50%, -50%, 0) scale(1); }
+
+        @media (max-width: 1024px) {
+            .ambient .mesh-patch { filter: blur(145px); }
+            .ambient .mesh-patch--royal-a { width: 126vw; height: 126vw; }
+            .ambient .mesh-patch--royal-b { width: 114vw; height: 114vw; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .ambient .mesh-patch, .status-dot { animation: none !important; }
+            .role-icon::before { transition: none; }
+        }
     </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen">
 
-    <div class="brand-logo lowercase">vet<span>restaurant</span></div>
-    
+    <div class="ambient" aria-hidden="true">
+        <div class="mesh-patch mesh-patch--royal-a"></div>
+        <div class="mesh-patch mesh-patch--royal-b"></div>
+        <div class="mesh-patch mesh-patch--teal-tr"></div>
+        <div class="mesh-patch mesh-patch--teal-br"></div>
+        <div class="mesh-patch mesh-patch--core"></div>
+        <div class="mesh-patch mesh-patch--dark-tl"></div>
+        <div class="ambient-readability"></div>
+        <div class="ambient-edge-fade"></div>
+        <div class="ambient-noise"></div>
+    </div>
 
-    <main id="profileSection" class="text-center fade-in">
-        <h2 class="who-is-using">Who's using?</h2>
+    <div class="brand-logo lowercase entrance" style="animation-delay: 0ms"><span class="accent">vet</span><span class="muted">restaurant</span><span class="version">2.0</span></div>
 
-        <div class="profile-group">
-            <div onclick="selectProfile('admin')" class="role-item">
-                <div class="icon-circle text-blue-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" /></svg>
+    <div class="status-pill entrance" id="statusPill" style="animation-delay: 50ms">
+        <span class="status-dot"></span>
+        <span id="statusText">Online</span>
+    </div>
+
+    <main id="profileSection" class="text-center">
+        <p class="eyebrow entrance" style="animation-delay: 100ms">Welcome back</p>
+        <h2 class="who-is-using entrance" style="animation-delay: 150ms">Who's using <span class="accent">VetRestaurant</span>?</h2>
+        <p class="subtext entrance" style="animation-delay: 200ms">Choose your role to continue</p>
+
+        <div class="role-group" role="group" aria-label="Choose your role">
+            <button type="button" data-role="admin" aria-label="Continue as Admin" class="role-item entrance" style="animation-delay: 250ms">
+                <div class="role-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
                 </div>
                 <span class="role-label">Admin</span>
-            </div>
+            </button>
 
-            <div onclick="selectProfile('staff')" class="role-item">
-                <div class="icon-circle text-rose-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path d="M5.223 2.25c-.497 0-.974.198-1.325.55l-1.3 1.298A3.75 3.75 0 0 0 7.5 9.75c.627.47 1.406.75 2.25.75.844 0 1.624-.28 2.25-.75.626.47 1.406.75 2.25.75.844 0 1.623-.28 2.25-.75a3.75 3.75 0 0 0 4.902-5.652l-1.3-1.299a1.875 1.875 0 0 0-1.325-.549H5.223Z" /><path fill-rule="evenodd" d="M3 20.25v-8.755c1.42.674 3.08.673 4.5 0A5.234 5.234 0 0 0 9.75 12c.804 0 1.568-.182 2.25-.506a5.234 5.234 0 0 0 2.25.506c.804 0 1.567-.182 2.25-.506 1.42.674 3.08.675 4.5.001v8.755h.75a.75.75 0 0 1 0 1.5H2.25a.75.75 0 0 1 0-1.5H3Zm3-6a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-3a.75.75 0 0 1-.75-.75v-3Zm8.25-.75a.75.75 0 0 0-.75.75v5.25c0 .414.336.75.75.75h3a.75.75 0 0 0 .75-.75v-5.25a.75.75 0 0 0-.75-.75h-3Z" clip-rule="evenodd" /></svg>
+            <div class="role-divider entrance" style="animation-delay: 275ms"></div>
+
+            <button type="button" data-role="staff" aria-label="Continue as Staff" class="role-item entrance" style="animation-delay: 300ms">
+                <div class="role-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z"/></svg>
                 </div>
                 <span class="role-label">Staff</span>
-            </div>
+            </button>
 
-            <div onclick="selectProfile('kds')" class="role-item">
-                <div class="icon-circle text-orange-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248ZM15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.718Z" clip-rule="evenodd" /></svg>
+            <div class="role-divider entrance" style="animation-delay: 325ms"></div>
+
+            <button type="button" data-role="kds" aria-label="Continue as Kitchen" class="role-item entrance" style="animation-delay: 350ms">
+                <div class="role-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.047 8.287 8.287 0 0 0 9 9.601a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z"/><path d="M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.547 5.975 5.975 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z"/></svg>
                 </div>
                 <span class="role-label">Kitchen</span>
-            </div>
+            </button>
 
-            <div onclick="selectProfile('dashboard')" class="role-item">
-                <div class="icon-circle text-purple-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-20 h-20"><path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" /></svg>
+            <div class="role-divider entrance" style="animation-delay: 375ms"></div>
+
+            <button type="button" data-role="dashboard" aria-label="Continue as Dashboard" class="role-item entrance" style="animation-delay: 400ms">
+                <div class="role-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5m.75-9 3-3 2.148 2.148A12.061 12.061 0 0 1 16.5 7.605" />
+                    </svg>
+
                 </div>
                 <span class="role-label">Dashboard</span>
-            </div>
+            </button>
         </div>
     </main>
 
-    <section id="pinSection" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center" onclick="handleOutsideClick(event, 'pin')">
-        <button onclick="closePinModal()" class="btn-close-top">
+    <section id="pinSection" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="pinTitle" onclick="handleOutsideClick(event, 'pin')">
+        <button type="button" onclick="closePinModal()" class="btn-close-top" aria-label="Close PIN entry">
             <i class="fas fa-times"></i>
         </button>
 
@@ -288,36 +1139,38 @@
                     <div class="pin-dot" id="dot3"></div>
                     <div class="pin-dot" id="dot4"></div>
                 </div>
-                <div id="pinErrorMessage" class="text-center"></div>
+                <div id="pinErrorMessage" class="text-center" role="alert" aria-live="assertive"></div>
             </div>
             
-            <div class="grid grid-cols-3 gap-6 w-fit justify-items-center mt-1">
-                <button onclick="pressKey('1')" class="numpad-btn">1</button>
-                <button onclick="pressKey('2')" class="numpad-btn">2</button>
-                <button onclick="pressKey('3')" class="numpad-btn">3</button>
-                <button onclick="pressKey('4')" class="numpad-btn">4</button>
-                <button onclick="pressKey('5')" class="numpad-btn">5</button>
-                <button onclick="pressKey('6')" class="numpad-btn">6</button>
-                <button onclick="pressKey('7')" class="numpad-btn">7</button>
-                <button onclick="pressKey('8')" class="numpad-btn">8</button>
-                <button onclick="pressKey('9')" class="numpad-btn">9</button>
+            <div class="grid grid-cols-3 gap-4 w-fit justify-items-center mt-1">
+                <button type="button" onclick="pressKey('1')" class="numpad-btn">1</button>
+                <button type="button" onclick="pressKey('2')" class="numpad-btn">2</button>
+                <button type="button" onclick="pressKey('3')" class="numpad-btn">3</button>
+                <button type="button" onclick="pressKey('4')" class="numpad-btn">4</button>
+                <button type="button" onclick="pressKey('5')" class="numpad-btn">5</button>
+                <button type="button" onclick="pressKey('6')" class="numpad-btn">6</button>
+                <button type="button" onclick="pressKey('7')" class="numpad-btn">7</button>
+                <button type="button" onclick="pressKey('8')" class="numpad-btn">8</button>
+                <button type="button" onclick="pressKey('9')" class="numpad-btn">9</button>
                 
-                <button onclick="pressKey('clear')" class="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors">Clear</button>
-                <button onclick="pressKey('0')" class="numpad-btn">0</button>
-                <button onclick="pressKey('backspace')" class="text-zinc-500 hover:text-white transition-colors">
-                    <i class="fas fa-backspace text-xl"></i>
+                <button type="button" onclick="pressKey('clear')" class="numpad-key-ghost text-[10px] uppercase tracking-widest text-zinc-500 hover:text-white transition-colors" aria-label="Clear entered PIN">Clear</button>
+                <button type="button" onclick="pressKey('0')" class="numpad-btn" aria-label="0">0</button>
+                <button type="button" onclick="pressKey('backspace')" class="numpad-key-ghost text-zinc-500 hover:text-white transition-colors" aria-label="Delete last digit">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="icon-delete" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9.75 14.25 12m0 0 2.25 2.25M14.25 12l2.25-2.25M14.25 12 12 14.25m-2.58 4.92-6.374-6.375a1.125 1.125 0 0 1 0-1.59L9.42 4.83c.21-.211.497-.33.795-.33H19.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25h-9.284c-.298 0-.585-.119-.795-.33Z" />
+                    </svg>
                 </button>
             </div>
         </div>
     </section>
 
-    <div id="stationModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4" onclick="handleOutsideClick(event, 'station')">
-        <button onclick="closeStationModal()" class="btn-close-top"><i class="fas fa-times"></i></button>
+    <div id="stationModal" class="hidden fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="stationTitle" onclick="handleOutsideClick(event, 'station')">
+        <button type="button" onclick="closeStationModal()" class="btn-close-top" aria-label="Close station selection"><i class="fas fa-times"></i></button>
         
         <div id="stationCard" class="w-full max-w-4xl text-center">
             <header class="mb-12">
-                <h2 class="text-3xl font-bold text-white tracking-tight uppercase">Select Station</h2>
-                <p class="text-zinc-500 text-sm mt-2 font-light">Please select your work station</p>
+                <h2 id="stationTitle" class="text-2xl font-semibold text-white tracking-tight">Select Station</h2>
+                <p class="text-zinc-500 text-sm mt-2 font-normal">Please select your work station</p>
             </header>
             <div id="stationGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
         </div>
@@ -332,16 +1185,47 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqb3Nzd3hydGNhbmh2cGRicmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjkyODcsImV4cCI6MjA5MjUwNTI4N30.DrtoBXmdL1EN17sVYZIYNVVOOp7UHfeAz1sDImZmYFM';
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        const PINS = { admin: "1111", staff: "2222" };
         const STATIONS = ['โรบินฮู้ด', 'หมูกระทะ', 'ไก่ไวน์', 'ส้มตำ', 'กระต่าย', 'ต้มยำ', 'คอหมูย่าง', 'บาร์บีคิว', 'ไข่เจียว', 'ข้าว', 'น้ำ', 'โอ้เอ๋ว'];
         
         let currentRole = "";
         let currentPinInput = "";
+        let lastRoleControl = null;
 
-        function selectProfile(role) {
+        document.querySelectorAll('.role-item').forEach((roleButton) => {
+            roleButton.addEventListener('click', () => selectProfile(roleButton.dataset.role, roleButton));
+        });
+
+        // ────────────────────────────────────────
+        // Live network status (navigator.onLine)
+        // ────────────────────────────────────────
+        let statusTimer;
+        function updateNetworkStatus({ reconnected = false } = {}) {
+            const pill = document.getElementById('statusPill');
+            const label = document.getElementById('statusText');
+            const online = navigator.onLine;
+            pill.classList.toggle('is-offline', !online);
+            pill.classList.toggle('is-reconnecting', reconnected && online);
+            label.textContent = online ? (reconnected ? 'Reconnected' : 'Online') : 'Offline';
+            window.clearTimeout(statusTimer);
+            if (reconnected && online) {
+                statusTimer = window.setTimeout(() => {
+                    pill.classList.remove('is-reconnecting');
+                    label.textContent = 'Online';
+                }, 1300);
+            }
+        }
+        window.addEventListener('online', () => updateNetworkStatus({ reconnected: true }));
+        window.addEventListener('offline', updateNetworkStatus);
+        updateNetworkStatus();
+
+        function selectProfile(role, el) {
             currentRole = role;
             currentPinInput = "";
-            
+            lastRoleControl = el;
+
+            document.querySelectorAll('.role-item').forEach(item => item.classList.remove('is-active'));
+            if (el) el.classList.add('is-active');
+
             // ตั้งหัวข้อหน้า PIN ให้ตรงตามตำแหน่ง
             const titleMap = {
                 admin: "ผู้จัดการ",
@@ -352,17 +1236,20 @@
 
             document.getElementById('pinTitle').innerHTML = `
                 <p class="text-zinc-500 text-[13px] uppercase mb-2 font-medium">กรอกรหัสผ่านสำหรับ</p>
-                <h2 class="text-2xl font-bold text-white uppercase tracking-wide">${titleMap[role]}</h2>
+                <h2 class="text-2xl font-semibold text-white tracking-tight">${titleMap[role]}</h2>
             `;
             
             resetPinDots();
             document.getElementById('profileSection').classList.add('hidden');
             document.getElementById('pinSection').classList.remove('hidden');
+            window.setTimeout(() => document.querySelector('.numpad-btn')?.focus(), 0);
         }
 
         function closePinModal() {
             document.getElementById('pinSection').classList.add('hidden');
             document.getElementById('profileSection').classList.remove('hidden');
+            document.querySelectorAll('.role-item').forEach(item => item.classList.remove('is-active'));
+            lastRoleControl?.focus();
         }
 
         function pressKey(key) {
@@ -384,10 +1271,6 @@
         function resetPinDots() {
             for (let i = 1; i <= 4; i++) document.getElementById(`dot${i}`).classList.remove('active');
         }
-
-        // ตั้งค่าความปลอดภัย
-        const MAX_ATTEMPTS = 5;
-        const LOCKOUT_TIME = 5 * 60 * 1000; // 5 นาที (มิลลิวินาที)
 
        async function checkPin() {
             const hashedInput = CryptoJS.SHA256(currentPinInput).toString();
@@ -451,35 +1334,14 @@
             }
         }
 
-        function handleFailedAttempt() {
-            let attempts = parseInt(localStorage.getItem('vetres_failed_attempts') || "0");
-            attempts++;
-            localStorage.setItem('vetres_failed_attempts', attempts);
-
-            if (attempts >= MAX_ATTEMPTS) {
-                const lockoutTime = Date.now() + LOCKOUT_TIME;
-                localStorage.setItem('vetres_lockout_until', lockoutTime);
-                alert("คุณกรอกรหัสผิดเกินกำหนด! ระบบถูกล็อคเป็นเวลา 5 นาที");
-            } else {
-                alert(`รหัสผ่านไม่ถูกต้อง (เหลือโอกาสอีก ${MAX_ATTEMPTS - attempts} ครั้ง)`);
-            }
-            
-            currentPinInput = "";
-            resetPinDots();
-        }
-
-        // ฟังก์ชันตัวอย่างการเรียกฐานข้อมูล (Concept)
-        async function validatePinWithBackend(role, pin) {
-            // ในขั้นตอนใช้งานจริง คุณควรใช้ Supabase/Firebase 
-            // เพื่อตรวจสอบ PIN ที่ผ่านการ Hash มาแล้ว
-            return pin === "1111"; // ตัวอย่างชั่วคราว
-        }
-
         function openStationModal() {
             const grid = document.getElementById('stationGrid');
             const headerContainer = document.querySelector('#stationCard header');
             
-            headerContainer.innerHTML = `<h2 class="station-header uppercase">เลือกซุ้มของคุณ</h2>`;
+            headerContainer.innerHTML = `
+                
+                <h2 class="station-header">เลือกซุ้มของคุณ</h2>
+            `;
             
             grid.innerHTML = "";
             grid.className = "grid grid-cols-2 md:grid-cols-4 gap-4";
@@ -524,7 +1386,19 @@
             }
         }
 
-        function closeStationModal() { document.getElementById('stationModal').classList.add('hidden'); }
+        function closeStationModal() {
+            document.getElementById('stationModal').classList.add('hidden');
+            document.getElementById('pinSection').classList.add('hidden');
+            document.getElementById('profileSection').classList.remove('hidden');
+            document.querySelectorAll('.role-item').forEach(item => item.classList.remove('is-active'));
+            lastRoleControl?.focus();
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key !== 'Escape') return;
+            if (!document.getElementById('pinSection').classList.contains('hidden')) closePinModal();
+            else if (!document.getElementById('stationModal').classList.contains('hidden')) closeStationModal();
+        });
     </script>
     
 </body>
