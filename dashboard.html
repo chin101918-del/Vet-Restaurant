@@ -15,37 +15,114 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #050505; color: white; overflow-x: hidden; }
+        body {
+            font-family: 'Geist', 'IBM Plex Sans Thai', sans-serif;
+            background-color: #06070c;
+            color: white;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        /* Ambient mesh — deep blue + soft violet, quiet and moody */
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            pointer-events: none;
+            background:
+                radial-gradient(1250px 860px at 12% -10%, rgba(62,82,164,0.13), transparent 60%),
+                radial-gradient(1080px 780px at 100% -2%, rgba(104,74,178,0.13), transparent 58%),
+                radial-gradient(1160px 940px at 50% 122%, rgba(56,64,146,0.10), transparent 63%),
+                radial-gradient(840px 760px at 80% 55%, rgba(122,88,196,0.06), transparent 60%),
+                #05060a;
+        }
+        /* Fine film-grain noise — barely-there texture over the mesh */
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.035;
+            mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-size: 140px 140px;
+        }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+
+        /* ────────────────────────────────────────
+           Header design tokens — เหมือนกับ kds.html เป๊ะๆ
+           ──────────────────────────────────────── */
+        :root {
+            --bg: #06070c;
+            --border: rgba(255, 255, 255, 0.05);
+            --border-strong: rgba(255, 255, 255, 0.12);
+            --text: #f5f6fa;
+            --accent: #7484C8;              /* slightly desaturated periwinkle-blue */
+            --accent-hover: #8A97D6;
+            --accent-rgb: 116, 132, 200;
+
+            /* ── Liquid Glass material system (macOS Tahoe) ── */
+            --glass-rim: rgba(255, 255, 255, 0.07);            /* hairline edge — shadows carry the form */
+            --glass-fill-top: rgba(255, 255, 255, 0.05);       /* baked-in top sheen */
+            --glass-fill-body: rgba(255, 255, 255, 0.025);     /* translucent body */
+            --glass-sheen: rgba(255, 255, 255, 0.14);          /* specular top line */
+            --glass-shade: rgba(0, 0, 0, 0.14);                /* bottom bevel shade */
+            /* layered depth — soft, wide bloom instead of a hard edge */
+            --glass-shadow:
+                0 1px 2px rgba(0, 0, 0, 0.26),
+                0 8px 20px rgba(0, 0, 0, 0.26),
+                0 24px 56px rgba(0, 0, 0, 0.30);
+            /* concentric corner radii */
+            --r-card: 24px;
+            --r-frame: 20px;
+            --r-tile: 18px;
+        }
+
+        /* --- Brand mark (เหมือนกับ kds.html เพื่อความสม่ำเสมอของ UI) --- */
+        .kds-brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
+        .kds-brand-mark {
+            width: 34px;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 11px;
+            color: #fff;
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent));
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.40),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.22),
+                0 8px 22px rgba(var(--accent-rgb), 0.28);
+            flex-shrink: 0;
+        }
         
-        .glass-card { 
-            background: rgba(255, 255, 255, 0.03); 
-            backdrop-filter: blur(20px); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            border-radius: 24px;
+        /* Content cards: solid, refined surfaces — NOT glass. Glass is reserved for the floating navbar. */
+        .glass-card {
+            position: relative;
+            background: #0e1016;
+            border: 1px solid rgba(255,255,255,0.045);
+            border-radius: var(--r-card);
+            box-shadow:
+                0 1px 2px rgba(0,0,0,0.30),
+                0 12px 30px rgba(0,0,0,0.26),
+                inset 0 1px 0 rgba(255,255,255,0.045);
         }
 
         .sticky-top-nav {
             position: sticky; top: 0; z-index: 50;
-            background: rgba(5, 5, 5, 0.85);
-            backdrop-filter: blur(24px);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0) 60%),
+                rgba(7, 8, 13, 0.74);
+            backdrop-filter: blur(18px) saturate(150%);
+            -webkit-backdrop-filter: blur(18px) saturate(150%);
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 4px 18px rgba(0,0,0,0.24);
         }
         
-        .nav-container { display: flex; position: relative; padding: 0 1rem; gap: 0.5rem; }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 1rem 0; cursor: pointer; transition: all 0.3s ease;
-            color: rgba(255, 255, 255, 0.4); position: relative; z-index: 2;
-        }
-        .nav-item.active { color: #fff; }
-        .nav-indicator {
-            position: absolute; bottom: 0; height: 3px; background: #a855f7; 
-            border-radius: 3px 3px 0 0; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); z-index: 1;
-        }
-
         input[type="date"]::-webkit-calendar-picker-indicator {
             opacity: 0;
             position: absolute;
@@ -55,433 +132,829 @@
             cursor: pointer;
         }
 
-        .stat-value { font-size: 2.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-        .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
+        .stat-value { font-size: 2.9rem; font-weight: 800; line-height: 0.98; letter-spacing: -0.035em; color: rgba(255,255,255,0.95); }
+        .stat-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em; color: rgba(255,255,255,0.38); margin-bottom: 10px; font-weight: 500; }
+
+        /* ────────────────────────────────────────
+           UI Polish additions — day-pill strip, range picker,
+           toggle switch, heat-map, kitchen hero, modal sub-nav
+           ──────────────────────────────────────── */
+
+        /* --- Day-pill strip (อยู่บรรทัดเดียวกับ Header แล้ว ไม่ต้องมีพื้นหลัง/เงาซ้ำ) --- */
+        .day-pill-bar {
+            background:
+                linear-gradient(180deg, rgba(0,0,0,0.14), rgba(255,255,255,0.02) 70%),
+                rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06); border-radius: 999px; padding: 5px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.32), inset 0 -1px 0 rgba(255,255,255,0.05);
+            max-width: 100%;
+        }
+        .day-pill {
+            flex-shrink: 0; padding: 7px 14px; border-radius: 999px; font-size: 12px; font-weight: 600;
+            color: rgba(255,255,255,0.52); background: transparent; border: 1px solid transparent;
+            cursor: pointer; transition: all .2s ease; white-space: nowrap;
+        }
+        .day-pill:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .day-pill.active {
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent));
+            color: #fff;
+            box-shadow: 0 6px 16px rgba(var(--accent-rgb),0.26), inset 0 1px 0 rgba(255,255,255,0.36), inset 0 -2px 5px rgba(0,0,0,0.18);
+        }
+
+        /* --- Inner frame รอบกราฟ/เนื้อหา (สไตล์เดียวกับ UI Polish.pdf) --- */
+        .inner-frame {
+            border: 1px solid rgba(255,255,255,0.04); border-radius: var(--r-frame); padding: 18px;
+            background: rgba(0,0,0,0.16);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.24);
+        }
+        /* --- Pill สีเทาหลังตัวเลข % แนวโน้ม --- */
+        .trend-pill {
+            display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
+            padding: 3px 9px; border-radius: 999px;
+            background: rgba(255,255,255,0.09);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        }
+
+        .mesh-today {
+            border-radius: 20px;
+            background-color: #252A4A; /* สีพื้นฐานให้สว่างกว่าพื้นหลังเว็บเล็กน้อย */
+            background-image: 
+                radial-gradient(at 0% 0%, #8A97D680 0px, transparent 75%),
+                radial-gradient(at 100% 100%, #7484C866 0px, transparent 70%);
+            border: 1px solid rgba(138, 151, 214, 0.25); /* เส้นขอบบางๆ ช่วยตัดกับพื้นหลังดำ */
+            box-shadow:
+                inset 0 1.5px 1px rgba(255, 255, 255, 0.35), /* แสงตกกระทบขอบบนให้ดูนูน */
+                inset 0 -1px 2px rgba(0, 0, 0, 0.4),
+                0 8px 24px rgba(116, 132, 200, 0.25); /* เงาเรืองแสงสีฟ้า ดันกล่องให้ลอย */
+        }
+
+        /* --- Range calendar modal --- */
+        .cal-day {
+            aspect-ratio: 1; display:flex; align-items:center; justify-content:center; border-radius: 10px;
+            font-size: 13px; font-weight:600; color: rgba(255,255,255,0.7); cursor:pointer; transition: all .15s ease;
+        }
+        .cal-day:hover { background: rgba(255,255,255,0.08); }
+        .cal-day.in-range { background: rgba(116,132,200,0.18); color:#fff; }
+        .cal-day.range-start, .cal-day.range-end { background: var(--accent); color:#fff; }
+        .cal-day.disabled { opacity:.2; pointer-events:none; }
+
+        /* --- Toggle switch (เช่น รายได้ / ความเร็ว) --- */
+        .seg-toggle {
+            display:inline-flex; padding:4px; border-radius:999px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.16), rgba(255,255,255,0.012) 70%), rgba(255,255,255,0.012);
+            border:1px solid rgba(255,255,255,0.05); gap:2px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.30), inset 0 -1px 0 rgba(255,255,255,0.04);
+        }
+        .seg-toggle button {
+            padding:6px 14px; border-radius:999px; font-size:12px; font-weight:600; color:rgba(255,255,255,0.5);
+            transition: all .2s ease; white-space:nowrap;
+        }
+        .seg-toggle button:hover { color: rgba(255,255,255,0.85); }
+        .seg-toggle button.active {
+            background: linear-gradient(135deg, var(--accent-hover), var(--accent)); color:#fff;
+            box-shadow: 0 5px 14px rgba(var(--accent-rgb),0.24), inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -2px 5px rgba(0,0,0,0.16);
+        }
+
+        /* --- Station heat-map pills (opacity ตามสัดส่วนรายได้) --- */
+        .heat-pill {
+            position: absolute; overflow:hidden; border-radius:14px; font-size:12px; font-weight:700;
+            color:#fff; border:1px solid rgba(255,255,255,0.10); cursor:pointer;
+            transition: transform .15s ease, box-shadow .15s ease;
+            background: rgba(255,255,255,0.03);
+            display:flex; align-items:center; justify-content:center; text-align:center;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
+        }
+        .heat-pill:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.16); }
+        .heat-pill .heat-fill { position:absolute; inset:0; background: radial-gradient(circle at 30% 20%, var(--accent-hover), var(--accent)); pointer-events:none; }
+        .heat-pill .heat-label { position:relative; z-index:1; padding:0 6px; line-height:1.15; white-space:nowrap; }
+        .heat-pill .heat-pct { position:relative; z-index:1; display:block; font-size:10px; font-weight:600; opacity:.75; margin-top:2px; }
+
+        /* --- Kitchen hero stat (Analytics) --- */
+        .kitchen-hero { text-align:center; padding: 12px 0; }
+        .kitchen-hero .hero-num { font-size: 2.6rem; font-weight:800; letter-spacing:-0.03em; background: linear-gradient(135deg,#fff,var(--accent-hover)); -webkit-background-clip:text; background-clip:text; color:transparent; line-height:1; }
+
+        /* --- Typography hierarchy (Apple HIG): lighter titles, subtler labels --- */
+        .stat-label { font-weight: 500; }
+        .soft-label { font-weight: 300 !important; color: rgba(255,255,255,0.40); }
+        .card-subtitle { font-weight: 300; color: rgba(255,255,255,0.38); }
+        .glass-card h3 { font-weight: 600; letter-spacing: -0.012em; color: rgba(255,255,255,0.90); }
+
+        /* Revenue card leads through typography (big hero number), not extra glow */
+        .revenue-focus::after {
+            content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+            background: radial-gradient(130% 100% at 16% -6%, rgba(122,88,196,0.06), transparent 60%);
+        }
+        .revenue-focus > * { position: relative; z-index: 1; }
+
+        /* Softer, larger radii on nested tiles for a Tahoe feel */
+        .glass-card .rounded-2xl { border-radius: 20px; }
+
+        /* --- Modal sub-nav (ตาราง / กราฟ) --- */
+        .modal-subnav {
+            display:inline-flex; padding:3px; border-radius:14px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0) 60%), rgba(255,255,255,0.03);
+            border:1px solid rgba(255,255,255,0.10); gap:2px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+        }
+        .modal-subnav button { padding:6px 14px; border-radius:11px; font-size:12px; font-weight:700; color:rgba(255,255,255,0.5); transition:.2s; }
+        .modal-subnav button.active { background: rgba(255,255,255,0.14); color:#fff; box-shadow: inset 0 1px 0 rgba(255,255,255,0.22); }
+
+        /* --- Table heat map grid (Analytics) --- */
+        .table-heat-cell {
+            border-radius: 12px; padding: 10px 8px; text-align:center; border:1px solid rgba(255,255,255,0.06);
+            transition: all .2s ease; cursor:default;
+        }
+        .table-heat-cell .th-id { font-size:12px; font-weight:800; color:#fff; }
+        .table-heat-cell .th-val { font-size:10px; color:rgba(255,255,255,0.6); margin-top:2px; }
+
+        /* --- Table Heat Map: ผังโต๊ะแบบโซน (สไตล์เดียวกับหน้า staff.html) --- */
+        .heat-zone-wrapper {
+            border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px;
+            background: rgba(255,255,255,0.02); width: fit-content;
+        }
+        .heat-zone-label {
+            font-size: 0.7rem; color: #71717a; margin-bottom: 10px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em; text-align: center;
+        }
+        .heat-zone-grid { display: flex; flex-wrap: nowrap; justify-content: center; gap: clamp(6px, 0.8vw, 14px); }
+        .heat-zone-wrapper.vertical .heat-zone-grid { flex-direction: column; }
+        .table-heat-circle {
+            width: clamp(40px, 4.2vw, 64px); height: clamp(40px, 4.2vw, 64px); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+            color: #fff; border: 1px solid rgba(255,255,255,0.15); transition: transform .15s ease;
+        }
+        .table-heat-circle:hover { transform: scale(1.12); z-index: 5; }
+
+        .breakeven-track { position:relative; height:10px; border-radius:999px; background:rgba(255,255,255,0.06); overflow:visible; box-shadow: inset 0 1px 2px rgba(0,0,0,0.28); }
+        .breakeven-fill { position:absolute; inset:0; border-radius:999px; background: linear-gradient(90deg, var(--accent), var(--accent-hover)); transition: width .6s ease; box-shadow: 0 2px 10px rgba(var(--accent-rgb),0.22); }
+        .breakeven-marker { position:absolute; top:50%; width:2px; height:20px; background:rgba(255,255,255,0.9); transform:translate(-50%,-50%); border-radius:2px; box-shadow:0 0 10px rgba(255,255,255,0.35); }
+
+        /* ────────────────────────────────────────
+           Modals — Tahoe: content dims & blurs behind,
+           panel floats as elevated Liquid Glass
+           ──────────────────────────────────────── */
+        #stationModal, #costModal, #tableDetailModal, #rangeModal {
+            background: rgba(6, 7, 12, 0.32) !important;
+            backdrop-filter: blur(8px) saturate(140%);
+            -webkit-backdrop-filter: blur(8px) saturate(140%);
+        }
+        #stationModal > div, #costModal > div, #tableDetailModal > div, #rangeModal > div {
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0) 18%),
+                linear-gradient(135deg, rgba(30,32,44,0.88), rgba(16,17,24,0.92)) !important;
+            backdrop-filter: blur(40px) saturate(190%);
+            -webkit-backdrop-filter: blur(40px) saturate(190%);
+            border: 1px solid rgba(255,255,255,0.10) !important;
+            box-shadow:
+                0 24px 64px rgba(0,0,0,0.50),
+                0 4px 16px rgba(0,0,0,0.30),
+                inset 0 1px 0 rgba(255,255,255,0.18),
+                inset 0 -1px 0 rgba(0,0,0,0.20) !important;
+        }
+
+        /* Circular icon buttons (close / month nav) — glass beads */
+        .modal-subnav ~ * .fa-times,
+        #stationModal .fa-times, #costModal .fa-times, #tableDetailModal .fa-times, #rangeModal .fa-times { opacity: .85; }
+
+        /* Gentle Tahoe entrance for tab views */
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(14px) scale(0.995); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-slide-up { animation: slideUpFade .5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        @media (prefers-reduced-motion: reduce) {
+            .animate-slide-up { animation: none; }
+        }
+
+        /* Nested tiles read as quiet solid surfaces, not raised chips */
+        .glass-card .bg-white\/5 {
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+        .glass-card .border-white\/10 { border-color: rgba(255,255,255,0.055); }
+        .glass-card .border-white\/20 { border-color: rgba(255,255,255,0.09); }
+        .glass-card .border-white\/5  { border-color: rgba(255,255,255,0.03); }
+    
+        /* ────────────────────────────────────────
+        LIQUID GLASS NAVBAR STYLES
+        ──────────────────────────────────────── */
+        .liquidGlass-wrapper {
+            position: relative;
+            display: flex;
+            overflow: hidden;
+            cursor: pointer;
+            border-radius: 9999px; /* บังคับให้เป็นแคปซูล */
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 2.2);
+            /* เอา Shadow เดิมของ Tailwind ออก แล้วใช้ของ Liquid Glass แทน */
+            box-shadow: 
+                0 16px 40px rgba(0, 0, 0, 0.5), 
+                0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* เอฟเฟกต์ตอน Hover Navbar (ขยายตัวนิดๆ สไตล์ macOS) */
+        .liquidGlass-wrapper:hover {
+            padding: 10px;
+            transform: translateX(-50%) translateY(-2px) scale(1.02) !important;
+        }
+
+        .liquidGlass-effect {
+            position: absolute;
+            z-index: 0;
+            inset: -10px; /* ขยายขอบเขตการเบลอออกไปนิดนึงเพื่อไม่ให้ขอบตัด */
+            backdrop-filter: blur(12px) saturate(150%);
+            filter: url(#glass-distortion);
+            isolation: isolate;
+        }
+
+        .liquidGlass-tint {
+            z-index: 1;
+            position: absolute;
+            inset: 0;
+            /* ปรับสีจากขาวโปร่งแสง เป็นสีเข้มโปร่งแสง ให้เข้ากับธีม */
+            background: rgba(18, 19, 24, 0.55); 
+        }
+
+        .liquidGlass-shine {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            border-radius: 9999px;
+            pointer-events: none;
+            /* แสงสะท้อนกระจกเหลว */
+            box-shadow: 
+                inset 1.5px 1.5px 1px 0 rgba(255, 255, 255, 0.15),
+                inset -1px -1px 1px 1px rgba(0, 0, 0, 0.4),
+                inset 0 0 10px rgba(255,255,255,0.05);
+        }
+
+        /* ────────────────────────────────────────
+        MODAL LIQUID GLASS (อิงจากต้นฉบับ Styled Component)
+        ──────────────────────────────────────── */
+        .liquid-modal-card {
+            position: relative;
+            border-radius: 28px;
+            isolation: isolate;
+            /* แสงเรืองรองด้านนอกจางๆ */
+            box-shadow: 0px 0px 30px -8px rgba(116, 132, 200, 0.15), 0 24px 64px rgba(0,0,0,0.8);
+            background: transparent;
+        }
+
+        /* Tint and inner shadow layer */
+        .liquid-modal-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            border-radius: 28px;
+            /* แสงสะท้อนขอบกระจกด้านใน */
+            box-shadow: inset 0 0 12px -4px rgba(255, 255, 255, 0.25);
+            /* สีพื้นหลังของกระจก (ต้องมืดนิดนึงเพื่อให้ตัวหนังสือสีขาวอ่านออก) */
+            background-color: rgba(20, 22, 30, 0.65);
+            pointer-events: none;
+        }
+
+        /* Backdrop blur and distortion layer */
+        .liquid-modal-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -2;
+            border-radius: 28px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            /* เรียกใช้ SVG Filter ที่เราสร้างไว้ */
+            filter: url(#modal-glass-distortion);
+            -webkit-filter: url(#modal-glass-distortion);
+            pointer-events: none;
+        }
+
+        /* Content Wrapper สำหรับดันเนื้อหาให้อยู่เหนือผิวกระจก */
+        .modal-content-wrapper {
+            position: relative;
+            z-index: 10;
+        }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
 
     <!-- TOP HEADER -->
     <div class="sticky-top-nav">
-        <header class="flex justify-between items-center p-6 pb-2">
-            <!-- ซ้าย: กลับหน้า Login & Title -->
-            <div class="flex items-center gap-5">
-                <button onclick="window.location.href='index.html'" class="bg-white/5 w-12 h-12 rounded-xl flex items-center justify-center border border-white/5 text-white/40 hover:text-white transition-all hover:bg-white/10 shadow-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
-                    <path fill-rule="evenodd" d="M7.793 2.232a.75.75 0 0 1-.025 1.06L3.622 7.25h10.003a5.375 5.375 0 0 1 0 10.75H10.75a.75.75 0 0 1 0-1.5h2.875a3.875 3.875 0 0 0 0-7.75H3.622l4.146 3.957a.75.75 0 0 1-1.036 1.085l-5.5-5.25a.75.75 0 0 1 0-1.085l5.5-5.25a.75.75 0 0 1 1.06.025Z" clip-rule="evenodd" />
+        <header class="flex justify-between items-center gap-4" style="height:68px; padding:0 24px; font-family:'Geist','IBM Plex Sans Thai',sans-serif;">
+            <!-- ซ้าย: เหลือแต่ปุ่มกลับหน้าหลัก + ไอคอนแบรนด์ -->
+            <div class="flex items-center shrink-0" style="gap: 16px;">
+                <button onclick="window.location.href='index.html'" class="hover:bg-white/10 flex items-center justify-center transition-all" style="width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,0.05);color:var(--text);border:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" style="width:20px;height:20px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
                     </svg>
                 </button>
-                <!-- ส่วน Title พร้อมไอคอนใหม่ -->
-                <div class="flex items-center gap-4">
-                    <!-- ไอคอน SVG ที่คุณต้องการ -->
-                    <div class="text-purple-500">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-9 h-9">
-                            <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 0 1 8.25-8.25.75.75 0 0 1 .75.75v6.75H18a.75.75 0 0 1 .75.75 8.25 8.25 0 0 1-16.5 0Z" clip-rule="evenodd" />
-                            <path fill-rule="evenodd" d="M12.75 3a.75.75 0 0 1 .75-.75 8.25 8.25 0 0 1 8.25 8.25.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75V3Z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    
-                    <div>
-                        <h1 class="text-2xl font-black tracking-widest text-white uppercase leading-none">VET <span class="text-purple-500">RESTAURANT</span></h1>
-                        <p class="text-[15px] text-white/40 uppercase tracking-[0.3em] font-bold mt-1">Dashboard</p>
-                    </div>
+                <div class="kds-brand-mark" aria-label="VetRestaurant Logo">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:18px;height:18px;color:white;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6a7.5 7.5 0 1 0 7.5 7.5h-7.5V6Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5H21A7.5 7.5 0 0 0 13.5 3v7.5Z" />
+                    </svg>
                 </div>
             </div>
 
-            <!-- ขวา: Date Picker & Export -->
-            <div class="flex items-center gap-3">
-                <div onclick="document.getElementById('datePicker').showPicker?.(); document.getElementById('datePicker').focus();" 
-                     class="bg-white/5 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-white/10 transition-all cursor-pointer relative w-fit whitespace-nowrap shrink-0">
-                    
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-purple-400">
+            <!-- กลาง: แถบเลือกวันที่ (PILL SHAPE ยาว) อยู่บรรทัดเดียวกับ Header -->
+            <div class="flex-1 flex justify-center overflow-hidden">
+                <div id="dayPillStrip" class="flex items-center gap-1 overflow-x-auto no-scrollbar day-pill-bar"></div>
+            </div>
+
+            <!-- ขวา: Range Picker (PILL SHAPE) & Export (PILL SHAPE) -->
+            <div class="flex items-center gap-3 shrink-0">
+                <div onclick="openRangeModal()"
+                     class="bg-white/5 border border-white/10 rounded-full px-4 py-2.5 flex items-center gap-3 hover:bg-white/10 transition-all cursor-pointer relative w-fit whitespace-nowrap shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 text-[#7484C8]">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                     </svg>
-                
-                    <!-- 2. แก้ไข: เปลี่ยนจาก w-[85px] เป็น w-[110px] เพื่อรองรับรูปแบบวันที่ไทย/สากลที่ยาวขึ้นบน iPad -->
-                    <input type="date" id="datePicker" onchange="fetchDashboardData()" 
-                           class="bg-transparent border-none outline-none text-white text-sm font-medium cursor-pointer w-[110px] appearance-none">
+                    <span id="rangeLabel" class="text-white text-sm font-medium">-</span>
+                    <i class="fas fa-chevron-down text-[10px] text-slate-500"></i>
                 </div>
-                <button onclick="exportToPDF()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 px-5 py-3 rounded-xl font-bold flex items-center gap-2 transition-all">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                      <path fill-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd" />
-                    </svg>
-                     <span class="hidden md:inline">Download</span>
+                <button onclick="exportToPDF()" class="bg-[#EBEBEB] hover:bg-[#D4D4D4] active:scale-95 text-[#111111] px-5 py-2.5 rounded-full font-semibold flex items-center gap-2 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_4px_14px_rgba(0,0,0,0.4)]" style="font-family: 'Geist', 'IBM Plex Sans Thai', sans-serif;">
+                    <i class="fas fa-file-export text-[#111111]"></i>
+                     <span class="hidden md:inline">Export</span>
                 </button>
             </div>
         </header>
-
-        <!-- 3 TABS NAVBAR -->
-        <nav class="nav-container max-w-3xl mx-auto mt-2">
-            <div class="nav-item active" id="tab-overview" onclick="switchView('overview')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                <path d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625ZM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75Z" />
-                </svg>
-                <span class="text-[13px] font-black uppercase tracking-widest">ภาพรวม</span>
-            </div>
-            <div class="nav-item" id="tab-stations" onclick="switchView('stations')">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-5">
-                <path d="M2.879 7.121A3 3 0 0 0 7.5 6.66a2.997 2.997 0 0 0 2.5 1.34 2.997 2.997 0 0 0 2.5-1.34 3 3 0 1 0 4.622-3.78l-.293-.293A2 2 0 0 0 15.415 2H4.585a2 2 0 0 0-1.414.586l-.292.292a3 3 0 0 0 0 4.243ZM3 9.032a4.507 4.507 0 0 0 4.5-.29A4.48 4.48 0 0 0 10 9.5a4.48 4.48 0 0 0 2.5-.758 4.507 4.507 0 0 0 4.5.29V16.5h.25a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75v-3.5a.75.75 0 0 0-.75-.75h-2.5a.75.75 0 0 0-.75.75v3.5a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1 0-1.5H3V9.032Z" />
-                </svg>
-                <span class="text-[13px] font-black uppercase tracking-widest">ซุ้ม</span>
-            </div>
-            <div class="nav-item" id="tab-analytics" onclick="switchView('analytics')">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                </svg>
-                <span class="text-[13px] font-black uppercase tracking-widest">วิเคราะห์</span>
-            </div>
-            <div class="nav-indicator" id="navIndicator"></div>
-        </nav>
     </div>
 
+    <!-- 3 TABS NAVBAR (LIQUID GLASS EFFECT) -->
+<!-- 3 TABS NAVBAR (LIQUID GLASS EFFECT) -->
+<nav class="liquidGlass-wrapper fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 p-2">
+    
+    <!-- Liquid Glass Layers -->
+    <div class="liquidGlass-effect pointer-events-none"></div>
+    <div class="liquidGlass-tint pointer-events-none"></div>
+    <div class="liquidGlass-shine pointer-events-none"></div>
+
+    <!-- Specular highlight (top edge) -->
+    <div class="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent pointer-events-none z-10"></div>
+
+    <!-- ปุ่มเมนู (แก้คลาส Active ตรง bg และ text) -->
+    <div class="nav-item active relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full cursor-pointer transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5 [&.active]:bg-[#7484C8] [&.active]:text-white [&.active]:scale-105 [&.active]:shadow-[0_4px_14px_rgba(116,132,200,0.35),inset_1px_1px_1px_rgba(255,255,255,0.3),inset_-1px_-1px_1px_rgba(0,0,0,0.15)]" id="tab-overview" onclick="switchView('overview')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
+        </svg>
+        <span class="text-[13px] font-bold uppercase tracking-wider">ภาพรวม</span>
+    </div>
+    
+    <div class="nav-item relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full cursor-pointer transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5 [&.active]:bg-[#7484C8] [&.active]:text-white [&.active]:scale-105 [&.active]:shadow-[0_4px_14px_rgba(116,132,200,0.35),inset_1px_1px_1px_rgba(255,255,255,0.3),inset_-1px_-1px_1px_rgba(0,0,0,0.15)]" id="tab-stations" onclick="switchView('stations')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 .75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349M3.75 21V9.349m0 0a3.001 3.001 0 0 0 3.75-.615A2.993 2.993 0 0 0 9.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 0 0 2.25 1.016c.896 0 1.7-.393 2.25-1.015a3.001 3.001 0 0 0 3.75.614m-16.5 0a3.004 3.004 0 0 1-.621-4.72l1.189-1.19A1.5 1.5 0 0 1 5.378 3h13.243a1.5 1.5 0 0 1 1.06.44l1.19 1.189a3 3 0 0 1-.621 4.72M6.75 18h3.75a.75.75 0 0 0 .75-.75V13.5a.75.75 0 0 0-.75-.75H6.75a.75.75 0 0 0-.75.75v3.75c0 .414.336.75.75.75Z" />
+        </svg>
+        <span class="text-[13px] font-bold uppercase tracking-wider">ซุ้ม</span>
+    </div>
+    
+    <div class="nav-item relative z-10 flex items-center gap-2 px-5 py-2.5 rounded-full cursor-pointer transition-all duration-300 text-slate-400 hover:text-white hover:bg-white/5 [&.active]:bg-[#7484C8] [&.active]:text-white [&.active]:scale-105 [&.active]:shadow-[0_4px_14px_rgba(116,132,200,0.35),inset_1px_1px_1px_rgba(255,255,255,0.3),inset_-1px_-1px_1px_rgba(0,0,0,0.15)]" id="tab-analytics" onclick="switchView('analytics')">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
+        </svg>
+        <span class="text-[13px] font-bold uppercase tracking-wider">วิเคราะห์</span>
+    </div>
+</nav>
+
     <!-- MAIN CONTENT -->
-    <main class="flex-1 p-6 max-w-7xl mx-auto w-full">
+    <main class="flex-1 p-6 max-w-7xl mx-auto w-full pb-32">
         
         <!-- ==============================================
              TAB 1: OVERVIEW (ภาพรวม)
              ============================================== -->
         <div id="view-overview" class="dashboard-view animate-slide-up space-y-6">
-            
-            <!-- 🌟 THE EXECUTIVE TOP ROW 🌟 -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                
-                <!-- 👑 HERO SECTION: FINANCIAL HEALTH (กว้าง 66%) -->
-                <div class="glass-card p-6 lg:col-span-2 relative overflow-hidden border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-transparent shadow-[0_0_30px_rgba(168,85,247,0.05)]">
-                    <div class="absolute -right-10 -top-10 text-purple-500/5 text-[250px] pointer-events-none"><i class="fas fa-money-bill-wave"></i></div>
-                    
-                    <div class="flex flex-col h-full">
-                        <!-- รายได้สุทธิ (Net Sales) -->
-                        <div class="relative z-10 flex-1 flex flex-col justify-center mb-2">
+
+            <!-- หัวข้อ: เปลี่ยนตามช่วงเวลาปัจจุบันของประเทศไทย (เช้านี้/เที่ยงนี้/บ่ายนี้/คืนนี้) -->
+            <h1 class="text-3xl font-bold text-white/90 mb-1 tracking-tight" id="overviewGreeting">ภาพรวมร้านคืนนี้</h1>
+
+            <!-- 🌟 TOP ROW: รายได้สะสม + รายได้วันนี้/จำนวนบิล + 4 ช่องทางชำระเงิน + รายได้ 8 วัน 🌟 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                <!-- คอลัมน์ 1: รายได้สะสม + รายได้วันนี้ + จำนวนบิล -->
+                <div class="glass-card p-5 pb-4 lg:col-span-1 flex flex-col justify-between gap-5 revenue-focus">
+                    <div>
+                        <div class="stat-label">รายได้สะสม</div>
+                        <div class="flex items-center gap-3 mt-8">
+                            <div class="stat-value text-white" id="statCumRevenue">฿0</div>
+                            <div id="trendCumRevenue" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400">...</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-[1.5fr_1fr] gap-3 h-[100px]">
+                        <div class="mesh-today rounded-2xl p-3 relative overflow-hidden flex flex-col justify-between">
+                            <div class="text-[11px] text-white/70 mb-1 font-light">รายได้วันนี้</div>
+                            <div class="text-2xl font-black text-white leading-none" id="statDayRevenue">฿0</div>
+                            <div class="text-[11px] font-bold text-emerald-300 mt-1" id="trendDayRevenue">↑ 0%</div>
+                        </div>
+                        <div class="rounded-2xl p-3 bg-white/5 border border-white/10 flex flex-col justify-between">
+                            <div class="text-[11px] text-slate-400 mb-1 font-light">จำนวนบิล</div>
+                            <div class="text-2xl font-black text-white leading-none"><span id="statDayBills">0</span> <span class="text-sm font-medium text-slate-500">บิล</span></div>
+                            <div class="text-[11px] font-bold text-emerald-400 mt-1" id="trendDayBills">↑ 0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- คอลัมน์ 2: กล่องใหญ่คลุม 4 ช่องทางการชำระเงิน (เงินสด/เงินโอน × แคชเชียร์/เทคโฮม) -->
+                <div class="glass-card p-4 lg:col-span-1">
+                    <div class="grid grid-cols-2 gap-3 h-full">
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative flex flex-col justify-between h-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[11px] text-slate-400 font-light">เงินสดแคชเชียร์</span>
+                                <i class="fas fa-money-bill-wave text-[#7484C8] text-sm"></i>
+                            </div>
                             <div>
-                                <h2 class="text-sm font-bold text-purple-300 tracking-widest uppercase mb-2 flex items-center gap-2">
-                                    <div class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></div> 
-                                    รายได้สุทธิ
-                                </h2>
-                                <div class="flex items-center gap-4">
-                                    <div class="text-5xl md:text-6xl font-black text-white tracking-wider drop-shadow-lg" id="statNet">฿0.00</div>
-                                    <div id="trendNet" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-slate-400 backdrop-blur-md">...</div>
-                                </div>
+                                <div class="text-xl font-bold text-white" id="statCashDine">฿0</div>
+                                <div class="mt-1" id="trendCashDine">↑ 0%</div>
                             </div>
                         </div>
-
-                        <!-- 4 ข้อมูลการเงินรอง (Sub-metrics) -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10 pt-5 border-t border-purple-500/20">
-                            <div>
-                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">ยอดก่อนหักส่วนลด</div>
-                                <div class="text-xl font-bold text-slate-200" id="statGross">฿0</div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative flex flex-col justify-between h-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[11px] text-slate-400 font-light">เงินโอนแคชเชียร์</span>
+                                <i class="fas fa-qrcode text-[#7484C8] text-sm"></i>
                             </div>
                             <div>
-                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">ยอดส่วนลด</div>
-                                <div class="text-xl font-bold text-red-400" id="statDiscount">-฿0</div>
+                                <div class="text-xl font-bold text-white" id="statTransferDine">฿0</div>
+                                <div class="mt-1" id="trendTransferDine">↑ 0%</div>
+                            </div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative flex flex-col justify-between h-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[11px] text-slate-400 font-light">เงินสดเทคโฮม</span>
+                                <i class="fas fa-money-bill-wave text-[#7484C8] text-sm"></i>
                             </div>
                             <div>
-                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">ยอดเฉลี่ยต่อหัว</div>
-                                <div class="text-xl font-bold text-emerald-400" id="statOverviewAvgSpend">฿0</div>
+                                <div class="text-xl font-bold text-white" id="statCashTakehome">฿0</div>
+                                <div class="mt-1" id="trendCashTakehome">↑ 0%</div>
+                            </div>
+                        </div>
+                        <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative flex flex-col justify-between h-full">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[11px] text-slate-400 font-light">เงินโอนเทคโฮม</span>
+                                <i class="fas fa-qrcode text-[#7484C8] text-sm"></i>
                             </div>
                             <div>
-                                <div class="text-[10px] text-slate-400 uppercase tracking-widest mb-1">จำนวนบิล</div>
-                                <div class="text-xl font-bold text-slate-200"><span id="statOverviewTotalBills">0</span> <span class="text-xs font-medium text-slate-500">บิล</span></div>
+                                <div class="text-xl font-bold text-white" id="statTransferTakehome">฿0</div>
+                                <div class="mt-1" id="trendTransferTakehome">↑ 0%</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- 🚨 ALERT SECTION: OPERATIONS (กว้าง 33%) -->
-                <div class="glass-card p-6 lg:col-span-1 border-orange-500/30 bg-gradient-to-b from-orange-500/5 to-transparent flex flex-col relative overflow-hidden">
-                    
-                    <!-- หัวข้อออเดอร์ค้าง -->
-                    <div class="relative z-10 flex-shrink-0 mb-4 flex justify-between items-start border-b border-orange-500/20 pb-4">
-                        <div>
-                            <h2 class="text-[13px] font-bold text-orange-400/80 tracking-widest uppercase mb-1 flex items-center gap-2">
-                                ออเดอร์รอเสิร์ฟ
-                            </h2>
-                            <div class="flex items-baseline gap-2">
-                                <span class="text-4xl font-black text-orange-400" id="statPending">0</span>
-                                <span class="text-sm font-medium text-orange-400/60">รายการ</span>
-                            </div>
-                        </div>
-                        <div class="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.2)]">
-                            <!-- เปลี่ยนกระดิ่งเป็นรูปไฟตามที่คุณต้องการ -->
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-6">
-                              <path fill-rule="evenodd" d="M12.963 2.286a.75.75 0 0 0-1.071-.136 9.742 9.742 0 0 0-3.539 6.176 7.547 7.547 0 0 1-1.705-1.715.75.75 0 0 0-1.152-.082A9 9 0 1 0 15.68 4.534a7.46 7.46 0 0 1-2.717-2.248ZM15.75 14.25a3.75 3.75 0 1 1-7.313-1.172c.628.465 1.35.81 2.133 1a5.99 5.99 0 0 1 1.925-3.546 3.75 3.75 0 0 1 3.255 3.718Z" clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                    </div>
 
-                    <!-- กราฟวงกลมแจกแจงคิวแต่ละซุ้ม -->
-                    <div class="relative w-full z-10 h-[160px] flex items-center justify-center">
-                        <canvas id="pendingChart"></canvas>
-                        <!-- ข้อความที่จะโชว์เมื่อครัวโล่ง -->
-                        <div id="noPendingMsg" class="absolute inset-0 flex flex-col items-center justify-center text-slate-500 hidden">
-                            <i class="fas fa-check-circle text-3xl mb-2 text-emerald-500/30"></i>
-                            <span class="text-xs tracking-widest uppercase">ไม่มีออเดอร์ค้าง</span>
-                        </div>
-                    </div>
+                <!-- คอลัมน์ 3: รายได้ 8 วัน (เงินสด vs เงินโอน) -->
+                <div class="glass-card p-4 lg:col-span-1 flex flex-col">
+                    <h3 class="text-base font-bold mb-3 px-1 pt-1">รายได้ 8 วัน</h3>
+                    <div class="inner-frame h-[197px] relative"><canvas id="rangeChart"></canvas></div>
                 </div>
             </div>
 
-            <!-- กราฟ Peak Time และ เมนู -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-card p-6 lg:col-span-2">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-clock text-purple-400"></i> ช่วงเวลาที่คนเยอะสุด</h3>
-                    <div class="h-64 relative"><canvas id="peakChart"></canvas></div>
+            <!-- 🟦 SECOND ROW: เทียบจุดคืนทุน + รายได้แยกประเภท (ซ้าย) / รายได้เรียงตามช่วงเวลา (ขวา) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+
+                <div class="lg:col-span-1 flex flex-col gap-6">
+                    <!-- เทียบจุดคืนทุน -->
+                    <div class="glass-card p-4">
+                        <div class="flex items-center justify-between mb-4 px-1 pt-1">
+                            <h3 class="text-base font-bold">เทียบจุดคืนทุน</h3>
+                            <button onclick="openCostModal()" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400"><i class="fas fa-pen text-xs"></i></button>
+                        </div>
+                        <div class="breakeven-track mb-3">
+                            <div id="breakevenFill" class="breakeven-fill" style="width:0%"></div>
+                            <div id="breakevenMarker" class="breakeven-marker hidden"></div>
+                        </div>
+                        <div class="flex justify-between items-baseline px-1">
+                            <span class="text-sm font-bold text-white" id="breakevenCurrent">฿0</span>
+                            <span class="text-sm text-slate-500" id="breakevenTarget">฿0</span>
+                        </div>
+                        <div id="breakevenProfitMsg" class="hidden mt-3 text-center text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl py-2"></div>
+                    </div>
+
+                    <!-- รายได้แยกประเภท: กรอบเดียวครอบทั้ง Label และกราฟ กำหนดความสูงตายตัวให้กระชับ -->
+                    <div class="glass-card p-4">
+                        <h3 class="text-base font-bold mb-2 px-1 pt-1">รายได้แยกประเภท</h3>
+                        <div class="inner-frame flex items-center gap-6 h-[132px]">
+                            <div class="space-y-2 text-xs shrink-0">
+                                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" style="background:#a855f7"></span> Dine-in</div>
+                                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" style="background:#22c55e"></span> Take home</div>
+                                <div class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full" style="background:#38bdf8"></span> Staff</div>
+                            </div>
+                            <div class="h-[98px] w-[98px] aspect-square relative shrink-0 mx-auto">
+                                <canvas id="typeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="glass-card p-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center gap-2"><i class="fas fa-trophy text-yellow-400"></i> 5 เมนูทำเงินสูงสุด</h3>
-                    <div id="topMenusList" class="space-y-4"></div>
+
+                <!-- รายได้เรียงตามช่วงเวลา (รายชั่วโมงของวัน/ช่วงที่เลือก) -->
+                <div class="glass-card p-4 md:col-span-2 lg:col-span-2 flex flex-col">
+                    <div class="flex items-center justify-between mb-3 px-1 pt-1">
+                        <h3 class="text-base font-bold">รายได้เรียงตามช่วงเวลา</h3>
+                        <div class="seg-toggle">
+                            <button id="trendMetricRevenue" class="active" onclick="setTrendMetric('revenue')">รายได้</button>
+                            <button id="trendMetricBills" onclick="setTrendMetric('bills')">จำนวนบิล</button>
+                        </div>
+                    </div>
+                    <div class="inner-frame flex-1 min-h-[230px] relative"><canvas id="longTrendChart"></canvas></div>
                 </div>
             </div>
-            
+
         </div> <!-- ✨ ปิด TAB 1: OVERVIEW แบบสมบูรณ์ที่ตรงนี้ ✨ -->
         
 
         <!-- ==============================================
              TAB 2: STATIONS (วิเคราะห์รายซุ้ม)
              ============================================== -->
-        <div id="view-stations" class="dashboard-view hidden animate-slide-up space-y-6">
-            
-            <!-- ✨ เพิ่ม Highlight: Fastest / Slowest Station ตรงนี้ ✨ -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="glass-card p-4 flex items-center gap-4 border-emerald-500/20">
-                    <div class="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400 text-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                        <path fill-rule="evenodd" d="M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h7.268a.75.75 0 0 1 .548 1.262l-10.5 11.25a.75.75 0 0 1-1.272-.71l1.992-7.302H3.75a.75.75 0 0 1-.548-1.262l10.5-11.25a.75.75 0 0 1 .913-.143Z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-widest">ทำเวลาดีที่สุด</p>
-                        <p class="text-xl font-bold text-white"><span id="statFastestStation">กำลังคำนวณ...</span></p>
-                    </div>
-                </div>
-                <div class="glass-card p-4 flex items-center gap-4 border-red-500/20">
-                    <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="currentColor" height="30px" width="30px" version="1.2" baseProfile="tiny" id="_x31_" viewBox="0 0 256 175" xml:space="preserve">
-                    <path d="M185,29.7v0.2l15-12.6c-11.4-6.1-23.9-9.5-37.5-9.5s-26.2,3.4-37.1,9.3l15,12.6L185,29.7L185,29.7z M105.1,93.2  c-24.7,0-45,20.3-45,45v4.5l0,0c0.2,9.5,7.9,17,17.4,17s17.2-7.5,17.4-17l0,0v-4.5c0-5.7,4.5-10.1,10.1-10.1  c9.7,0,17.6-7.9,17.6-17.6S114.8,93.2,105.1,93.2z M221.9,92.8c-9.7,0-17.6,7.9-17.6,17.6v32.4l0,0c0.4,9.3,7.9,16.8,17.4,16.8  s17-7.5,17.4-16.8l0,0v-32.7C239.3,100.5,231.4,92.8,221.9,92.8z M252.7,101.9c0-4.3-1.4-8.5-3.4-12c-2.2,1.6-4.7,2.6-7.7,2.6  c4.1,4.9,6.5,11,6.5,17.6v5.5C251.3,111.8,252.7,107,252.7,101.9z M131.7,110.6c0,5.7-1.8,10.7-4.7,15c11.6,2.6,23.5,4.1,35.7,4.1  c11.4,0,22.1-1.2,32.7-3.4v-16c0-6.5,2.4-12.6,6.3-17h-76.5C129,98,131.7,103.9,131.7,110.6z M125,93.4L125,93.4c0.2,0,0-0.2,0-0.2  V93.4z M245.8,79.6c0-2.4-2-4.7-4.5-4.7h-0.6c-3.4-21.7-15.4-40.6-32.7-52.5l-17.6,14.8c9.7,11.4,16.4,24.1,20.3,37.9h-9.5  c-4.3-13-11.4-25.6-21.5-35.9h-32.9c-10.1,10.5-17,22.7-21.5,35.9h-9.5c3.9-13.4,10.3-26,19.9-36.9l-18.5-15.6  c-17,12.2-29.4,30.8-32.7,52.5h-1.2c-2.4,0-4.5,2-4.5,4.5c0,2.4,2,4.5,4.5,4.5h157.8C243.8,84.1,245.8,82,245.8,79.6z M81.6,89.5  c-4.9-0.6-8.9-4.7-8.9-9.9v-8.9c0-18.7-15-33.9-33.9-33.9c-18.7,0-33.9,15-33.9,33.9v8.9c0,4.9,4.1,8.9,8.9,8.9h24.5  c2.2,11.4,8.5,20.7,17.6,27.4C61.1,104.3,70.2,95.2,81.6,89.5z M24.2,64.4c-3,0-5.7-2.4-5.7-5.7c0-3,2.4-5.7,5.7-5.7  s5.7,2.4,5.7,5.7C29.8,61.9,27.4,64.4,24.2,64.4z"/>
-                    </svg>
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-slate-400 uppercase tracking-widest">ใช้เวลามากที่สุด</p>
-                        <p class="text-xl font-bold text-white"><span id="statSlowestStation">กำลังคำนวณ...</span></p>
-                    </div>
-                </div>
-            </div>
+        <div id="view-stations" class="dashboard-view hidden animate-slide-up">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-            <div class="glass-card p-6">
-                <h3 class="text-xl font-bold mb-1 flex items-center gap-2"><i class="fas fa-store text-emerald-400"></i> รายได้แยกซุ้ม</h3>
-                <p class="text-medium text-slate-400 mb-6 font-light">คลิกแท่งกราฟเพื่อดูรายละเอียดแต่ละซุ้ม</p>
-                <div class="h-96 relative"><canvas id="stationChart"></canvas></div>
+                <!-- ซ้าย: รายได้แยกซุ้ม + รายละเอียดแต่ละซุ้ม -->
+                <div class="lg:col-span-8 flex flex-col gap-6">
+                    <div class="glass-card p-4">
+                        <div class="flex items-center justify-between mb-1 px-1 pt-1">
+                            <h3 class="text-xl font-bold">รายได้แยกซุ้ม</h3>
+                        </div>
+                        <p class="text-sm text-slate-400 mb-3 px-1 font-light">คลิกแท่งกราฟหรือชื่อซุ้มเพื่อดูรายละเอียด</p>
+                        <div class="inner-frame h-96 relative"><canvas id="stationChart"></canvas></div>
+                    </div>
+
+                    <!-- รายละเอียดแต่ละซุ้ม: ผังหน้าร้านจริง (Floor Plan) — ตำแหน่งตรงตามรูปทุกสัดส่วน -->
+                    <div class="glass-card p-4">
+                        <div class="relative w-full" style="aspect-ratio: 3.02 / 1; min-height: 210px;">
+                            <div class="absolute z-10" style="left:1.6%; top:7%;">
+                                <h3 class="text-lg font-bold leading-tight">รายละเอียดแต่ละซุ้ม</h3>
+                                <p class="card-subtitle text-xs mt-1">กดที่ซุ้มเพื่อดูรายละเอียด</p>
+                            </div>
+                            <div id="stationPillGrid" class="absolute inset-0"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ขวา: จัดอันดับซุ้ม -->
+                <div class="lg:col-span-4">
+                    <div class="glass-card p-4 flex flex-col">
+                        <div class="flex items-center justify-between mb-3 px-1 pt-1">
+                            <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-trophy text-yellow-400"></i> จัดอันดับซุ้ม</h3>
+                            <div class="seg-toggle">
+                                <button id="stationMetricRevenue" class="active" onclick="setStationMetric('revenue')">รายได้</button>
+                                <button id="stationMetricSpeed" onclick="setStationMetric('speed')">ความเร็ว</button>
+                            </div>
+                        </div>
+                        <div class="inner-frame">
+                            <div id="stationRankList" class="space-y-2 overflow-y-auto no-scrollbar" style="max-height:600px;"></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
 <!-- ==============================================
              TAB 3: ANALYTICS (วิเคราะห์พฤติกรรมลูกค้า)
              ============================================== -->
-        <div id="view-analytics" class="dashboard-view hidden animate-slide-up">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                
-                <!-- 🟦 ส่วนที่ 1: Insight Cards (กว้าง 8 ส่วน) -->
-                <div class="lg:col-span-8 space-y-4">
-                    <div class="flex items-center gap-3 mb-2 px-2">
-                        <!-- เปลี่ยนแท่งสีเป็นไอคอนกลุ่มคน -->
-                        <div class="text-pink-400">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7">
-                                <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" />
-                                <path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" />
-                            </svg>
-                        </div>
-                        <h3 class="text-xl font-bold text-white tracking-wider">วิเคราะห์ลูกค้า</h3>
-                    </div>
+        <div id="view-analytics" class="dashboard-view hidden animate-slide-up space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-                    <!-- 💳 1. Financial Insight -->
-                    <div class="glass-card p-6 relative overflow-hidden border-purple-500/20 bg-gradient-to-br from-purple-500/10 via-transparent to-transparent group transition-all duration-500">
-                        <!-- ไอคอนเงาด้านหลัง -->
-                        <div class="absolute -right-6 -bottom-8 text-purple-500/5 text-9xl transform -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
-                            <i class="fas fa-money-bill-wave"></i>
-                        </div>
-                        
-                        <div class="flex flex-col md:flex-row md:items-center relative z-10">
-                            <!-- ข้อมูลหลัก (Hero Metric) -->
-                            <div class="flex-1 space-y-1">
-                                <p class="text-[13px] uppercase tracking-[0.2em] text-purple-400/60 font-bold flex items-center gap-2">
-                                    <i class="fas fa-coins"></i> ยอดเฉลี่ยต่อหัว
-                                </p>
-                                <div class="text-5xl font-black text-white tracking-wide leading-none py-2">
-                                    <span id="statAvgSpend">0</span> 
-                                    <span class="text-xs text-slate-500 font-normal ml-1">บาท</span>
-                                </div>
-                            </div>
-                            
-                            <!-- ข้อมูลรอง (จัดตำแหน่งให้ตรงกัน) -->
-                            <div class="flex gap-12 mt-6 md:mt-0 md:border-l border-white/10 md:pl-12 w-full md:w-[320px] shrink-0">
-                                <div class="w-1/2 space-y-1 text-left">
-                                    <p class="text-[12px] uppercase tracking-widest text-slate-500 font-bold">บิลที่แพงที่สุด</p>
-                                    <p class="text-xl font-bold text-emerald-400 tracking-wide" id="statMaxBill">฿0</p>
-                                </div>
-                                <div class="w-1/2 space-y-1 text-left">
-                                    <p class="text-[12px] uppercase tracking-widest text-slate-500 font-bold">บิลที่ถูกที่สุด</p>
-                                    <p class="text-xl font-bold text-red-400 tracking-wide" id="statMinBill">฿0</p>
-                                </div>
-                            </div>
+                <!-- กราฟแสดงตามเวลา: เลือกดูได้ 4 มุมมอง -->
+                <div class="glass-card p-4 lg:col-span-8">
+                    <div class="flex items-center justify-between mb-3 flex-wrap gap-3 px-1 pt-1">
+                        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-chart-line text-[#7484C8]"></i> แนวโน้มรายชั่วโมง</h3>
+                        <div class="seg-toggle flex-wrap">
+                            <button class="active" onclick="setAnalyticsMetric('perhead', this)">ยอดเฉลี่ยต่อหัว</button>
+                            <button onclick="setAnalyticsMetric('perbill', this)">ยอดเฉลี่ยต่อบิล</button>
+                            <button onclick="setAnalyticsMetric('cooktime', this)">เวลารออาหารเฉลี่ย</button>
+                            <button onclick="setAnalyticsMetric('dwell', this)">เวลานั่งแช่เฉลี่ย</button>
                         </div>
                     </div>
+                    <div class="inner-frame h-[290px] relative"><canvas id="analyticsChart"></canvas></div>
+                </div>
 
-                    <!-- ⏳ 2. Time Insight -->
-                    <div class="glass-card p-6 relative overflow-hidden border-blue-500/20 bg-gradient-to-br from-blue-500/10 via-transparent to-transparent group transition-all duration-500">
-                        <!-- ไอคอนเงาด้านหลัง -->
-                        <div class="absolute -right-6 -bottom-8 text-blue-500/5 text-9xl transform -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
-                            <i class="fas fa-stopwatch"></i>
-                        </div>
+                <!-- แสดงเกี่ยวกับครัว -->
+                <div class="glass-card p-5 lg:col-span-4 flex flex-col">
+                    <h3 class="text-lg font-bold mb-3 flex items-center gap-2"><i class="fas fa-kitchen-set text-orange-400"></i> ข้อมูลครัว</h3>
 
-                        <div class="flex flex-col md:flex-row md:items-center relative z-10">
-                            <div class="flex-1 space-y-1">
-                                <p class="text-[13px] uppercase tracking-[0.2em] text-blue-400/60 font-bold flex items-center gap-2">
-                                    <i class="fas fa-hourglass-half"></i> เวลานั่งโต๊ะเฉลี่ย
-                                </p>
-                                <div class="text-5xl font-black text-white tracking-wide leading-none py-2">
-                                    <span id="statAvgDwell">0</span> 
-                                    <span class="text-xs text-slate-500 font-normal ml-1">Mins</span>
-                                </div>
-                            </div>
-                            
-                            <!-- ตำแหน่งคงที่ (Fixed width md:w-[320px]) -->
-                            <div class="flex gap-12 mt-6 md:mt-0 md:border-l border-white/10 md:pl-12 w-full md:w-[320px] shrink-0">
-                                <div class="w-1/2 space-y-1 text-left">
-                                    <p class="text-[12px] uppercase tracking-widest text-slate-500 font-bold">เวลานั่งนานสุด</p>
-                                    <p class="text-xl font-bold text-orange-400 tracking-wide" id="statLongestStay">0 นาที</p>
-                                </div>
-                                <div class="w-1/2 space-y-1 text-left">
-                                    <p class="text-[12px] uppercase tracking-widest text-slate-500 font-bold">เวลานั่งสั้นสุด</p>
-                                    <p class="text-xl font-bold text-sky-400 tracking-wide" id="statShortestStay">0 นาที</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="kitchen-hero border-b border-white/10 mb-3">
+                        <div class="stat-label">Average Cook Time</div>
+                        <div class="hero-num" id="statAvgCookTime">0m</div>
                     </div>
 
-                    <!-- 🪑 3. Table Insight -->
-                    <div class="glass-card p-6 relative overflow-hidden border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-transparent to-transparent group transition-all duration-500">
-                        <!-- ไอคอนเงาด้านหลัง -->
-                        <div class="absolute -right-6 -bottom-8 text-emerald-500/5 text-9xl transform -rotate-12 group-hover:scale-110 transition-transform duration-700 pointer-events-none">
-                            <i class="fas fa-chair"></i>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between items-center bg-white/5 rounded-xl px-4 py-2.5 border border-white/5">
+                            <span class="text-slate-400 font-light">ออเดอร์ค้างสูงสุด</span>
+                            <span class="font-bold text-orange-400" id="statBacklogStation">-</span>
                         </div>
-
-                        <div class="flex flex-col md:flex-row md:items-center relative z-10">
-                            <div class="flex-1 space-y-1">
-                                <p class="text-[13px] uppercase tracking-[0.2em] text-emerald-400/60 font-bold flex items-center gap-2">
-                                    <i class="fas fa-file-invoice"></i> จำนวนบิลทั้งหมด
-                                </p>
-                                <div class="text-5xl font-black text-white tracking-wider"><span id="statTotalBills">0</span> <span class="text-xs text-slate-500 font-normal">Bills</span></div>
-                            </div>
-                            
-                            <div class="flex gap-12 mt-6 md:mt-0 md:border-l border-white/10 md:pl-12 w-full md:w-[320px] shrink-0">
-                                <div class="w-1/2 space-y-1 text-left">
-                                    <p class="text-[12px] uppercase tracking-widest text-slate-500 font-bold">Top Turnover</p>
-                                    <p class="text-xl font-bold text-emerald-400 tracking-wide" id="statMaxTurnover">-</p>
-                                </div>
-                                <div class="w-1/2 space-y-1 text-left">
-                                    <p class="text-[12px] uppercase tracking-widest text-slate-500 font-bold">Low Turnover</p>
-                                    <p class="text-xl font-bold text-slate-400 tracking-wide" id="statMinTurnover">-</p>
-                                </div>
-                            </div>
+                        <div class="flex justify-between items-center bg-white/5 rounded-xl px-4 py-2.5 border border-white/5">
+                            <span class="text-slate-400 font-light">เมนูที่เร็วที่สุด</span>
+                            <span class="font-bold text-emerald-400" id="statFastestMenu">-</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white/5 rounded-xl px-4 py-2.5 border border-white/5">
+                            <span class="text-slate-400 font-light">เมนูที่ช้าที่สุด</span>
+                            <span class="font-bold text-red-400" id="statSlowestMenu">-</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white/5 rounded-xl px-4 py-2.5 border border-white/5">
+                            <span class="text-slate-400 font-light">Peak Hour</span>
+                            <span class="font-bold text-[#7484C8]" id="statPeakHour">-</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="lg:col-span-4 flex flex-col gap-4">
-                    <div class="px-2">
-                         <h3 class="text-xl font-bold text-white tracking-wider flex items-center gap-2">
-                             <i class="fas fa-pie-chart text-purple-400"></i> รายได้แยกประเภท
-                         </h3>
+                <!-- Table Heat Map: ผังโต๊ะจริงตามโซน (เหมือนหน้า Staff) -->
+                <div class="glass-card p-4 lg:col-span-12">
+                    <div class="flex items-center justify-between mb-3 px-1 pt-1">
+                        <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-border-all text-emerald-400"></i> Table Heat Map</h3>
+                        <div class="seg-toggle">
+                            <button id="heatMetricRevenue" class="active" onclick="setHeatMetric('revenue')">เรียงตามรายได้</button>
+                            <button id="heatMetricDwell" onclick="setHeatMetric('dwell')">เรียงตามเวลานั่งแช่</button>
+                        </div>
                     </div>
-                    <!-- ปรับกล่องให้ยืดเต็มความสูง (flex-1) เพื่อให้พอดีกับฝั่งซ้าย -->
-                    <div class="glass-card p-8 flex flex-col items-center justify-center h-full min-h-0 relative overflow-hidden">
-                        <div class="w-full relative flex items-center justify-center">
-                            <!-- ขยายกราฟให้ใหญ่ขึ้นอีกระดับ -->
-                            <div class="w-full max-w-[300px] aspect-square relative">
-                                <canvas id="typeChart"></canvas>
-                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-2">
-                                    <p class="text-[10px] uppercase tracking-[0.2em] text-slate-500 mb-1">Total Net</p>
-                                    <p class="text-xl font-black text-white tracking-wide leading-none" id="donutTotal">฿0</p>
-                                </div>
+                    <div class="inner-frame">
+                        <div id="tableHeatGrid" class="flex justify-start items-start gap-4 md:gap-8 w-full py-2 overflow-x-auto no-scrollbar">
+                            <div class="flex flex-col items-center gap-3 md:gap-4">
+                                <div id="heatLayoutTop" class="flex justify-center flex-wrap gap-3"></div>
+                                <div id="heatLayoutMidLeft" class="flex flex-col gap-3 md:gap-4"></div>
+                                <div id="heatLayoutBottom" class="flex justify-center mt-1 flex-wrap gap-3"></div>
+                            </div>
+                            <div id="heatLayoutMidRight" class="pt-2"></div>
+                        </div>
                     </div>
                 </div>
 
             </div>
         </div>
-
 
     </main>
 
     <!-- ==============================================
-         MODAL: STATION DETAIL
-         ============================================== -->
-    <div id="stationModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[100]">
-        <div class="bg-[#141414] w-full max-w-lg rounded-3xl border border-white/10 p-8 shadow-2xl glass-card relative overflow-hidden">
-            <div id="modalColorStrip" class="absolute top-0 left-0 w-full h-2 bg-purple-500"></div>
+     MODAL: STATION DETAIL (REDESIGN LAYOUT)
+     ============================================== -->
+<div id="stationModal" onclick="if(event.target===this)this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[100]">
+    
+    <div class="liquid-modal-card w-full max-w-2xl bg-[#0c0e14] border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+        
+        <!-- ส่วนหัว: ชื่อซุ้ม + Toggle (ซ้าย) | ปุ่มปิด (ขวา) -->
+        <div class="flex justify-between items-center mb-5">
+            <div class="flex items-center gap-4">
+                <h2 class="text-2xl md:text-3xl font-bold text-white tracking-tight" id="modalStationName">ซุ้มกระต่าย</h2>
+                
+                <!-- Toggle ดูยอด / ดูกราฟ -->
+                <div class="modal-subnav bg-white/5 p-1 rounded-xl border border-white/10 flex">
+                    <button id="modalTabTable" class="active px-4 py-1.5 rounded-lg text-xs font-semibold transition-all" onclick="switchModalTab('table')">ดูยอด</button>
+                    <button id="modalTabChart" class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-400 transition-all" onclick="switchModalTab('chart')">ดูกราฟ</button>
+                </div>
+            </div>
+
+            <!-- ปุ่มปิด -->
+            <button onclick="document.getElementById('stationModal').classList.add('hidden')" class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+
+        <!-- ── มุมมอง: ดูยอด (TABLE VIEW) ── -->
+        <div id="modalViewTable">
             
-            <div class="flex justify-between items-start mb-6 pt-2">
-                <div>
-                    <h2 class="text-3xl font-black text-white" id="modalStationName">ชื่อซุ้ม</h2>
-                    <p class="text-slate-400 text-sm">ข้อมูลเชิงลึก</p>
+            <!-- แถว 3 กล่อง: รายได้วันนี้ (Gradient) | จำนวนบิล | เวลาทำอาหารเฉลี่ย -->
+            <div class="grid grid-cols-1 md:grid-cols-[1.3fr_1fr_1fr] gap-3 mb-5">
+                
+                <!-- กล่อง 1: รายได้วันนี้ (ใช้ mesh-today เหมือนหน้าแรก) -->
+                <div class="mesh-today rounded-2xl p-4 flex flex-col justify-between border border-white/10 relative overflow-hidden min-h-[115px]">
+                    <div class="text-xs text-white/80 font-light">รายได้วันนี้</div>
+                    <div>
+                        <div class="text-2xl md:text-3xl font-black text-white leading-none" id="modalRevenue">฿0</div>
+                        <div class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 mt-2 px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30">
+                            <div id="modalTrendRevenue" class="hidden inline-flex items-center gap-1 text-[11px] font-bold mt-2 px-2 py-0.5 rounded-full">
+</div>
+                        </div>
+                    </div>
                 </div>
-                <button onclick="document.getElementById('stationModal').classList.add('hidden')" class="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 transition-all"><i class="fas fa-times"></i></button>
+
+                <!-- กล่อง 2: จำนวนบิล -->
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col justify-between min-h-[115px]">
+                    <div class="text-xs text-slate-400 font-light">จำนวนบิล</div>
+                    <div>
+                        <div class="text-2xl md:text-3xl font-black text-white leading-none">
+                            <span id="modalBillCount">0</span> <span class="text-xs font-normal text-slate-400">บิล</span>
+                        </div>
+                        <div class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 mt-2 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                            <div id="modalTrendBills" class="hidden inline-flex items-center gap-1 text-[11px] font-bold mt-2 px-2 py-0.5 rounded-full">
+</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- กล่อง 3: เวลาทำอาหารเฉลี่ย -->
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 flex flex-col justify-between min-h-[115px]">
+
+                    <div class="text-xs text-slate-400 font-light">เวลาทำอาหารเฉลี่ย</div>
+                    <div>
+                        <div class="text-2xl md:text-3xl font-black text-white leading-none" id="modalWaitTime">0 นาที</div>
+                        <div class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 mt-2 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                            <div id="modalTrendWait" class="hidden inline-flex items-center gap-1 text-[11px] font-bold mt-2 px-2 py-0.5 rounded-full">
+</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-8">
-                <!-- กล่องรายได้รวม (อัปเดตใส่พื้นหลังเงิน) -->
-                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden">
-                    <div class="absolute -right-3 -bottom-3 text-white/5 text-5xl"><i class="fas fa-money-bill-wave"></i></div>
+            <!-- ตารางเมนูขายดีประจำซุ้ม -->
+            <div class="bg-white/[0.03] border border-white/5 rounded-2xl overflow-hidden">
+                <div id="modalTopItems"></div>
+            </div>
+            
+        </div>
+
+        <!-- ── มุมมอง: ดูกราฟ (CHART VIEW) ── -->
+        <div id="modalViewChart" class="hidden">
+            <div class="flex justify-end mb-3">
+                <div class="seg-toggle bg-black/20 p-1 border border-white/5 rounded-full">
+                    <button id="modalMetricRevenue" class="active px-4 py-1 rounded-full text-xs" onclick="setModalChartMetric('revenue')">รายได้</button>
+                    <button id="modalMetricCount" class="px-4 py-1 rounded-full text-xs text-slate-400" onclick="setModalChartMetric('count')">จำนวนบิล</button>
+                </div>
+            </div>
+            <div class="h-64 relative"><canvas id="modalHourChart"></canvas></div>
+            <p class="text-[11px] text-slate-500 mt-3 text-center">กราฟแบ่งสีตามเมนู เพื่อดูว่าเมนูไหนขายดีที่ช่วงเวลาใด</p>
+        </div>
+
+    </div>
+</div>
+
+    <!-- ==============================================
+         MODAL: RANGE PICKER (เลือกช่วงวันที่ ~8 วัน)
+         ============================================== -->
+    <div id="rangeModal" onclick="if(event.target===this)this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[100]">
+        <div class="bg-[#141414] w-full max-w-md rounded-3xl border border-white/10 p-6 shadow-2xl glass-card">
+            
+            <!-- ส่วนหัว: ลบ Subtitle ทิ้ง และขยับระยะห่าง (mb-6) -->
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-black text-white">เลือกช่วงวันที่เปิดร้าน</h2>
+                <button onclick="document.getElementById('rangeModal').classList.add('hidden')" class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <!-- กรอบล้อมรอบส่วนปฏิทินทั้งหมด (เพิ่ม border, rounded-2xl, p-4) -->
+            <div class="border border-white/10 rounded-2xl p-4 mb-5 bg-white/[0.02]">
+                <div class="flex items-center justify-between mb-4">
+                    <button onclick="calShiftMonth(-1)" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300"><i class="fas fa-chevron-left text-xs"></i></button>
+                    <span id="calMonthLabel" class="text-sm font-bold text-white"></span>
+                    <button onclick="calShiftMonth(1)" class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300"><i class="fas fa-chevron-right text-xs"></i></button>
+                </div>
+                <div id="calWeekdayRow" class="grid grid-cols-7 gap-1 mb-2 text-center"></div>
+                <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+            </div>
+
+            <!-- ปุ่มยืนยัน -->
+            <button onclick="applyRange()" class="w-full bg-[#7484C8] hover:bg-[#8A97D6] active:scale-95 text-white py-3 rounded-xl font-bold transition-all">ยืนยันช่วงวันที่</button>
+            
+        </div>
+    </div>
+
+    <!-- ==============================================
+         MODAL: เทียบจุดคืนทุน (กรอกต้นทุน)
+         ============================================== -->
+    <div id="costModal" onclick="if(event.target===this)this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[100]">
+        <div class="bg-[#141414] w-full max-w-sm rounded-3xl border border-white/10 p-6 shadow-2xl glass-card">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-black text-white">กรอกราคาต้นทุน</h2>
+                <button onclick="document.getElementById('costModal').classList.add('hidden')" class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400"><i class="fas fa-times"></i></button>
+            </div>
+            <p class="text-xs text-slate-500 mb-4">ใช้เพื่อเทียบว่ารายได้สะสมผ่านจุดคืนทุนแล้วหรือยัง (บันทึกไว้ถาวร ใช้ได้ทุกเครื่อง)</p>
+            <label class="text-[11px] uppercase tracking-widest text-slate-500 font-bold">ต้นทุนทั้งหมด (บาท)</label>
+            <input id="costInput" type="number" min="0" step="1" class="w-full mt-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-lg font-bold outline-none focus:border-[#7484C8]" placeholder="0">
+            <button onclick="saveCostTarget()" class="w-full mt-5 bg-[#7484C8] hover:bg-[#8A97D6] active:scale-95 text-white py-3 rounded-xl font-bold transition-all">บันทึก</button>
+        </div>
+    </div>
+
+    <!-- ==============================================
+         MODAL: รายละเอียดโต๊ะ (จากผัง Table Heat Map)
+         ============================================== -->
+    <div id="tableDetailModal" onclick="if(event.target===this)this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[100]">
+        <div class="bg-[#141414] w-full max-w-sm rounded-3xl border border-white/10 p-6 shadow-2xl glass-card">
+            <div class="flex justify-between items-center mb-5">
+                <h2 class="text-xl font-black text-white">โต๊ะ <span id="tableModalId">-</span></h2>
+                <button onclick="document.getElementById('tableDetailModal').classList.add('hidden')" class="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
+                    <div class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">ปิดบิลไปแล้ว</div>
+                    <div class="text-2xl font-black text-white"><span id="tableModalBills">0</span> <span class="text-sm font-medium text-slate-500">บิล</span></div>
+                </div>
+                <div class="bg-white/5 rounded-2xl p-4 border border-white/5">
                     <div class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">รายได้รวม</div>
-                    <div class="text-2xl font-bold text-white" id="modalRevenue">฿0</div>
-                </div>
-                <div class="bg-white/5 rounded-2xl p-4 border border-white/5 relative overflow-hidden">
-                    <div class="absolute -right-3 -bottom-3 text-white/5 text-5xl"><i class="fas fa-stopwatch"></i></div>
-                    <div class="text-[10px] uppercase tracking-widest text-slate-500 mb-1">เวลารอเฉลี่ย</div>
-                    <div class="text-2xl font-bold text-white" id="modalWaitTime">0 นาที</div>
+                    <div class="text-2xl font-black text-white" id="tableModalRevenue">฿0</div>
                 </div>
             </div>
-
-            <h3 class="text-sm font-bold text-slate-300 mb-3 border-b border-white/10 pb-2"><i class="fas fa-star text-yellow-500 mr-2"></i> เมนูขายดีประจำซุ้ม</h3>
-            <div id="modalTopItems" class="space-y-2 max-h-48 overflow-y-auto no-scrollbar pr-2"></div>
         </div>
     </div>
     <script>
-  /**
-   * ฟังก์ชันกรองหน่วยออกเฉพาะตำแหน่งที่กำหนด
-   * @param {string} id - ID ของ Element ที่ต้องการดักจับ
-   * @param {string} textToRemove - ข้อความหรือสัญลักษณ์ที่ต้องการตัดออก
-   */
-  const cleanSpecificValue = (id, textToRemove) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-
-    const observer = new MutationObserver(() => {
-      // ตรวจสอบว่าในข้อความมีหน่วยที่ต้องการลบปนอยู่หรือไม่
-      if (el.innerText.includes(textToRemove)) {
-        const cleanedValue = el.innerText.replace(textToRemove, '').trim();
-        // อัปเดตเฉพาะเมื่อค่าเปลี่ยนไปจริงๆ เพื่อป้องกัน Loop
-        if (el.innerText !== cleanedValue) {
-          el.innerText = cleanedValue;
-        }
-      }
-    });
-
-    // เริ่มการดักจับการเปลี่ยนแปลงของตัวเลขภายใน Span
-    observer.observe(el, { childList: true, characterData: true, subtree: true });
-  };
-
-  // เจาะจงลบเฉพาะ 2 ตำแหน่งที่คุณต้องการเท่านั้น
-  cleanSpecificValue('statAvgSpend', '฿');     // ลบ ฿ ออกจากยอดเฉลี่ยต่อหัว
-  cleanSpecificValue('statAvgDwell', 'นาที');  // ลบ คำว่านาที ออกจากเวลานั่งเฉลี่ย
-</script>
-
-
-    <script>
-        // เปลี่ยนชื่อตัวแปรเป็น supabaseClient เพื่อไม่ให้ชนกับไลบรารีหลัก
+        // ════════════════════════════════════════════════
+        // 0. Supabase Init
+        // ════════════════════════════════════════════════
         const SUPABASE_URL = 'https://xjosswxrtcanhvpdbrap.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhqb3Nzd3hydGNhbmh2cGRicmFwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5MjkyODcsImV4cCI6MjA5MjUwNTI4N30.DrtoBXmdL1EN17sVYZIYNVVOOp7UHfeAz1sDImZmYFM';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 🎨 ชุดสีประจำซุ้ม
+        // 🎛️ Chart.js — global Apple-quiet defaults (softer type, low-contrast axes)
+        if (window.Chart) {
+            Chart.defaults.color = 'rgba(255,255,255,0.42)';
+            Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+            Chart.defaults.font.family = "'Geist','IBM Plex Sans Thai',sans-serif";
+            Chart.defaults.font.size = 11;
+            Chart.defaults.font.weight = '500';
+        }
+
+        // 🎨 ชุดสีประจำซุ้ม (คงชุดเดิม)
         const stationColors = {
             'โรบินฮู้ด': '#ef4444',     'หมูกระทะ': '#22c55e',      'ไก่ไวน์': '#a855f7',
             'ส้มตำ': '#d97706',         'กระต่าย': '#ec4899',       'ต้มยำ': '#f97316',
@@ -490,566 +963,1245 @@
             'default': '#64748b'
         };
 
-        let charts = { peak: null, station: null, type: null, pending: null };
-        let currentRawData = { servedItems: [], sessions: [], orders: [] };
+        // ════════════════════════════════════════════════
+        // 1. Global State
+        // ════════════════════════════════════════════════
+        let charts = { range: null, type: null, longTrend: null, station: null, modalHour: null, analytics: null };
+        let tablesMeta = [];              // จากตาราง tables
+        let rangeDates = [];              // 8 วันที่กำลังเลือกดู (YYYY-MM-DD ตามเวลาไทย)
+        let prevPeriodDates = [];         // ช่วง 8 วันก่อนหน้า (ไว้เทียบ % เปลี่ยนแปลง)
+        let selectedDayIndex = 0;         // index ใน rangeDates ที่กำลังดู, -1 = โหมดเฉลี่ยทั้ง 8 วัน
+        let perDaySummary = {};           // date -> summary
+        let prevPeriodSummary = {};       // date -> summary (period ก่อนหน้า)
+        let currentDayList = [];          // วันที่ที่ใช้ render อยู่ตอนนี้ (1 วัน หรือทั้ง 8 วัน)
+        let currentDivisor = 1;
+        let stationMetricMode = 'revenue';   // 'revenue' | 'speed'
+        let trendMetricMode = 'revenue';     // 'revenue' | 'bills'
+        let analyticsMetricMode = 'perhead'; // 'perhead' | 'perbill' | 'cooktime' | 'dwell'
+        let heatMetricMode = 'revenue';      // 'revenue' | 'dwell'
+        let modalChartMetric = 'revenue';    // 'revenue' | 'count'
+        let currentModalStation = null;
+        let costTarget = 0;
+        let calViewMonth = new Date();
+        let calSelectedStart = null;
 
         // ════════════════════════════════════════════════
-        // 1. Navigation & Default Date
+        // 2. Time / format helpers
         // ════════════════════════════════════════════════
         function getTodayBKK() {
             const now = new Date();
             const bkkTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (7 * 3600000));
             return bkkTime.toISOString().split('T')[0];
         }
+        function addDaysStr(dateStr, n) {
+            const d = new Date(dateStr + 'T00:00:00Z');
+            d.setUTCDate(d.getUTCDate() + n);
+            return d.toISOString().split('T')[0];
+        }
+        function bkkDateStringFromISO(iso) {
+            // แปลง timestamp (UTC) ให้เป็นวันที่ "YYYY-MM-DD" ตามเวลาประเทศไทย (UTC+7)
+            const d = new Date(new Date(iso).getTime() + 7 * 3600000);
+            return d.toISOString().split('T')[0];
+        }
+        function bkkBoundsForDate(dateStr) {
+            const start = new Date(`${dateStr}T00:00:00Z`);
+            start.setTime(start.getTime() - 7 * 3600000);
+            const end = new Date(start.getTime() + 86400000);
+            return { start, end };
+        }
+        function formatThaiShortDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00Z');
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            return `${d.getUTCDate()} ${months[d.getUTCMonth()]}`;
+        }
+        function getGreetingWord() {
+            // ใช้เวลาปัจจุบัน "จริง" ของประเทศไทย ไม่ใช่วันที่กำลังเลือกดูย้อนหลัง
+            const now = new Date();
+            const bkkHour = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + 7 * 3600000).getHours();
+            if (bkkHour >= 5 && bkkHour < 11) return 'เช้านี้';
+            if (bkkHour >= 11 && bkkHour < 14) return 'เที่ยงนี้';
+            if (bkkHour >= 14 && bkkHour < 18) return 'บ่ายนี้';
+            return 'คืนนี้';
+        }
+        function formatDuration(ms) {
+            if (!ms || isNaN(ms) || ms <= 0) return '0 นาที';
+            const totalSecs = Math.floor(ms / 1000);
+            if (totalSecs < 60) return `${totalSecs} วิ.`;
+            const mins = Math.floor(totalSecs / 60);
+            const hrs = Math.floor(mins / 60);
+            if (hrs > 0) return `${hrs} ชม. ${mins % 60} น.`;
+            return `${mins} นาที`;
+        }
+        function formatMoney(n) { return `฿${Math.round(n || 0).toLocaleString()}`; }
+        function setTrendText(elId, current, previous) {
+            const el = document.getElementById(elId); if (!el) return;
+            if (!previous) { el.innerHTML = `<span class="trend-pill text-slate-400">N/A</span>`; return; }
+            const diff = current - previous, pct = (diff / Math.abs(previous)) * 100, isUp = diff >= 0;
+            el.innerHTML = `<span class="trend-pill ${isUp ? 'text-emerald-400' : 'text-red-400'}">${isUp ? '↑' : '↓'} ${Math.abs(pct).toFixed(1)}%</span>`;
+        }
+        function setTrendBadge(elId, current, previous) {
+            const el = document.getElementById(elId); if (!el) return;
+            if (!previous) { el.className = 'text-xs font-bold px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-slate-400'; el.innerText = 'N/A'; return; }
+            const diff = current - previous, pct = (diff / Math.abs(previous)) * 100, isUp = diff >= 0;
+            el.className = `text-xs font-bold px-2.5 py-1 rounded-lg border ${isUp ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`;
+            el.innerHTML = `<i class="fas fa-arrow-${isUp ? 'up' : 'down'} mr-1"></i>${Math.abs(pct).toFixed(1)}%`;
+        }
 
-        window.onload = () => {
-            // เซ็ตวันที่ปัจจุบันของประเทศไทยเป็น Default
-            document.getElementById('datePicker').value = getTodayBKK();
-            
-            switchView('overview');
-            fetchDashboardData();
-
-            // ใช้ supabaseClient ในการ Subscribe Realtime
-            supabaseClient.channel('dashboard_updates')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => autoRefreshIfToday())
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => autoRefreshIfToday())
-                .subscribe();
-        };
-
+        // ════════════════════════════════════════════════
+        // 3. Boot / Access
+        // ════════════════════════════════════════════════
         (function checkAccess() {
             const sessionRaw = sessionStorage.getItem('vetres_session');
-            if (!sessionRaw) {
-                window.location.href = 'index.html';
-                return;
-            }
-        
+            if (!sessionRaw) { window.location.href = 'index.html'; return; }
             const session = JSON.parse(sessionRaw);
-        
-            // ยอมรับทั้ง dashboard (ตัวเลขสถิติ) และ admin
             if (session.role !== 'dashboard' && session.role !== 'admin') {
                 alert('เฉพาะผู้จัดการและส่วนงานสถิติที่เข้าถึงข้อมูลนี้ได้');
                 window.location.href = 'index.html';
             }
         })();
 
+        window.onload = async () => {
+            switchView('overview');
+            const today = getTodayBKK();
+            rangeDates = buildRangeEndingAt(today);
+            selectedDayIndex = rangeDates.length - 1;
+            renderDayPillStrip();
+            updateRangeLabel();
+
+            await fetchTablesMeta();
+            await loadCostTarget();
+            await loadRangeData();
+
+            supabaseClient.channel('dashboard_updates')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items' }, () => autoRefreshIfToday())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => autoRefreshIfToday())
+                .subscribe();
+        };
+
+        function buildRangeEndingAt(endDateStr) {
+            const arr = [];
+            for (let i = 7; i >= 0; i--) arr.push(addDaysStr(endDateStr, -i));
+            return arr;
+        }
+
         function switchView(viewId) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             const activeTab = document.getElementById(`tab-${viewId}`);
-            if(activeTab) {
-                activeTab.classList.add('active');
-                const indicator = document.getElementById('navIndicator');
-                indicator.style.width = `${activeTab.offsetWidth}px`;
-                indicator.style.left = `${activeTab.offsetLeft}px`;
-            }
+            if (activeTab) activeTab.classList.add('active');
 
             document.querySelectorAll('.dashboard-view').forEach(v => v.classList.add('hidden'));
             const targetView = document.getElementById(`view-${viewId}`);
-            if(targetView) targetView.classList.remove('hidden');
+            if (targetView) targetView.classList.remove('hidden');
 
-            // บังคับให้กราฟ Resize เมื่อแสดงผล เพื่อแก้ปัญหากราฟหายตอนซ่อนหน้า
             setTimeout(() => {
-                if (viewId === 'overview' && charts.peak) charts.peak.resize();
-                if (viewId === 'stations' && charts.station) charts.station.resize();
-                if (viewId === 'analytics' && charts.type) charts.type.resize();
+                if (viewId === 'overview') { charts.range?.resize(); charts.type?.resize(); charts.longTrend?.resize(); }
+                if (viewId === 'stations') { charts.station?.resize(); }
+                if (viewId === 'analytics') { charts.analytics?.resize(); }
             }, 100);
         }
 
         function autoRefreshIfToday() {
-            if (document.getElementById('datePicker').value === getTodayBKK()) {
-                fetchDashboardData();
+            const today = getTodayBKK();
+            if (rangeDates.includes(today)) loadRangeData();
+        }
+
+        // ════════════════════════════════════════════════
+        // 4. Day-pill strip เลือกวันที่ต้องการดู (8 วันจาก Range)
+        // ════════════════════════════════════════════════
+        function renderDayPillStrip() {
+            const el = document.getElementById('dayPillStrip'); if (!el) return;
+            const today = getTodayBKK();
+            let html = rangeDates.map((d, i) => {
+                const label = d === today ? 'วันนี้' : formatThaiShortDate(d);
+                return `<div class="day-pill ${i === selectedDayIndex ? 'active' : ''}" onclick="selectDay(${i})">${label}</div>`;
+            }).join('');
+            html += `<div class="day-pill ${selectedDayIndex === -1 ? 'active' : ''}" onclick="selectDay(-1)"><i class="fas fa-calculator mr-1"></i>เฉลี่ย 8 วัน</div>`;
+            el.innerHTML = html;
+        }
+        function selectDay(i) { selectedDayIndex = i; renderDayPillStrip(); renderAll(); }
+
+        // ════════════════════════════════════════════════
+        // 5. Range Modal (ปฏิทินเลือกช่วง ~8 วัน)
+        // ════════════════════════════════════════════════
+        function openRangeModal() {
+            calSelectedStart = rangeDates.length ? rangeDates[0] : getTodayBKK();
+            calViewMonth = new Date(calSelectedStart + 'T00:00:00Z');
+            renderCalendar();
+            document.getElementById('rangeModal').classList.remove('hidden');
+        }
+        function calShiftMonth(delta) {
+            calViewMonth.setUTCMonth(calViewMonth.getUTCMonth() + delta);
+            renderCalendar();
+        }
+        function renderCalendar() {
+            const y = calViewMonth.getUTCFullYear(), m = calViewMonth.getUTCMonth();
+            const thMonths = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            document.getElementById('calMonthLabel').innerText = `${thMonths[m]} ${y + 543}`;
+
+            const wd = ['อา', 'จ', 'อ', 'พ', 'พฤ', 'ศ', 'ส'];
+            document.getElementById('calWeekdayRow').innerHTML = wd.map(w => `<div class="text-[10px] text-slate-500 font-bold">${w}</div>`).join('');
+
+            const firstDay = new Date(Date.UTC(y, m, 1));
+            const startOffset = firstDay.getUTCDay();
+            const daysInMonth = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+            const rangeEnd = calSelectedStart ? addDaysStr(calSelectedStart, 7) : null;
+
+            let html = '';
+            for (let i = 0; i < startOffset; i++) html += `<div></div>`;
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const inRange = calSelectedStart && dateStr >= calSelectedStart && dateStr <= rangeEnd;
+                const isStart = dateStr === calSelectedStart;
+                const isEnd = dateStr === rangeEnd;
+                html += `<div class="cal-day ${inRange ? 'in-range' : ''} ${(isStart || isEnd) ? 'range-start' : ''}" onclick="pickRangeStart('${dateStr}')">${d}</div>`;
             }
+            document.getElementById('calGrid').innerHTML = html;
         }
-
-        function formatDuration(ms) {
-            if (ms === 0 || isNaN(ms)) return '0 นาที';
-            const totalSecs = Math.floor(ms / 1000);
-            if (totalSecs < 60) return `${totalSecs} วิ.`; // ถ้าไม่ถึง 1 นาที ให้แสดงเป็นวินาที
-            const mins = Math.floor(totalSecs / 60);
-            const hrs = Math.floor(mins / 60);
-            if (hrs > 0) return `${hrs} ชม. ${mins % 60} น.`;
-            return `${mins} นาที`;
+        function pickRangeStart(dateStr) { calSelectedStart = dateStr; renderCalendar(); }
+        async function applyRange() {
+            if (!calSelectedStart) return;
+            rangeDates = []; for (let i = 0; i < 8; i++) rangeDates.push(addDaysStr(calSelectedStart, i));
+            selectedDayIndex = rangeDates.length - 1;
+            document.getElementById('rangeModal').classList.add('hidden');
+            renderDayPillStrip(); updateRangeLabel();
+            await loadRangeData();
+        }
+        function updateRangeLabel() {
+            if (!rangeDates.length) return;
+            document.getElementById('rangeLabel').innerText = `${formatThaiShortDate(rangeDates[0])} - ${formatThaiShortDate(rangeDates[rangeDates.length - 1])}`;
         }
 
         // ════════════════════════════════════════════════
-        // 2. Data Fetching & Processing
+        // 6. Fetch: tables meta / daily_reports / range data
         // ════════════════════════════════════════════════
-        async function fetchDashboardData() {
-            const selectedDate = document.getElementById('datePicker').value;
-            
-            const bkkOffset = 7 * 3600000;
-            const startOfDay = new Date(`${selectedDate}T00:00:00Z`);
-            startOfDay.setTime(startOfDay.getTime() - bkkOffset); 
-            
-            const endOfDay = new Date(startOfDay.getTime());
-            endOfDay.setDate(endOfDay.getDate() + 1);
+        async function fetchTablesMeta() {
+            try {
+                const { data } = await supabaseClient.from('tables').select('id,zone,sort_order,is_active').order('sort_order', { ascending: true });
+                tablesMeta = (data || []).filter(t => t.is_active !== false);
+            } catch (e) { console.error('fetchTablesMeta', e); tablesMeta = []; }
+        }
 
-            const startOfYesterday = new Date(startOfDay.getTime() - 86400000);
-            const endOfYesterday = new Date(startOfDay.getTime());
+        async function loadRangeData() {
+            const rangeLen = rangeDates.length;
+            const startBound = bkkBoundsForDate(rangeDates[0]).start;
+            const endBound = bkkBoundsForDate(rangeDates[rangeLen - 1]).end;
+            const prevDates = rangeDates.map(d => addDaysStr(d, -rangeLen));
+            const prevStart = bkkBoundsForDate(prevDates[0]).start;
+            const prevEnd = bkkBoundsForDate(prevDates[rangeLen - 1]).end;
+
+            const cols = 'id,item_name_th,quantity,total_price,status,kds_station,created_at,served_at,session_token,order_id';
+            const ocols = 'id,order_type,table_id,created_at';
+            const scols = 'token,discount,pax,session_type,opened_at,closed_at,table_id,payment_method';
 
             try {
-                // ใช้ supabaseClient สำหรับการ Fetch ข้อมูลทั้งหมด
-                const { data: items } = await supabaseClient.from('order_items')
-                    .select('id, item_name_th, quantity, total_price, status, kds_station, created_at, served_at, session_token, order_id')
-                    .gte('created_at', startOfDay.toISOString())
-                    .lt('created_at', endOfDay.toISOString())
-                    .neq('status', 'cancel');
+                const [itemsRes, ordersRes, sessionsRes, pItemsRes, pOrdersRes, pSessionsRes] = await Promise.all([
+                    supabaseClient.from('order_items').select(cols).gte('created_at', startBound.toISOString()).lt('created_at', endBound.toISOString()).neq('status', 'cancel'),
+                    supabaseClient.from('orders').select(ocols).gte('created_at', startBound.toISOString()).lt('created_at', endBound.toISOString()),
+                    supabaseClient.from('sessions').select(scols).gte('opened_at', startBound.toISOString()).lt('opened_at', endBound.toISOString()),
+                    supabaseClient.from('order_items').select(cols).gte('created_at', prevStart.toISOString()).lt('created_at', prevEnd.toISOString()).neq('status', 'cancel'),
+                    supabaseClient.from('orders').select(ocols).gte('created_at', prevStart.toISOString()).lt('created_at', prevEnd.toISOString()),
+                    supabaseClient.from('sessions').select(scols).gte('opened_at', prevStart.toISOString()).lt('opened_at', prevEnd.toISOString())
+                ]);
 
-                const { data: orders } = await supabaseClient.from('orders')
-                    .select('id, order_type')
-                    .gte('created_at', startOfDay.toISOString())
-                    .lt('created_at', endOfDay.toISOString());
+                const items = itemsRes.data || [], orders = ordersRes.data || [], sessions = sessionsRes.data || [];
+                window.rawRange = { items, orders, sessions };
 
-                // เพิ่ม table_id เข้าไปใน select
-                const { data: sessions } = await supabaseClient.from('sessions')
-                    .select('token, discount, pax, session_type, opened_at, closed_at, table_id') 
-                    .gte('opened_at', startOfDay.toISOString())
-                    .lt('opened_at', endOfDay.toISOString());
+                perDaySummary = bucketAndSummarize(items, orders, sessions, rangeDates);
+                prevPeriodSummary = bucketAndSummarize(pItemsRes.data || [], pOrdersRes.data || [], pSessionsRes.data || [], prevDates);
+                prevPeriodDates = prevDates;
 
-
-
-                const { data: yestItems } = await supabaseClient.from('order_items')
-                    .select('total_price, kds_station, session_token')
-                    .eq('status', 'served')
-                    .gte('created_at', startOfYesterday.toISOString())
-                    .lt('created_at', endOfYesterday.toISOString());
-                
-                const { data: yestSessions } = await supabaseClient.from('sessions')
-                    .select('token, discount')
-                    .gte('opened_at', startOfYesterday.toISOString())
-                    .lt('opened_at', endOfYesterday.toISOString());
-
-                processData(items || [], orders || [], sessions || [], yestItems || [], yestSessions || []);
-
-            } catch (err) { console.error("Fetch Error:", err); }
+                renderAll();
+            } catch (err) { console.error('loadRangeData error', err); }
         }
 
-        function processData(items, orders, sessions, yestItems, yestSessions) {
-    const pendingItems = items.filter(i => i.status === 'pending');
-    const servedItems = items.filter(i => i.status === 'served');
-    currentRawData = { servedItems, sessions, orders };
-
-    // สร้าง Map เพื่อการค้นหาข้อมูลที่รวดเร็ว
-    const orderTypeMap = orders.reduce((acc, o) => { acc[o.id] = o.order_type; return acc; }, {});
-    const discountMap = sessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
-    const yestDiscountMap = yestSessions.reduce((acc, s) => { acc[s.token] = parseFloat(s.discount || 0); return acc; }, {});
-
-    // ==========================================
-    // 1. ฟังก์ชันหลัก: คำนวณรายได้แบบ "ปัดส่วนลดลงรายบิล"
-    // ==========================================
-    const calcNetRevenue = (itemArray, discMap) => {
-        let totalGross = 0;
-        let totalDiscount = 0;
-        const sessionGroups = {};
-
-        // 1.1 จัดกลุ่มรายการอาหารตาม Session
-        itemArray.forEach(item => {
-            const token = item.session_token;
-            if (!token) return;
-            if (!sessionGroups[token]) {
-                sessionGroups[token] = { gross: 0, discountable: 0 };
-            }
-            const price = parseFloat(item.total_price) || 0;
-            sessionGroups[token].gross += price;
-            // "น้ำ" ไม่นำมาคำนวณส่วนลด
-            if (item.kds_station !== 'น้ำ') {
-                sessionGroups[token].discountable += price;
-            }
-        });
-
-        // 1.2 คำนวณรายบิล: ยอดบิล - FLOOR(ยอดอาหาร * %)
-        Object.keys(sessionGroups).forEach(token => {
-            const group = sessionGroups[token];
-            const pct = discMap[token] || 0;
-            const billDiscount = Math.floor(group.discountable * (pct / 100));
-            
-            totalGross += group.gross;
-            totalDiscount += billDiscount;
-        });
-
-        return { gross: totalGross, discountAmt: totalDiscount, net: totalGross - totalDiscount };
-    };
-
-    const todayRev = calcNetRevenue(servedItems, discountMap);
-    const yestRev = calcNetRevenue(yestItems, yestDiscountMap);
-
-    // อัปเดต UI ส่วนการเงิน (ใช้เลขกลม)
-    document.getElementById('statNet').innerText = `฿${todayRev.net.toLocaleString()}`;
-    document.getElementById('statGross').innerText = `฿${todayRev.gross.toLocaleString()}`;
-    document.getElementById('statDiscount').innerText = `-฿${todayRev.discountAmt.toLocaleString()}`;
-    document.getElementById('statPending').innerText = pendingItems.length;
-    document.getElementById('donutTotal').innerText = `฿${todayRev.net.toLocaleString()}`;
-
-    // คำนวณ Trend เปรียบเทียบเมื่อวาน
-    const trendEl = document.getElementById('trendNet');
-    if (yestRev.net > 0) {
-        const diff = todayRev.net - yestRev.net;
-        const pct = (diff / yestRev.net) * 100;
-        const isUp = diff >= 0;
-        trendEl.className = `text-xs font-bold px-2 py-1 rounded-lg border ${isUp ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`;
-        trendEl.innerHTML = `<i class="fas fa-arrow-${isUp ? 'up' : 'down'} mr-1"></i> ${Math.abs(pct).toFixed(1)}%`;
-    } else {
-        trendEl.innerHTML = `<span class="text-slate-500">N/A</span>`;
-    }
-
-    // ==========================================
-    // 2. คำนวณ Customer Insights (พฤติกรรมลูกค้า)
-    // ==========================================
-    let totalPax = 0;
-    let totalDwellTimeMs = 0;
-    let validDwellSessions = 0;
-    let longestStay = 0;
-    let shortestStay = Infinity;
-    const tableCounts = {};
-    const sessionNetTotals = {}; // เก็บยอด Net รายบิลไว้คำนวณ Max/Min Bill
-
-    // ประมวลผลราย Session
-    sessions.forEach(s => {
-        if (s.table_id && s.table_id !== 'TH' && s.table_id !== 'STAFF') {
-            tableCounts[s.table_id] = (tableCounts[s.table_id] || 0) + 1;
+        function bucketAndSummarize(items, orders, sessions, dateList) {
+            const buckets = {};
+            dateList.forEach(d => buckets[d] = { items: [], orders: [], sessions: [] });
+            items.forEach(it => { const d = bkkDateStringFromISO(it.created_at); if (buckets[d]) buckets[d].items.push(it); });
+            orders.forEach(o => { const d = bkkDateStringFromISO(o.created_at); if (buckets[d]) buckets[d].orders.push(o); });
+            sessions.forEach(s => { const d = bkkDateStringFromISO(s.opened_at); if (buckets[d]) buckets[d].sessions.push(s); });
+            const out = {};
+            dateList.forEach(d => out[d] = computeDaySummary(buckets[d].items, buckets[d].orders, buckets[d].sessions));
+            return out;
         }
 
-        // เฉพาะลูกค้า Dine-in
-        if (s.session_type === 'dine_in' || !s.session_type) {
-            totalPax += (parseInt(s.pax) || 1);
-            if (s.opened_at && s.closed_at) {
-                const duration = new Date(s.closed_at) - new Date(s.opened_at);
-                if (duration > 0) {
-                    totalDwellTimeMs += duration;
-                    validDwellSessions++;
-                    if (duration > longestStay) longestStay = duration;
-                    if (duration < shortestStay) shortestStay = duration;
-                }
-            }
-        }
-    });
+        // ════════════════════════════════════════════════
+        // 7. คำนวณสรุปข้อมูลของ 1 วัน (แกนหลักของทั้งแดชบอร์ด)
+        // ════════════════════════════════════════════════
+        function computeDaySummary(items, orders, sessions) {
+            const servedItems = items.filter(i => i.status === 'served');
+            const pendingItems = items.filter(i => i.status === 'pending');
 
-    // คำนวณยอด Net รายบิลจาก servedItems
-    const tempGroups = {};
-    servedItems.forEach(i => {
-        const t = i.session_token;
-        if (!t) return;
-        if (!tempGroups[t]) tempGroups[t] = { gross: 0, discountable: 0 };
-        tempGroups[t].gross += parseFloat(i.total_price || 0);
-        if (i.kds_station !== 'น้ำ') tempGroups[t].discountable += parseFloat(i.total_price || 0);
-    });
-
-    Object.keys(tempGroups).forEach(t => {
-        const pct = (orderTypeMap[Object.keys(orderTypeMap).find(oid => servedItems.find(si => si.session_token === t)?.order_id === oid)] === 'staff') ? 10 : (discountMap[t] || 0);
-        sessionNetTotals[t] = tempGroups[t].gross - Math.floor(tempGroups[t].discountable * (pct / 100));
-    });
-
-    const billValues = Object.values(sessionNetTotals);
-    const maxBill = billValues.length ? Math.max(...billValues) : 0;
-    const minBill = billValues.length ? Math.min(...billValues) : 0;
-
-    // อัปเดต UI Insights
-    document.getElementById('statTotalBills').innerText = orders.length;
-    document.getElementById('statOverviewTotalBills').innerText = orders.length;
-    document.getElementById('statAvgSpend').innerText = totalPax > 0 ? Math.round(todayRev.net / totalPax).toLocaleString() : '0';
-    document.getElementById('statOverviewAvgSpend').innerText = totalPax > 0 ? `฿${Math.round(todayRev.net / totalPax).toLocaleString()}` : '฿0';
-    document.getElementById('statAvgDwell').innerText = formatDuration(validDwellSessions > 0 ? totalDwellTimeMs / validDwellSessions : 0);
-    document.getElementById('statMaxBill').innerText = `฿${Math.round(maxBill).toLocaleString()}`;
-    document.getElementById('statMinBill').innerText = `฿${Math.round(minBill).toLocaleString()}`;
-    document.getElementById('statLongestStay').innerText = formatDuration(longestStay);
-    document.getElementById('statShortestStay').innerText = shortestStay === Infinity ? '0 นาที' : formatDuration(shortestStay);
-
-    // Turnover (โต๊ะไหนหมุนบ่อยสุด)
-    const sortedTables = Object.entries(tableCounts).sort((a,b) => b[1] - a[1]);
-    document.getElementById('statMaxTurnover').innerText = sortedTables.length ? `${sortedTables[0][0]} (${sortedTables[0][1]} บิล)` : '-';
-    document.getElementById('statMinTurnover').innerText = sortedTables.length ? `${sortedTables[sortedTables.length-1][0]} (${sortedTables[sortedTables.length-1][1]} บิล)` : '-';
-
-    // ==========================================
-    // 3. วิเคราะห์ความเร็วรายซุ้ม & กราฟ
-    // ==========================================
-    const stationPerf = {};
-    servedItems.forEach(i => {
-        if (i.kds_station && i.created_at && i.served_at) {
-            const time = new Date(i.served_at) - new Date(i.created_at);
-            if (!stationPerf[i.kds_station]) stationPerf[i.kds_station] = { totalMs: 0, count: 0 };
-            stationPerf[i.kds_station].totalMs += time;
-            stationPerf[i.kds_station].count++;
-        }
-    });
-
-    const perfArray = Object.entries(stationPerf).map(([name, data]) => ({ name, avg: data.totalMs / data.count }));
-    const fastest = perfArray.sort((a,b) => a.avg - b.avg)[0];
-    const slowest = perfArray.sort((a,b) => b.avg - a.avg)[0];
-
-    document.getElementById('statFastestStation').innerHTML = fastest ? `ซุ้ม${fastest.name} <span class="text-sm font-normal text-slate-400">(${Math.round(fastest.avg/60000)}m)</span>` : '-';
-    document.getElementById('statSlowestStation').innerHTML = slowest ? `ซุ้ม${slowest.name} <span class="text-sm font-normal text-slate-400">(${Math.round(slowest.avg/60000)}m)</span>` : '-';
-
-    // กราฟ Peak Time (รายชั่วโมง)
-    const hoursCount = Array(24).fill(0);
-    items.forEach(i => hoursCount[new Date(i.created_at).getHours()]++);
-    renderPeakChart(hoursCount);
-
-    // 5 อันดับเมนู
-    const menuRev = {};
-    servedItems.forEach(i => menuRev[i.item_name_th] = (menuRev[i.item_name_th] || 0) + parseFloat(i.total_price || 0));
-    document.getElementById('topMenusList').innerHTML = Object.entries(menuRev).sort((a,b) => b[1] - a[1]).slice(0, 5).map((m, i) => `
-        <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-400 border border-slate-700">${i+1}</div>
-                <span class="font-medium text-slate-200">${m[0]}</span>
-            </div>
-            <span class="font-bold text-emerald-400">฿${Math.round(m[1]).toLocaleString()}</span>
-        </div>
-    `).join('') || '<div class="text-slate-500 text-center py-5">ยังไม่มีข้อมูล</div>';
-
-    // รายได้แยกซุ้ม (Bar Chart)
-    const stationGross = {};
-    servedItems.forEach(i => stationGross[i.kds_station] = (stationGross[i.kds_station] || 0) + parseFloat(i.total_price || 0));
-    renderStationChart(stationGross);
-
-    // รายได้แยกประเภท (Donut Chart - ใช้ตรรกะ Floor)
-    const typeGross = { 'dine_in': 0, 'takehome': 0, 'staff': 0 };
-    Object.keys(sessionNetTotals).forEach(t => {
-        const type = sessions.find(s => s.token === t)?.session_type || 'dine_in';
-        typeGross[type] += sessionNetTotals[t];
-    });
-    renderTypeChart(typeGross);
-
-    // ออเดอร์ค้าง (Pending Pie)
-    const pendingByStation = {};
-    pendingItems.forEach(i => pendingByStation[i.kds_station] = (pendingByStation[i.kds_station] || 0) + i.quantity);
-    renderPendingChart(pendingByStation);
-}
-
-        function renderPeakChart(dataArr) {
-            if (charts.peak) charts.peak.destroy();
-            const ctx = document.getElementById('peakChart').getContext('2d');
-            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
-
-            charts.peak = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: Array.from({length: 24}, (_, i) => `${i}:00`),
-                    datasets: [{
-                        label: 'จำนวนรายการอาหาร (Items)', data: dataArr,
-                        borderColor: '#3b82f6', backgroundColor: gradient, borderWidth: 3,
-                        pointBackgroundColor: '#fff', pointBorderColor: '#3b82f6', pointRadius: 4,
-                        fill: true, tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } }
-                }
+            const discountMap = {}, typeMap = {}, payMap = {};
+            sessions.forEach(s => {
+                discountMap[s.token] = parseFloat(s.discount || 0);
+                typeMap[s.token] = s.session_type || 'dine_in';
+                const raw = (s.payment_method || '').toString().toLowerCase();
+                // สมมติฐาน: ค่า payment_method ที่มีคำว่า transfer/โอน/promptpay/qr ถือเป็น "เงินโอน" นอกนั้นถือเป็น "เงินสด"
+                payMap[s.token] = (raw.includes('transfer') || raw.includes('โอน') || raw.includes('promptpay') || raw.includes('qr')) ? 'transfer' : 'cash';
             });
-        }
 
-        function renderStationChart(stationData) {
-            if (charts.station) charts.station.destroy();
-            const ctx = document.getElementById('stationChart').getContext('2d');
-            const sortedData = Object.entries(stationData).sort((a,b) => b[1] - a[1]);
-            const labels = sortedData.map(d => d[0]);
-            const bgColors = labels.map(l => stationColors[l] || stationColors['default']);
+            const sessionGroups = {};
+            servedItems.forEach(it => {
+                const t = it.session_token; if (!t) return;
+                if (!sessionGroups[t]) sessionGroups[t] = { gross: 0, discountable: 0 };
+                const price = parseFloat(it.total_price) || 0;
+                sessionGroups[t].gross += price;
+                if (it.kds_station !== 'น้ำ') sessionGroups[t].discountable += price;
+            });
 
-            charts.station = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{ data: sortedData.map(d => d[1]), backgroundColor: bgColors, borderRadius: 8 }]
-                },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } }, x: { grid: { display: false } } },
-                    onClick: (e, activeElements) => {
-                        if (activeElements.length > 0) openStationModal(labels[activeElements[0].index]);
+            let gross = 0, discountAmt = 0;
+            const typeNet = { dine_in: 0, takehome: 0, staff: 0 };
+            const payType = { cashDine: 0, transferDine: 0, cashTakehome: 0, transferTakehome: 0 };
+            Object.keys(sessionGroups).forEach(t => {
+                const g = sessionGroups[t];
+                const pct = discountMap[t] || 0;
+                const disc = Math.floor(g.discountable * (pct / 100));
+                const net = g.gross - disc;
+                gross += g.gross; discountAmt += disc;
+                const type = typeMap[t] || 'dine_in';
+                if (typeNet[type] !== undefined) typeNet[type] += net; else typeNet.dine_in += net;
+                const pay = payMap[t] || 'cash';
+                if (type === 'dine_in') { if (pay === 'transfer') payType.transferDine += net; else payType.cashDine += net; }
+                else if (type === 'takehome') { if (pay === 'transfer') payType.transferTakehome += net; else payType.cashTakehome += net; }
+            });
+            const net = gross - discountAmt;
+
+            let totalPax = 0, totalDwellMs = 0, validDwell = 0;
+            sessions.forEach(s => {
+                if (s.session_type === 'dine_in' || !s.session_type) {
+                    totalPax += parseInt(s.pax) || 1;
+                    if (s.opened_at && s.closed_at) {
+                        const dur = new Date(s.closed_at) - new Date(s.opened_at);
+                        if (dur > 0) { totalDwellMs += dur; validDwell++; }
                     }
                 }
             });
+
+            const stationRevenue = {}, stationWaitTotalMs = {}, stationWaitCountN = {}, stationBillsSet = {};
+            const menuWaitTotalMs = {}, menuWaitCountN = {};
+            const pendingByStation = {};
+            let cookTotalMs = 0, cookCountN = 0;
+
+            servedItems.forEach(it => {
+                const rev = parseFloat(it.total_price || 0);
+                if (it.kds_station) {
+                    stationRevenue[it.kds_station] = (stationRevenue[it.kds_station] || 0) + rev;
+                    if (!stationBillsSet[it.kds_station]) stationBillsSet[it.kds_station] = new Set();
+                    if (it.order_id) stationBillsSet[it.kds_station].add(it.order_id);
+                }
+                if (it.created_at && it.served_at) {
+                    const wait = new Date(it.served_at) - new Date(it.created_at);
+                    if (it.kds_station) { stationWaitTotalMs[it.kds_station] = (stationWaitTotalMs[it.kds_station] || 0) + wait; stationWaitCountN[it.kds_station] = (stationWaitCountN[it.kds_station] || 0) + 1; }
+                    if (it.item_name_th) { menuWaitTotalMs[it.item_name_th] = (menuWaitTotalMs[it.item_name_th] || 0) + wait; menuWaitCountN[it.item_name_th] = (menuWaitCountN[it.item_name_th] || 0) + 1; }
+                    cookTotalMs += wait; cookCountN++;
+                }
+            });
+            pendingItems.forEach(it => { if (it.kds_station) pendingByStation[it.kds_station] = (pendingByStation[it.kds_station] || 0) + it.quantity; });
+
+            const stationCount = {};
+            Object.keys(stationBillsSet).forEach(k => stationCount[k] = stationBillsSet[k].size);
+
+            // รายชั่วโมง (ตามเวลาไทย) — ใช้สำหรับกราฟหน้าวิเคราะห์
+            const hourlyRevenue = Array(24).fill(0), hourlyBillCount = Array(24).fill(0), hourlyPax = Array(24).fill(0);
+            const hourlyCookTotal = Array(24).fill(0), hourlyCookCount = Array(24).fill(0);
+            const hourlyDwellTotal = Array(24).fill(0), hourlyDwellCount = Array(24).fill(0);
+
+            servedItems.forEach(it => {
+                const hr = (new Date(it.created_at).getUTCHours() + 7) % 24;
+                hourlyRevenue[hr] += parseFloat(it.total_price || 0);
+                if (it.created_at && it.served_at) {
+                    hourlyCookTotal[hr] += (new Date(it.served_at) - new Date(it.created_at));
+                    hourlyCookCount[hr]++;
+                }
+            });
+            orders.forEach(o => { const hr = (new Date(o.created_at).getUTCHours() + 7) % 24; hourlyBillCount[hr]++; });
+            sessions.forEach(s => {
+                if (s.opened_at && (s.session_type === 'dine_in' || !s.session_type)) {
+                    const hr = (new Date(s.opened_at).getUTCHours() + 7) % 24;
+                    hourlyPax[hr] += parseInt(s.pax) || 1;
+                    if (s.closed_at) {
+                        const dur = new Date(s.closed_at) - new Date(s.opened_at);
+                        if (dur > 0) { hourlyDwellTotal[hr] += dur; hourlyDwellCount[hr]++; }
+                    }
+                }
+            });
+
+            // รายได้ / เวลานั่งแช่ต่อโต๊ะ
+            const orderTableMap = {}; orders.forEach(o => orderTableMap[o.id] = o.table_id);
+            const tableRevenue = {};
+            servedItems.forEach(it => { const tid = orderTableMap[it.order_id]; if (tid) tableRevenue[tid] = (tableRevenue[tid] || 0) + parseFloat(it.total_price || 0); });
+            const tableDwellTotalMs = {}, tableDwellCountN = {};
+            sessions.forEach(s => {
+                if (s.table_id && s.opened_at && s.closed_at) {
+                    const dur = new Date(s.closed_at) - new Date(s.opened_at);
+                    if (dur > 0) { tableDwellTotalMs[s.table_id] = (tableDwellTotalMs[s.table_id] || 0) + dur; tableDwellCountN[s.table_id] = (tableDwellCountN[s.table_id] || 0) + 1; }
+                }
+            });
+
+            return {
+                net, gross, discountAmt, bills: orders.length, pax: totalPax,
+                typeNet, payType,
+                avgDwellMs: validDwell > 0 ? totalDwellMs / validDwell : 0,
+                stationRevenue, stationWaitTotalMs, stationWaitCountN, stationCount,
+                menuWaitTotalMs, menuWaitCountN, pendingByStation,
+                cookTotalMs, cookCountN,
+                hourlyRevenue, hourlyBillCount, hourlyPax, hourlyCookTotal, hourlyCookCount, hourlyDwellTotal, hourlyDwellCount,
+                tableRevenue, tableDwellTotalMs, tableDwellCountN
+            };
         }
 
+        // ════════════════════════════════════════════════
+        // 8. Aggregation helpers ข้าม (หลาย)วัน
+        // ════════════════════════════════════════════════
+        function aggregateRange(summaryMap, dateList) {
+            let net = 0, bills = 0, cashDine = 0, transferDine = 0, cashTakehome = 0, transferTakehome = 0;
+            dateList.forEach(d => {
+                const s = summaryMap[d]; if (!s) return;
+                net += s.net; bills += s.bills;
+                cashDine += s.payType.cashDine; transferDine += s.payType.transferDine;
+                cashTakehome += s.payType.cashTakehome; transferTakehome += s.payType.transferTakehome;
+            });
+            return { net, bills, cashDine, transferDine, cashTakehome, transferTakehome };
+        }
+        function sumTypeNet(dateList, divisor = 1) {
+            const out = { dine_in: 0, takehome: 0, staff: 0 };
+            dateList.forEach(d => { const s = perDaySummary[d]; if (!s) return; out.dine_in += s.typeNet.dine_in; out.takehome += s.typeNet.takehome; out.staff += s.typeNet.staff; });
+            out.dine_in /= divisor; out.takehome /= divisor; out.staff /= divisor;
+            return out;
+        }
+        function getPreviousDaySummary(idx) {
+            if (idx > 0) return perDaySummary[rangeDates[idx - 1]];
+            return prevPeriodSummary[prevPeriodDates[prevPeriodDates.length - 1]];
+        }
+
+        // ════════════════════════════════════════════════
+        // 9. Master render
+        // ════════════════════════════════════════════════
+        function renderAll() {
+            if (!rangeDates.length) return;
+            const isAvg = selectedDayIndex === -1;
+            const dayList = isAvg ? rangeDates : [rangeDates[selectedDayIndex]];
+            const divisor = isAvg ? rangeDates.length : 1;
+            currentDayList = dayList; currentDivisor = divisor;
+
+            const dayAgg = aggregateRange(perDaySummary, dayList);
+            const dayNet = dayAgg.net / divisor, dayBills = Math.round(dayAgg.bills / divisor);
+            const rangeAgg = aggregateRange(perDaySummary, rangeDates); // รายได้สะสม = ผลรวมทั้ง range เสมอ
+            const prevRangeAgg = aggregateRange(prevPeriodSummary, prevPeriodDates);
+
+            document.getElementById('overviewGreeting').innerText = `ภาพรวมร้าน${getGreetingWord()}`;
+
+            document.getElementById('statCumRevenue').innerText = formatMoney(rangeAgg.net);
+            setTrendBadge('trendCumRevenue', rangeAgg.net, prevRangeAgg.net);
+
+            document.getElementById('statDayRevenue').innerText = formatMoney(dayNet);
+            document.getElementById('statDayBills').innerText = dayBills;
+
+            if (isAvg) {
+                setTrendText('trendDayRevenue', rangeAgg.net / rangeDates.length, prevRangeAgg.net / prevPeriodDates.length);
+                setTrendText('trendDayBills', rangeAgg.bills / rangeDates.length, prevRangeAgg.bills / prevPeriodDates.length);
+                setTrendText('trendCashDine', dayAgg.cashDine / divisor, prevRangeAgg.cashDine / prevPeriodDates.length);
+                setTrendText('trendTransferDine', dayAgg.transferDine / divisor, prevRangeAgg.transferDine / prevPeriodDates.length);
+                setTrendText('trendCashTakehome', dayAgg.cashTakehome / divisor, prevRangeAgg.cashTakehome / prevPeriodDates.length);
+                setTrendText('trendTransferTakehome', dayAgg.transferTakehome / divisor, prevRangeAgg.transferTakehome / prevPeriodDates.length);
+            } else {
+                const prevDay = getPreviousDaySummary(selectedDayIndex);
+                setTrendText('trendDayRevenue', dayNet, prevDay ? prevDay.net : null);
+                setTrendText('trendDayBills', dayBills, prevDay ? prevDay.bills : null);
+                setTrendText('trendCashDine', dayAgg.cashDine, prevDay ? prevDay.payType.cashDine : null);
+                setTrendText('trendTransferDine', dayAgg.transferDine, prevDay ? prevDay.payType.transferDine : null);
+                setTrendText('trendCashTakehome', dayAgg.cashTakehome, prevDay ? prevDay.payType.cashTakehome : null);
+                setTrendText('trendTransferTakehome', dayAgg.transferTakehome, prevDay ? prevDay.payType.transferTakehome : null);
+            }
+
+            document.getElementById('statCashDine').innerText = formatMoney(dayAgg.cashDine / divisor);
+            document.getElementById('statTransferDine').innerText = formatMoney(dayAgg.transferDine / divisor);
+            document.getElementById('statCashTakehome').innerText = formatMoney(dayAgg.cashTakehome / divisor);
+            document.getElementById('statTransferTakehome').innerText = formatMoney(dayAgg.transferTakehome / divisor);
+
+            renderRangeChart();
+            renderTypeChart(sumTypeNet(dayList, divisor));
+            renderBreakeven(rangeAgg.net);
+            renderLongTrendChart();
+
+            renderStationsTab(dayList, divisor);
+            renderAnalyticsTab(dayList, divisor);
+        }
+
+        function renderRangeChart() {
+    const cash = [], transfer = [], labels = [];
+    rangeDates.forEach(d => {
+        const s = perDaySummary[d];
+        labels.push(String(new Date(d + 'T00:00:00Z').getUTCDate())); // แสดงแค่วัน ไม่ต้องมีเดือน
+        cash.push(s ? s.payType.cashDine + s.payType.cashTakehome : 0);
+        transfer.push(s ? s.payType.transferDine + s.payType.transferTakehome : 0);
+    });
+    if (charts.range) charts.range.destroy();
+    const ctx = document.getElementById('rangeChart').getContext('2d');
+    
+    charts.range = new Chart(ctx, {
+        type: 'bar',
+        data: { 
+            labels, 
+            datasets: [
+                // เงินโอน (ฐานด้านล่าง)
+                { 
+                    label: 'เงินโอน', 
+                    data: transfer, 
+                    backgroundColor: '#94a3b8', 
+                    borderRadius: 8,         // เพิ่มความมนให้รับกับแท่งที่หนาขึ้น
+                    borderSkipped: false, 
+                    barPercentage: 0.95,     // 👈 ทำให้แท่งหนาขึ้นเกือบเต็มพื้นที่
+                    categoryPercentage: 0.65 // 👈 ควบคุมช่องไฟระหว่างแท่ง (ยิ่งค่าน้อยจะยิ่งห่าง)
+                },
+                // เงินสด (ทับด้านบน)
+                { 
+                    label: 'เงินสด', 
+                    data: cash, 
+                    backgroundColor: '#7484C8', 
+                    borderRadius: 8,         // เพิ่มความมนให้รับกับแท่งที่หนาขึ้น
+                    borderSkipped: false, 
+                    barPercentage: 0.95,     // 👈 ต้องตั้งค่าให้เท่ากับแท่งด้านล่าง
+                    categoryPercentage: 0.65 // 👈 ต้องตั้งค่าให้เท่ากับแท่งด้านล่าง
+                }
+            
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { 
+                legend: { 
+                    position: 'top', 
+                    align: 'end', 
+                    labels: { 
+                        boxWidth: 10, 
+                        boxHeight: 10, 
+                        usePointStyle: true, 
+                        pointStyle: 'rectRounded', // ไอคอนสี่เหลี่ยมโค้งมน
+                        font: { size: 10 }, 
+                        color: 'rgba(255,255,255,0.48)' 
+                    } 
+                } 
+            },
+            scales: { 
+                x: { 
+                    stacked: true, // เปิดโหมดซ้อนทับแนวแกน X
+                    grid: { display: false } 
+                }, 
+                y: { 
+                    stacked: true, // เปิดโหมดซ้อนทับแนวแกน Y
+                    grid: { 
+                        color: 'rgba(255,255,255,0.05)', 
+                        borderDash: [4, 4], // ทำเส้นฉากหลังให้เป็นเส้นประ
+                        drawBorder: false 
+                    } 
+                } 
+            }
+        }
+    });
+}
+    
+
+        // ════════════════════════════════════════════════
+        // 11. รายได้แยกประเภท (Donut)
+        // ════════════════════════════════════════════════
         function renderTypeChart(typeData) {
             if (charts.type) charts.type.destroy();
             const ctx = document.getElementById('typeChart').getContext('2d');
             charts.type = new Chart(ctx, {
                 type: 'doughnut',
-                data: {
-                    labels: ['ทานที่ร้าน', 'กลับบ้าน', 'พนักงาน'],
-                    datasets: [{ data: [typeData['dine_in'], typeData['takehome'], typeData['staff']], backgroundColor: [
-                            '#3b82f6', // ทานที่ร้าน (สีฟ้า Blue 500)
-                            '#a855f7', // กลับบ้าน (สีม่วง Purple 500)
-                            '#f59e0b'  // พนักงาน (สีส้ม Amber 500)
-                        ], borderWidth: 0, hoverOffset: 4 }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom', labels: { padding: 20, usePointStyle: true } } } }
+                data: { labels: ['Dine-in', 'Take home', 'Staff'], datasets: [{ data: [typeData.dine_in, typeData.takehome, typeData.staff], backgroundColor: ['#a855f7', '#22c55e', '#38bdf8'], borderWidth: 0, hoverOffset: 4 }] },
+                options: { responsive: true, maintainAspectRatio: false, cutout: '70%', plugins: { legend: { display: false } } }
             });
         }
 
-        function renderPendingChart(dataMap) {
-            const ctx = document.getElementById('pendingChart');
-            if (!ctx) return;
-            
-            if (charts.pending) charts.pending.destroy();
-            
-            const labels = Object.keys(dataMap);
-            const data = Object.values(dataMap);
-            
-            const noPendingMsg = document.getElementById('noPendingMsg');
-            
-            // ถ้าไม่มีออเดอร์ค้างเลย ให้ซ่อนกราฟแล้วโชว์ข้อความ "ครัวโล่ง"
-            if (data.length === 0) {
-                ctx.style.display = 'none';
-                if(noPendingMsg) noPendingMsg.classList.remove('hidden');
+        // ════════════════════════════════════════════════
+        // 12. เทียบจุดคืนทุน
+        // ════════════════════════════════════════════════
+        async function loadCostTarget() {
+            try {
+                const { data } = await supabaseClient.from('dashboard_settings').select('cost_amount').eq('id', 'breakeven_cost').maybeSingle();
+                costTarget = data ? parseFloat(data.cost_amount) || 0 : 0;
+            } catch (e) { console.error('loadCostTarget', e); costTarget = 0; }
+        }
+        function openCostModal() {
+            document.getElementById('costInput').value = costTarget || '';
+            document.getElementById('costModal').classList.remove('hidden');
+        }
+        async function saveCostTarget() {
+            const val = parseFloat(document.getElementById('costInput').value) || 0;
+            try {
+                await supabaseClient.from('dashboard_settings').upsert({ id: 'breakeven_cost', cost_amount: val, updated_at: new Date().toISOString() });
+                costTarget = val;
+                document.getElementById('costModal').classList.add('hidden');
+                renderAll();
+            } catch (e) {
+                console.error('saveCostTarget', e);
+                alert('บันทึกไม่สำเร็จ กรุณาตรวจสอบว่าสร้างตาราง dashboard_settings ใน Supabase แล้วหรือยัง');
+            }
+        }
+        function renderBreakeven(cum) {
+            const fill = document.getElementById('breakevenFill');
+            const marker = document.getElementById('breakevenMarker');
+            const profitMsg = document.getElementById('breakevenProfitMsg');
+            const curEl = document.getElementById('breakevenCurrent');
+            const targetEl = document.getElementById('breakevenTarget');
+            curEl.innerText = formatMoney(cum);
+            if (costTarget <= 0) {
+                fill.style.width = '0%'; marker.classList.add('hidden'); profitMsg.classList.add('hidden');
+                targetEl.innerText = 'ยังไม่ได้ตั้งเป้าต้นทุน';
                 return;
+            }
+            targetEl.innerText = formatMoney(costTarget);
+            if (cum < costTarget) {
+                fill.style.width = Math.max(2, Math.min(100, (cum / costTarget) * 100)) + '%';
+                marker.classList.add('hidden');
+                profitMsg.classList.add('hidden');
             } else {
-                ctx.style.display = 'block';
-                if(noPendingMsg) noPendingMsg.classList.add('hidden');
+                fill.style.width = '100%';
+                const pct = Math.max(0, Math.min(100, (costTarget / cum) * 100));
+                marker.style.left = pct + '%';
+                marker.classList.remove('hidden');
+                profitMsg.innerText = `กำไร ${formatMoney(cum - costTarget)}`;
+                profitMsg.classList.remove('hidden');
+            }
+        }
+
+        // ════════════════════════════════════════════════
+        // 13. รายได้เรียงตามช่วงเวลา (รายชั่วโมง ของวัน/ช่วงที่กำลังเลือกดู)
+        // ════════════════════════════════════════════════
+        function setTrendMetric(m) {
+            trendMetricMode = m;
+            document.getElementById('trendMetricRevenue').classList.toggle('active', m === 'revenue');
+            document.getElementById('trendMetricBills').classList.toggle('active', m === 'bills');
+            renderLongTrendChart();
+        }
+        function renderLongTrendChart() {
+            const hourlyRevenue = Array(24).fill(0), hourlyBillCount = Array(24).fill(0);
+            currentDayList.forEach(d => {
+                const s = perDaySummary[d]; if (!s) return;
+                for (let h = 0; h < 24; h++) { hourlyRevenue[h] += s.hourlyRevenue[h]; hourlyBillCount[h] += s.hourlyBillCount[h]; }
+            });
+            const seriesFull = trendMetricMode === 'revenue' ? hourlyRevenue : hourlyBillCount;
+            const activeHours = seriesFull.map((v, h) => ({ v, h })).filter(x => x.v > 0);
+            const hours = activeHours.length ? activeHours.map(x => x.h) : Array.from({ length: 9 }, (_, i) => i + 12);
+            const labels = hours.map(h => `${String(h).padStart(2, '0')}:00`);
+            const data = hours.map(h => Math.round(seriesFull[h] * 10) / 10);
+
+            if (charts.longTrend) charts.longTrend.destroy();
+            const ctx = document.getElementById('longTrendChart').getContext('2d');
+            let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(116,132,200,0.26)'); gradient.addColorStop(1, 'rgba(116,132,200,0)');
+            charts.longTrend = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [{ data, borderColor: '#7484C8', backgroundColor: gradient, borderWidth: 2.5, pointRadius: 0, pointHoverRadius: 4, pointBackgroundColor: '#fff', pointBorderColor: '#7484C8', fill: true, tension: 0.35 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.035)', drawBorder: false } }, x: { grid: { display: false } } }
+                }
+            });
+        }
+
+        // ════════════════════════════════════════════════
+        // 14. Stations Tab: bar chart / heat pill / ranking
+        // ════════════════════════════════════════════════
+        function setStationMetric(m) {
+            stationMetricMode = m;
+            document.getElementById('stationMetricRevenue').classList.toggle('active', m === 'revenue');
+            document.getElementById('stationMetricSpeed').classList.toggle('active', m === 'speed');
+            renderStationsTab(currentDayList, currentDivisor);
+        }
+        function renderStationsTab(dayList, divisor) {
+            const revenue = {}, waitTotal = {}, waitCount = {};
+            dayList.forEach(d => {
+                const s = perDaySummary[d]; if (!s) return;
+                Object.entries(s.stationRevenue).forEach(([k, v]) => revenue[k] = (revenue[k] || 0) + v);
+                Object.entries(s.stationWaitTotalMs).forEach(([k, v]) => waitTotal[k] = (waitTotal[k] || 0) + v);
+                Object.entries(s.stationWaitCountN).forEach(([k, v]) => waitCount[k] = (waitCount[k] || 0) + v);
+            });
+            const speed = {}; Object.keys(waitTotal).forEach(k => speed[k] = waitTotal[k] / waitCount[k]);
+            const metricData = stationMetricMode === 'revenue' ? revenue : speed;
+
+            renderStationBarChart(metricData);
+            renderStationHeatPills(revenue);
+            renderStationRankList(metricData);
+        }
+        function renderStationBarChart(dataObj) {
+            const isSpeed = stationMetricMode === 'speed';
+            let entries = Object.entries(dataObj);
+            entries = isSpeed ? entries.sort((a, b) => a[1] - b[1]) : entries.sort((a, b) => b[1] - a[1]);
+            const labels = entries.map(e => e[0]);
+            const values = entries.map(e => isSpeed ? Math.round((e[1] / 60000) * 10) / 10 : Math.round(e[1]));
+            const bgColors = labels.map(l => stationColors[l] || stationColors.default);
+
+            if (charts.station) charts.station.destroy();
+            const ctx = document.getElementById('stationChart').getContext('2d');
+            charts.station = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets: [{ data: values, backgroundColor: bgColors, borderRadius: 8 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: (ctx) => isSpeed ? `${ctx.parsed.y} นาที` : `฿${ctx.parsed.y.toLocaleString()}` } }
+                    },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.035)', drawBorder: false } }, x: { grid: { display: false } } },
+                    onClick: (e, active) => { if (active.length > 0) openStationModal(labels[active[0].index]); }
+                }
+            });
+        }
+        // ผังจริงของหน้าร้าน — พิกัดเป็น % ของกรอบผัง (ตรงตามรูปที่แนบทุกสัดส่วน)
+        // l = ซ้าย, t = บน, w = กว้าง, h = สูง (หน่วยเป็น % ของกรอบ)
+        const STATION_FLOORPLAN = [
+    // แถวบน: 5 กล่องเรียงกัน (คำนวณให้ขอบขวาสุดของ "ข้าว" จบที่ 97% พอดี)
+    { name: 'น้ำ',      l: 36.6, t: 5.0,  w: 10.0, h: 25.0 },
+    { name: 'ส้มตำ',    l: 49.2, t: 5.0,  w: 10.0, h: 25.0 },
+    { name: 'ไข่เจียว',  l: 61.8, t: 5.0,  w: 10.0, h: 25.0 },
+    { name: 'กระต่าย',  l: 74.4, t: 5.0,  w: 10.0, h: 25.0 },
+    { name: 'ข้าว',      l: 87.0, t: 5.0,  w: 10.0, h: 25.0 }, 
+
+    // แถวกลาง: ต้มยำ (จัดให้ตรงกับบาร์บีคิว)
+    { name: 'ต้มยำ',    l: 26.1, t: 35.5, w: 10.0, h: 25.0 },
+
+    // แถวล่าง: กล่องยาว 20.5% กล่องปกติ 10% (ขอบซ้ายเริ่มที่ 3% ขอบขวาจบที่ 97% พอดี)
+    { name: 'โรบินฮู้ด', l: 3.0,  t: 66.0, w: 20.5, h: 25.0 },
+    { name: 'บาร์บีคิว', l: 26.1, t: 66.0, w: 10.0, h: 25.0 },
+    { name: 'ไก่ไวน์',   l: 38.7, t: 66.0, w: 10.0, h: 25.0 },
+    { name: 'คอหมู',    l: 51.3, t: 66.0, w: 10.0, h: 25.0 },
+    { name: 'หมูกระทะ', l: 63.9, t: 66.0, w: 10.0, h: 25.0 },
+    { name: 'โอ้เอ๋ว',   l: 76.5, t: 78.0, w: 20.5, h: 13.0 }
+];
+        function renderStationHeatPills(revenueObj) {
+            const max = Math.max(1, ...Object.values(revenueObj));
+            const known = new Set(STATION_FLOORPLAN.map(s => s.name));
+            const pillHTML = (s) => {
+                const val = revenueObj[s.name] || 0;
+                const opacity = Math.max(0.12, val / max).toFixed(2);
+                return `<div class="heat-pill" style="left:${s.l}%; top:${s.t}%; width:${s.w}%; height:${s.h}%;" onclick="openStationModal('${s.name}')">
+                    <div class="heat-fill" style="opacity:${opacity}"></div>
+                    <span class="heat-label">${s.name}</span>
+                </div>`;
+            };
+            let html = STATION_FLOORPLAN.map(pillHTML).join('');
+
+            // ซุ้มที่มีข้อมูลจริงแต่ไม่อยู่ในผัง — วางต่อท้ายมุมซ้ายล่างแบบ inline
+            const extras = Object.keys(revenueObj).filter(n => !known.has(n));
+            if (extras.length) {
+                const extraPills = extras.map(n => {
+                    const val = revenueObj[n] || 0;
+                    const opacity = Math.max(0.12, val / max).toFixed(2);
+                    return `<div class="heat-pill" style="position:relative; left:auto; top:auto; width:auto; height:auto; padding:8px 14px;" onclick="openStationModal('${n}')"><div class="heat-fill" style="opacity:${opacity}"></div><span class="heat-label">${n}</span></div>`;
+                }).join('');
+                html += `<div class="absolute" style="left:1.6%; bottom:2%; display:flex; gap:8px; flex-wrap:wrap;">${extraPills}</div>`;
             }
 
-            const bgColors = labels.map(l => stationColors[l] || stationColors['default']);
-
-            charts.pending = new Chart(ctx.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{ 
-                        data: data, 
-                        backgroundColor: bgColors, 
-                        borderWidth: 2,
-                        borderColor: '#0a0a0a' // สีเส้นขอบให้กลืนกับพื้นหลังการ์ด
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '60%', 
-                    plugins: { 
-                        legend: { 
-                            position: 'right', 
-                            labels: { 
-                                boxWidth: 12, 
-                                padding: 12, 
-                                font: { family: 'Kanit', size: 10 }, 
-                                color: '#94a3b8' 
-                            } 
-                        } 
-                    } 
-                }
-            });
+            document.getElementById('stationPillGrid').innerHTML = html || '<div class="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">ไม่มีข้อมูล</div>';
         }
-
-        // ════════════════════════════════════════════════
-        // 4. Modal & Export
-        // ════════════════════════════════════════════════
-        function openStationModal(stationName) {
-            const stationItems = currentRawData.servedItems.filter(i => i.kds_station === stationName);
-            const revenue = stationItems.reduce((s, i) => s + parseFloat(i.total_price||0), 0);
-            
-            let totalWaitMs = 0, validWaitCount = 0;
-            stationItems.forEach(item => {
-                if(item.created_at && item.served_at) {
-                    totalWaitMs += (new Date(item.served_at).getTime() - new Date(item.created_at).getTime());
-                    validWaitCount++;
-                }
-            });
-            // แก้ไข: ใช้ formatDuration แทนการหารตรงๆ และเปลี่ยนตัวแปรเป็น avgWaitMs
-            const avgWaitMs = validWaitCount > 0 ? (totalWaitMs / validWaitCount) : 0;
-
-            const itemCounts = {};
-            stationItems.forEach(i => itemCounts[i.item_name_th] = (itemCounts[i.item_name_th] || 0) + i.quantity);
-            const topMenus = Object.entries(itemCounts).sort((a,b) => b[1] - a[1]).slice(0, 5);
-
-            document.getElementById('modalStationName').innerText = `ซุ้ม${stationName}`;
-            document.getElementById('modalColorStrip').style.backgroundColor = stationColors[stationName] || stationColors['default'];
-            document.getElementById('modalRevenue').innerText = `฿${revenue.toLocaleString()}`;
-            // แก้ไข: เรียกใช้ formatDuration และส่ง avgWaitMs เข้าไป
-            document.getElementById('modalWaitTime').innerText = formatDuration(avgWaitMs);
-            
-            document.getElementById('modalTopItems').innerHTML = topMenus.map((m, i) => `
-                <div class="flex justify-between items-center text-sm p-2 bg-white/5 rounded-lg border border-white/5">
-                    <span class="text-slate-300"><span class="text-slate-500 mr-2">${i+1}.</span>${m[0]}</span>
-                    <span class="font-bold text-white">${m[1]} จาน</span>
+        function renderStationRankList(dataObj) {
+            const isSpeed = stationMetricMode === 'speed';
+            let entries = Object.entries(dataObj);
+            entries = isSpeed ? entries.sort((a, b) => a[1] - b[1]) : entries.sort((a, b) => b[1] - a[1]);
+            const medalBg = ['bg-yellow-500', 'bg-slate-400', 'bg-orange-700'];
+            document.getElementById('stationRankList').innerHTML = entries.map(([name, val], i) => `
+                <div class="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5 cursor-pointer hover:bg-white/10 transition-all" onclick="openStationModal('${name}')">
+                    <div class="flex items-center gap-3">
+                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white ${i < 3 ? medalBg[i] : 'bg-slate-700'}">${i + 1}</div>
+                        <span class="font-medium text-slate-200">${name}</span>
+                    </div>
+                    <span class="font-bold ${isSpeed ? 'text-[#7484C8]' : 'text-emerald-400'}">${isSpeed ? formatDuration(val) : formatMoney(val)}</span>
                 </div>
-            `).join('') || '<div class="text-slate-500 text-sm">ไม่มีข้อมูล</div>';
-
-            document.getElementById('stationModal').classList.remove('hidden');
+            `).join('') || '<div class="text-slate-500 text-sm text-center py-6">ไม่มีข้อมูล</div>';
         }
 
         // ════════════════════════════════════════════════
-        // 4. Modal & Export (Update)
+        // 15b. Modal รายละเอียดโต๊ะ (จาก Table Heat Map)
         // ════════════════════════════════════════════════
+        function openTableModal(tableId) {
+            const daySet = new Set(currentDayList);
+            const orders = (window.rawRange?.orders || []).filter(o => o.table_id === tableId && daySet.has(bkkDateStringFromISO(o.created_at)));
+            const orderIds = new Set(orders.map(o => o.id));
+            const items = (window.rawRange?.items || []).filter(i => i.status === 'served' && orderIds.has(i.order_id));
+            const revenue = items.reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
+
+            document.getElementById('tableModalId').innerText = tableId;
+            document.getElementById('tableModalBills').innerText = orders.length;
+            document.getElementById('tableModalRevenue').innerText = formatMoney(revenue);
+            document.getElementById('tableDetailModal').classList.remove('hidden');
+        }
+
+        // ════════════════════════════════════════════════
+        // 15. Modal รายละเอียดซุ้ม
+        // ════════════════════════════════════════════════
+        function filterRawItemsForStation(name) {
+            const daySet = new Set(currentDayList);
+            return (window.rawRange?.items || []).filter(i => i.kds_station === name && daySet.has(bkkDateStringFromISO(i.created_at)));
+        }
+        function switchModalTab(tab) {
+            document.getElementById('modalTabTable').classList.toggle('active', tab === 'table');
+            document.getElementById('modalTabChart').classList.toggle('active', tab === 'chart');
+            document.getElementById('modalViewTable').classList.toggle('hidden', tab !== 'table');
+            document.getElementById('modalViewChart').classList.toggle('hidden', tab !== 'chart');
+            if (tab === 'chart') renderModalHourChart();
+        }
+        function setModalChartMetric(metric) {
+            modalChartMetric = metric;
+            document.getElementById('modalMetricRevenue').classList.toggle('active', metric === 'revenue');
+            document.getElementById('modalMetricCount').classList.toggle('active', metric === 'count');
+            renderModalHourChart();
+        }
+        function openStationModal(name) {
+    currentModalStation = name;
+    modalChartMetric = 'revenue';
+    
+    if (document.getElementById('modalMetricRevenue')) {
+        document.getElementById('modalMetricRevenue').classList.add('active');
+        document.getElementById('modalMetricCount').classList.remove('active');
+    }
+    switchModalTab('table');
+
+    document.getElementById('modalStationName').innerText = `ซุ้ม${name}`;
+
+    const items = filterRawItemsForStation(name);
+    const served = items.filter(i => i.status === 'served');
+    
+    // คำนวณรายได้รวม
+    const revenue = served.reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
+    
+    // คำนวณจำนวนบิลของซุ้มนี้
+    const billCount = new Set(served.map(i => i.order_id).filter(Boolean)).size;
+    
+    // คำนวณเวลาเฉลี่ย
+    let waitTotal = 0, waitCount = 0;
+    served.forEach(i => { 
+        if (i.created_at && i.served_at) { 
+            waitTotal += (new Date(i.served_at) - new Date(i.created_at)); 
+            waitCount++; 
+        } 
+    });
+
+    // อัปเดตตัวเลขในกล่องสถิติ
+    document.getElementById('modalRevenue').innerText = formatMoney(revenue);
+    document.getElementById('modalBillCount').innerText = billCount;
+    const timeStr = formatDuration(waitCount ? waitTotal / waitCount : 0);
+    document.getElementById('modalWaitTime').innerHTML = timeStr.replace(/([^\d\s]+)/g, '<span class="text-xs font-normal text-slate-400">$1</span>');
+
+    // -----------------------------------------------------
+    // ส่วนคำนวณแนวโน้ม (Trend % vs เมื่อวาน) สำหรับ Modal
+    // -----------------------------------------------------
+    const prevSummary = getPreviousDaySummary(selectedDayIndex);
+    let prevRev = 0, prevBills = 0, prevWaitTotal = 0, prevWaitCount = 0;
+    
+    if (prevSummary) {
+        prevRev = prevSummary.stationRevenue[name] || 0;
+        prevBills = prevSummary.stationCount[name] || 0;
+        prevWaitTotal = prevSummary.stationWaitTotalMs[name] || 0;
+        prevWaitCount = prevSummary.stationWaitCountN[name] || 0;
+    }
+    
+    const prevWaitAvg = prevWaitCount ? prevWaitTotal / prevWaitCount : 0;
+    const curWaitAvg = waitCount ? waitTotal / waitCount : 0;
+
+    function setModalTrend(id, cur, prev, isWaitTime = false) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        
+        // ถ้าไม่มีข้อมูลเก่าให้เทียบ หรือข้อมูลเก่าเป็น 0 ให้ซ่อนป้ายไปเลย
+        if (!prev || prev === 0) {
+            el.classList.add('hidden'); 
+            return;
+        }
+        
+        el.classList.remove('hidden');
+        const diff = cur - prev;
+        const pct = (diff / prev) * 100;
+        const isUp = diff > 0;
+        
+        // ความพิเศษ: ถ้าเป็น "เวลาทำอาหาร" ยอดลดลง(เร็วน้อยลง) คือเรื่องดี(สีเขียว)
+        const isGood = isWaitTime ? !isUp : isUp;
+        
+        el.className = `inline-flex items-center gap-1 text-[11px] font-bold mt-2 px-2 py-0.5 rounded-full border ${isGood ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`;
+        el.innerHTML = `${isUp ? '↑' : '↓'} ${Math.abs(pct).toFixed(1)}%`;
+    }
+
+    setModalTrend('modalTrendRevenue', revenue, prevRev);
+    setModalTrend('modalTrendBills', billCount, prevBills);
+    setModalTrend('modalTrendWait', curWaitAvg, prevWaitAvg, true);
+
+    // คำนวณจัดอันดับเมนูขายดี
+    const itemAgg = {};
+    served.forEach(i => { 
+        if (!itemAgg[i.item_name_th]) itemAgg[i.item_name_th] = { qty: 0, rev: 0 }; 
+        itemAgg[i.item_name_th].qty += i.quantity; 
+        itemAgg[i.item_name_th].rev += parseFloat(i.total_price || 0); 
+    });
+    
+    const rows = Object.entries(itemAgg).sort((a, b) => b[1].rev - a[1].rev).slice(0, 6);
+
+    // สร้าง HTML ตารางเมนูขายดีแบบเดียวกับในรูปตัวอย่าง
+    document.getElementById('modalTopItems').innerHTML = rows.length ? `
+        <table class="w-full text-sm border-collapse">
+            <thead>
+                <tr class="bg-white/5 text-slate-400 text-xs border-b border-white/5">
+                    <th class="text-left py-3 px-4 font-normal w-16">ลำดับ</th>
+                    <th class="text-left py-3 px-4 font-normal">เมนู</th>
+                    <th class="text-right py-3 px-4 font-normal w-20">จาน</th>
+                    <th class="text-right py-3 px-4 font-normal w-28">บาท</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                ${rows.map((r, i) => `
+                    <tr class="hover:bg-white/[0.02] transition-colors">
+                        <td class="py-3 px-4 text-slate-400 font-medium">${i + 1}</td>
+                        <td class="py-3 px-4 text-slate-200 font-medium">${r[0]}</td>
+                        <td class="py-3 px-4 text-right text-slate-300">${r[1].qty}</td>
+                        <td class="py-3 px-4 text-right font-bold text-white">${Math.round(r[1].rev).toLocaleString()}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    ` : '<div class="text-slate-500 text-sm text-center py-8">ไม่มีข้อมูล</div>';
+
+    document.getElementById('stationModal').classList.remove('hidden');
+}
+        function renderModalHourChart() {
+            if (!currentModalStation) return;
+            const items = filterRawItemsForStation(currentModalStation).filter(i => i.status === 'served');
+            const menuTotals = {};
+            items.forEach(i => menuTotals[i.item_name_th] = (menuTotals[i.item_name_th] || 0) + parseFloat(i.total_price || 0));
+            const topMenus = Object.entries(menuTotals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(m => m[0]);
+
+            const hourBuckets = {}; for (let h = 0; h < 24; h++) hourBuckets[h] = {};
+            items.forEach(i => {
+                const hr = (new Date(i.created_at).getUTCHours() + 7) % 24;
+                const key = topMenus.includes(i.item_name_th) ? i.item_name_th : 'อื่นๆ';
+                const val = modalChartMetric === 'revenue' ? parseFloat(i.total_price || 0) : i.quantity;
+                hourBuckets[hr][key] = (hourBuckets[hr][key] || 0) + val;
+            });
+            const activeHours = Object.keys(hourBuckets).map(Number).filter(h => Object.keys(hourBuckets[h]).length > 0).sort((a, b) => a - b);
+            const hours = activeHours.length ? activeHours : Array.from({ length: 9 }, (_, i) => i + 12);
+            const labels = hours.map(h => `${String(h).padStart(2, '0')}:00`);
+            const legendKeys = [...topMenus, 'อื่นๆ'];
+            const palette = ['#7484C8', '#f97316', '#22c55e', '#ec4899', '#eab308', '#64748b'];
+            const datasets = legendKeys.map((k, idx) => ({ 
+                label: k, 
+                data: hours.map(h => hourBuckets[h][k] || 0), 
+                backgroundColor: palette[idx % palette.length],
+                borderRadius: 8,         // 👈 เพิ่มความโค้งมนตรงนี้ (ตัวเลขยิ่งมาก ยิ่งโค้ง)
+                borderSkipped: false     // 👈 บังคับให้โค้งทั้งด้านบนและด้านล่าง
+            }));
+
+            if (charts.modalHour) charts.modalHour.destroy();
+            const ctx = document.getElementById('modalHourChart').getContext('2d');
+            charts.modalHour = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, grid: { color: 'rgba(255,255,255,0.035)', drawBorder: false } } },
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 }, color: 'rgba(255,255,255,0.48)' } } }
+                }
+            });
+        }
+
+        // ════════════════════════════════════════════════
+        // 16. Analytics Tab
+        // ════════════════════════════════════════════════
+        function setAnalyticsMetric(metric, btn) {
+            analyticsMetricMode = metric;
+            btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderAnalyticsTab(currentDayList, currentDivisor);
+        }
+        function setHeatMetric(m) {
+            heatMetricMode = m;
+            document.getElementById('heatMetricRevenue').classList.toggle('active', m === 'revenue');
+            document.getElementById('heatMetricDwell').classList.toggle('active', m === 'dwell');
+            renderAnalyticsTab(currentDayList, currentDivisor);
+        }
+        function renderAnalyticsTab(dayList, divisor) {
+            const hourlyRevenue = Array(24).fill(0), hourlyBillCount = Array(24).fill(0), hourlyPax = Array(24).fill(0);
+            const hourlyCookTotal = Array(24).fill(0), hourlyCookCount = Array(24).fill(0);
+            const hourlyDwellTotal = Array(24).fill(0), hourlyDwellCount = Array(24).fill(0);
+            let cookTotalAll = 0, cookCountAll = 0;
+            const pendingByStation = {}, menuWaitTotal = {}, menuWaitCount = {};
+            const tableRevenue = {}, tableDwellTotal = {}, tableDwellCount = {};
+
+            dayList.forEach(d => {
+                const s = perDaySummary[d]; if (!s) return;
+                for (let h = 0; h < 24; h++) {
+                    hourlyRevenue[h] += s.hourlyRevenue[h]; hourlyBillCount[h] += s.hourlyBillCount[h]; hourlyPax[h] += s.hourlyPax[h];
+                    hourlyCookTotal[h] += s.hourlyCookTotal[h]; hourlyCookCount[h] += s.hourlyCookCount[h];
+                    hourlyDwellTotal[h] += s.hourlyDwellTotal[h]; hourlyDwellCount[h] += s.hourlyDwellCount[h];
+                }
+                cookTotalAll += s.cookTotalMs; cookCountAll += s.cookCountN;
+                Object.entries(s.pendingByStation).forEach(([k, v]) => pendingByStation[k] = (pendingByStation[k] || 0) + v);
+                Object.entries(s.menuWaitTotalMs).forEach(([k, v]) => menuWaitTotal[k] = (menuWaitTotal[k] || 0) + v);
+                Object.entries(s.menuWaitCountN).forEach(([k, v]) => menuWaitCount[k] = (menuWaitCount[k] || 0) + v);
+                Object.entries(s.tableRevenue).forEach(([k, v]) => tableRevenue[k] = (tableRevenue[k] || 0) + v);
+                Object.entries(s.tableDwellTotalMs).forEach(([k, v]) => tableDwellTotal[k] = (tableDwellTotal[k] || 0) + v);
+                Object.entries(s.tableDwellCountN).forEach(([k, v]) => tableDwellCount[k] = (tableDwellCount[k] || 0) + v);
+            });
+
+            renderAnalyticsChart({ hourlyRevenue, hourlyBillCount, hourlyPax, hourlyCookTotal, hourlyCookCount, hourlyDwellTotal, hourlyDwellCount });
+
+            document.getElementById('statAvgCookTime').innerText = cookCountAll ? Math.round(cookTotalAll / cookCountAll / 60000) + 'm' : '0m';
+            const backlog = Object.entries(pendingByStation).sort((a, b) => b[1] - a[1])[0];
+            document.getElementById('statBacklogStation').innerText = backlog ? `ซุ้ม${backlog[0]} (${backlog[1]})` : 'ไม่มีออเดอร์ค้าง';
+
+            const menuSpeedArr = Object.entries(menuWaitTotal).map(([k, v]) => ({ name: k, avg: v / menuWaitCount[k] })).filter(m => !isNaN(m.avg));
+            if (menuSpeedArr.length) {
+                const fastest = menuSpeedArr.reduce((a, b) => a.avg < b.avg ? a : b);
+                const slowest = menuSpeedArr.reduce((a, b) => a.avg > b.avg ? a : b);
+                document.getElementById('statFastestMenu').innerText = `${fastest.name} (${Math.round(fastest.avg / 60000)}m)`;
+                document.getElementById('statSlowestMenu').innerText = `${slowest.name} (${Math.round(slowest.avg / 60000)}m)`;
+            } else {
+                document.getElementById('statFastestMenu').innerText = '-';
+                document.getElementById('statSlowestMenu').innerText = '-';
+            }
+            const peakHourIdx = hourlyBillCount.reduce((maxI, v, i, arr) => v > arr[maxI] ? i : maxI, 0);
+            document.getElementById('statPeakHour').innerText = hourlyBillCount[peakHourIdx] > 0 ? `${String(peakHourIdx).padStart(2, '0')}:00` : '-';
+
+            renderTableHeatMap(tableRevenue, tableDwellTotal, tableDwellCount);
+        }
+        function renderAnalyticsChart(d) {
+            let seriesFull, labelSuffix;
+            switch (analyticsMetricMode) {
+                case 'perhead': seriesFull = d.hourlyRevenue.map((v, h) => d.hourlyPax[h] > 0 ? v / d.hourlyPax[h] : 0); labelSuffix = 'บาท/หัว'; break;
+                case 'perbill': seriesFull = d.hourlyRevenue.map((v, h) => d.hourlyBillCount[h] > 0 ? v / d.hourlyBillCount[h] : 0); labelSuffix = 'บาท/บิล'; break;
+                case 'cooktime': seriesFull = d.hourlyCookTotal.map((v, h) => d.hourlyCookCount[h] > 0 ? (v / d.hourlyCookCount[h]) / 60000 : 0); labelSuffix = 'นาที'; break;
+                default: seriesFull = d.hourlyDwellTotal.map((v, h) => d.hourlyDwellCount[h] > 0 ? (v / d.hourlyDwellCount[h]) / 60000 : 0); labelSuffix = 'นาที';
+            }
+            const activeHours = seriesFull.map((v, h) => ({ v, h })).filter(x => x.v > 0);
+            const hours = activeHours.length ? activeHours.map(x => x.h) : Array.from({ length: 9 }, (_, i) => i + 12);
+            const labels = hours.map(h => `${String(h).padStart(2, '0')}:00`);
+            const data = hours.map(h => Math.round(seriesFull[h] * 10) / 10);
+
+            if (charts.analytics) charts.analytics.destroy();
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            let gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(116,132,200,0.30)'); gradient.addColorStop(1, 'rgba(116,132,200,0)');
+            charts.analytics = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [{ label: labelSuffix, data, borderColor: '#7484C8', backgroundColor: gradient, borderWidth: 2.5, pointBackgroundColor: '#fff', pointBorderColor: '#7484C8', pointRadius: 0, pointHoverRadius: 4, fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.035)', drawBorder: false } }, x: { grid: { display: false } } } }
+            });
+        }
+        // ผังโซนโต๊ะจริง (เหมือนหน้า staff.html): D บนสุด, A/B/C กลางซ้ายเรียงต่อกัน, W กลางขวาแนวตั้ง, Y/X ล่างสุด
+        // โซนที่ไม่ได้อยู่ในผังจริง (เช่น TH = เทคโฮม, virtual = โต๊ะเสมือน) จะไม่ถูกแสดงในผังนี้
+        const ZONE_LAYOUT_MAP = { D: 'heatLayoutTop', A: 'heatLayoutMidLeft', B: 'heatLayoutMidLeft', C: 'heatLayoutMidLeft', W: 'heatLayoutMidRight', Y: 'heatLayoutBottom', X: 'heatLayoutBottom' };
+        const ZONE_VERTICAL = new Set(['W']);
+        function renderTableHeatMap(tableRevenue, tableDwellTotal, tableDwellCount) {
+            const tableDwellAvg = {}; Object.keys(tableDwellTotal).forEach(k => tableDwellAvg[k] = tableDwellTotal[k] / tableDwellCount[k]);
+            const metric = heatMetricMode === 'revenue' ? tableRevenue : tableDwellAvg;
+
+            ['heatLayoutTop', 'heatLayoutMidLeft', 'heatLayoutBottom', 'heatLayoutMidRight'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+
+            const floorTables = tablesMeta.filter(t => Object.prototype.hasOwnProperty.call(ZONE_LAYOUT_MAP, t.zone));
+            const max = Math.max(1, ...floorTables.map(t => metric[t.id] || 0));
+
+            if (!floorTables.length) {
+                document.getElementById('heatLayoutBottom').innerHTML = '<div class="text-slate-500 text-sm text-center py-10">ไม่มีข้อมูลผังโต๊ะ</div>';
+                return;
+            }
+
+            const zonesPresent = [...new Set(floorTables.map(t => t.zone))];
+            zonesPresent.forEach(zone => {
+                const targetId = ZONE_LAYOUT_MAP[zone];
+                const target = document.getElementById(targetId); if (!target) return;
+                const zoneTables = floorTables.filter(t => t.zone === zone).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'heat-zone-wrapper' + (ZONE_VERTICAL.has(zone) ? ' vertical' : '');
+                const grid = document.createElement('div'); grid.className = 'heat-zone-grid';
+
+                zoneTables.forEach(t => {
+                    const v = metric[t.id] || 0;
+                    const opacity = Math.max(0.1, v / max).toFixed(2);
+                    const circle = document.createElement('div');
+                    circle.className = 'table-heat-circle';
+                    circle.style.background = `rgba(116,132,200,${opacity})`;
+                    circle.title = heatMetricMode === 'revenue' ? formatMoney(v) : formatDuration(v);
+                    circle.innerHTML = `<span>${t.id}</span>`;
+                    circle.onclick = () => openTableModal(t.id);
+                    grid.appendChild(circle);
+                });
+
+                wrapper.appendChild(grid);
+                target.appendChild(wrapper);
+            });
+        }
+
+        // ════════════════════════════════════════════════
+        // 17. Export — สร้างรายงาน PDF จริง สไตล์เอกสารราชการ
+        // ════════════════════════════════════════════════
+        function generateDocNumber() {
+            const buddhistYear = new Date().getFullYear() + 543;
+            const rand = Math.floor(Math.random() * 900 + 100);
+            return `พิเศษ ${rand}/${buddhistYear}`;
+        }
+        function formatThaiFullDate(d) {
+            const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+        }
+        function buildFormalReportHTML() {
+            const isAvg = selectedDayIndex === -1;
+            const dayList = currentDayList.length ? currentDayList : rangeDates;
+            const divisor = currentDivisor || 1;
+            const rangeAgg = aggregateRange(perDaySummary, rangeDates);
+            const dayAgg = aggregateRange(perDaySummary, dayList);
+            const dayNet = dayAgg.net / divisor, dayBills = Math.round(dayAgg.bills / divisor);
+            const typeAgg = sumTypeNet(dayList, divisor);
+
+            const stationRevenue = {};
+            dayList.forEach(d => { const s = perDaySummary[d]; if (!s) return; Object.entries(s.stationRevenue).forEach(([k, v]) => stationRevenue[k] = (stationRevenue[k] || 0) + v); });
+            const stationRows = Object.entries(stationRevenue).sort((a, b) => b[1] - a[1]);
+            const stationRowsHTML = stationRows.map(([name, val], i) => `<tr><td>${i + 1}</td><td>${name}</td><td class="num">${Math.round(val).toLocaleString()}</td></tr>`).join('')
+                || `<tr><td colspan="3" style="text-align:center;">ไม่มีข้อมูล</td></tr>`;
+
+            const rangeRowsHTML = rangeDates.map(d => {
+                const s = perDaySummary[d] || { net: 0, payType: { cashDine: 0, transferDine: 0, cashTakehome: 0, transferTakehome: 0 } };
+                const cash = s.payType.cashDine + s.payType.cashTakehome;
+                const transfer = s.payType.transferDine + s.payType.transferTakehome;
+                return `<tr><td>${formatThaiShortDate(d)}</td><td class="num">${Math.round(cash).toLocaleString()}</td><td class="num">${Math.round(transfer).toLocaleString()}</td><td class="num">${Math.round(s.net).toLocaleString()}</td></tr>`;
+            }).join('');
+
+            const today = new Date();
+            const docNo = generateDocNumber();
+            const beYear = new Date(rangeDates[rangeDates.length - 1]).getFullYear() + 543;
+            const rangeLabel = `${formatThaiShortDate(rangeDates[0])} - ${formatThaiShortDate(rangeDates[rangeDates.length - 1])} ${beYear}`;
+
+            return `
+            <div id="formalReportInner" style="width:794px; padding:64px 72px; background:#ffffff; color:#111111; font-family:'IBM Plex Sans Thai','Sarabun',sans-serif; font-size:15px; line-height:1.8;">
+                <div style="text-align:center; margin-bottom:6px;">
+                    <div style="font-size:20px; font-weight:700;">บันทึกข้อความ</div>
+                </div>
+                <div style="border-bottom:2px solid #111; margin-bottom:18px;"></div>
+                <div style="margin-bottom:4px;">ส่วนงาน &nbsp; ระบบแดชบอร์ด VETRES Restaurant</div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:18px;">
+                    <span>ที่ ${docNo}</span><span>วันที่ ${formatThaiFullDate(today)}</span>
+                </div>
+                <div style="margin-bottom:8px;"><b>เรื่อง</b> &nbsp; รายงานสรุปผลประกอบการร้าน ประจำช่วงวันที่ ${rangeLabel}</div>
+                <div style="margin-bottom:18px;"><b>เรียน</b> &nbsp; ผู้บริหารร้าน</div>
+                <div style="text-indent:48px; margin-bottom:20px; text-align:justify;">
+                    ด้วยระบบแดชบอร์ดของร้านได้ทำการประมวลผลข้อมูลยอดขายประจำช่วงวันที่ดังกล่าวข้างต้นเสร็จสิ้นแล้ว จึงขอสรุปรายละเอียดผลประกอบการเพื่อโปรดทราบ ดังนี้
+                </div>
+
+                <div style="font-weight:700; margin-bottom:8px;">๑. สรุปภาพรวมรายได้</div>
+                <table class="rpt-table"><tbody>
+                    <tr><td>รายได้สะสม (${rangeDates.length} วัน)</td><td class="num">${Math.round(rangeAgg.net).toLocaleString()} บาท</td></tr>
+                    <tr><td>รายได้เฉลี่ยต่อวัน</td><td class="num">${Math.round(rangeAgg.net / rangeDates.length).toLocaleString()} บาท</td></tr>
+                    <tr><td>รายได้ของวันที่เลือกดู${isAvg ? ' (ค่าเฉลี่ย 8 วัน)' : ''}</td><td class="num">${Math.round(dayNet).toLocaleString()} บาท</td></tr>
+                    <tr><td>จำนวนบิล${isAvg ? ' (เฉลี่ยต่อวัน)' : ''}</td><td class="num">${dayBills.toLocaleString()} บิล</td></tr>
+                </tbody></table>
+
+                <div style="font-weight:700; margin:20px 0 8px;">๒. รายได้แยกตามช่องทางการชำระเงิน</div>
+                <table class="rpt-table"><tbody>
+                    <tr><td>เงินสด (แคชเชียร์)</td><td class="num">${Math.round(dayAgg.cashDine / divisor).toLocaleString()} บาท</td></tr>
+                    <tr><td>เงินโอน (แคชเชียร์)</td><td class="num">${Math.round(dayAgg.transferDine / divisor).toLocaleString()} บาท</td></tr>
+                    <tr><td>เงินสด (เทคโฮม)</td><td class="num">${Math.round(dayAgg.cashTakehome / divisor).toLocaleString()} บาท</td></tr>
+                    <tr><td>เงินโอน (เทคโฮม)</td><td class="num">${Math.round(dayAgg.transferTakehome / divisor).toLocaleString()} บาท</td></tr>
+                </tbody></table>
+
+                <div style="font-weight:700; margin:20px 0 8px;">๓. รายได้รายวันย้อนหลัง (${rangeDates.length} วัน)</div>
+                <table class="rpt-table">
+                    <thead><tr><th>วันที่</th><th>เงินสด (บาท)</th><th>เงินโอน (บาท)</th><th>รวมสุทธิ (บาท)</th></tr></thead>
+                    <tbody>${rangeRowsHTML}</tbody>
+                </table>
+
+                <div style="font-weight:700; margin:20px 0 8px;">๔. รายได้แยกตามประเภทลูกค้า</div>
+                <table class="rpt-table"><tbody>
+                    <tr><td>รับประทานที่ร้าน (Dine-in)</td><td class="num">${Math.round(typeAgg.dine_in).toLocaleString()} บาท</td></tr>
+                    <tr><td>สั่งกลับบ้าน (Take home)</td><td class="num">${Math.round(typeAgg.takehome).toLocaleString()} บาท</td></tr>
+                    <tr><td>พนักงาน (Staff)</td><td class="num">${Math.round(typeAgg.staff).toLocaleString()} บาท</td></tr>
+                </tbody></table>
+
+                <div style="font-weight:700; margin:20px 0 8px;">๕. รายได้แยกตามซุ้มอาหาร (เรียงจากมากไปน้อย)</div>
+                <table class="rpt-table">
+                    <thead><tr><th style="width:40px;">ลำดับ</th><th>ชื่อซุ้ม</th><th>รายได้ (บาท)</th></tr></thead>
+                    <tbody>${stationRowsHTML}</tbody>
+                </table>
+
+                <div style="margin-top:36px; text-indent:48px;">จึงเรียนมาเพื่อโปรดทราบ</div>
+
+                <div style="margin-top:56px; text-align:right; padding-right:40px;">
+                    <div>ลงชื่อ .................................................</div>
+                    <div style="margin-top:6px;">( ระบบแดชบอร์ด VETRES Restaurant )</div>
+                    <div style="font-size:12px; color:#555; margin-top:4px;">ออกรายงานโดยระบบอัตโนมัติ เมื่อ ${today.toLocaleString('th-TH')}</div>
+                </div>
+            </div>
+            <style>
+                .rpt-table{ width:100%; border-collapse:collapse; margin-bottom:4px; font-size:14px; }
+                .rpt-table th, .rpt-table td{ border:1px solid #333; padding:6px 10px; text-align:left; }
+                .rpt-table th{ background:#f0f0f0; font-weight:700; }
+                .rpt-table td.num{ text-align:right; }
+            </style>`;
+        }
 
         async function exportToPDF() {
             const exportBtn = event.currentTarget;
             const originalText = exportBtn.innerHTML;
-            
-            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้างรูปภาพรวม...';
+            exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้างรายงาน...';
             exportBtn.disabled = true;
-        
+
+            let container = null;
             try {
-                const selectedDate = document.getElementById('datePicker').value;
-                const viewIds = ['view-overview', 'view-stations', 'view-analytics'];
-                const capturedCanvases = [];
-                
-                // เก็บสถานะปัจจุบันไว้เพื่อคืนค่าตอนท้าย
-                const currentActiveViewId = document.querySelector('.dashboard-view:not(.hidden)').id;
-        
-                // 1. วนลูปแคปภาพทีละส่วน
-                for (const id of viewIds) {
-                    const el = document.getElementById(id);
-                    const isHidden = el.classList.contains('hidden');
-        
-                    if (isHidden) el.classList.remove('hidden');
-                    
-                    // รอให้กราฟ Render (สำคัญมากสำหรับ iPad)
-                    await new Promise(r => setTimeout(r, 500));
-        
-                    const canvas = await html2canvas(el, {
-                        scale: 2, // เพิ่มความชัด
-                        backgroundColor: '#050505',
-                        useCORS: true,
-                        logging: false,
-                        // ปรับขอบเขตการแคปให้พอดีเนื้อหา
-                        width: el.offsetWidth,
-                        height: el.offsetHeight
-                    });
-        
-                    capturedCanvases.push(canvas);
-        
-                    if (isHidden) el.classList.add('hidden');
+                container = document.createElement('div');
+                container.style.position = 'fixed';
+                container.style.left = '-9999px';
+                container.style.top = '0';
+                container.style.zIndex = '-1';
+                container.innerHTML = buildFormalReportHTML();
+                document.body.appendChild(container);
+                await new Promise(r => setTimeout(r, 150));
+
+                const inner = document.getElementById('formalReportInner');
+                const canvas = await html2canvas(inner, { scale: 2, backgroundColor: '#ffffff', useCORS: true, logging: false });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ unit: 'pt', format: 'a4' });
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pageWidth;
+                const imgHeight = canvas.height * (imgWidth / canvas.width);
+                const imgData = canvas.toDataURL('image/png');
+
+                let heightLeft = imgHeight, position = 0;
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
                 }
-        
-                // 2. คำนวณขนาด Master Canvas (ความกว้างสูงสุด และ ความสูงรวมกัน)
-                const totalWidth = Math.max(...capturedCanvases.map(c => c.width));
-                const totalHeight = capturedCanvases.reduce((sum, c) => sum + c.height, 0);
-        
-                // 3. สร้าง Canvas กลางเพื่อนำภาพมาต่อกัน
-                const masterCanvas = document.createElement('canvas');
-                masterCanvas.width = totalWidth;
-                masterCanvas.height = totalHeight;
-                const ctx = masterCanvas.getContext('2d');
-        
-                // 4. วาดภาพลงบน Master Canvas ทีละส่วนต่อกันในแนวตั้ง
-                let currentY = 0;
-                capturedCanvases.forEach(canvas => {
-                    ctx.drawImage(canvas, 0, currentY);
-                    currentY += canvas.height;
-                });
-        
-                // 5. บันทึกและดาวน์โหลดเป็นไฟล์ PNG
-                const imgData = masterCanvas.toDataURL('image/png');
-                const link = document.createElement('a');
-                link.download = `VETRES_Full_Dashboard_${selectedDate}.png`;
-                link.href = imgData;
-                link.click();
-        
-                // 6. คืนค่าหน้าจอเดิม
-                switchView(currentActiveViewId.replace('view-', ''));
-        
+
+                const rangeSuffix = rangeDates.length ? `${rangeDates[0]}_${rangeDates[rangeDates.length - 1]}` : getTodayBKK();
+                pdf.save(`VETRES_Report_${rangeSuffix}.pdf`);
             } catch (error) {
-                console.error("Image Export Error:", error);
-                alert("เกิดข้อผิดพลาดในการสร้างรูปภาพรวม");
+                console.error('Export PDF Error:', error);
+                alert('เกิดข้อผิดพลาดในการสร้างรายงาน PDF');
             } finally {
+                if (container) document.body.removeChild(container);
                 exportBtn.innerHTML = originalText;
                 exportBtn.disabled = false;
             }
         }
     </script>
+    <svg style="visibility: hidden; position: absolute; width: 0; height: 0;" aria-hidden="true">
+    <filter id="glass-distortion">
+        <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise" />
+        <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+</svg>
+<svg style="visibility: hidden; position: absolute; width: 0; height: 0;" aria-hidden="true">
+  <defs>
+    <filter id="modal-glass-distortion" x="0%" y="0%" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.008 0.008" numOctaves="2" seed="92" result="noise" />
+      <feGaussianBlur in="noise" stdDeviation="2" result="blurred" />
+      <feDisplacementMap in="SourceGraphic" in2="blurred" scale="150" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </defs>
+</svg>
 </body>
 </html>
