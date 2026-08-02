@@ -4,57 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VETRES | Admin</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='1.5' stroke='%236B7FD7'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z' /%3E%3C/svg%3E">
     <link href="./dist/output.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Kanit', sans-serif; background-color: #050505; color: white; overflow-x: hidden; }
+        /* ────────────────────────────────────────
+           DESIGN TOKENS
+           Shared with the login screen so the whole
+           app reads as one system.
+           ──────────────────────────────────────── */
+        :root {
+            --bg: #09090b;
+            --surface: #101013;
+            --surface-2: #131316;
+            --surface-hover: #17171b;
+
+            --border: rgba(255, 255, 255, 0.06);
+            --border-strong: rgba(255, 255, 255, 0.16);
+
+            --text: #f5f6fa;
+            --text-dim: #8c90a3;
+            --text-faint: #55565c;
+
+            --accent: #6B7FD7;
+            --accent-hover: #7C8FE3;
+            --accent-active: #93A5F3;
+            --accent-glow: rgba(107, 127, 215, 0.18);
+            --accent-soft: rgba(107, 127, 215, 0.12);
+            --accent-soft-strong: rgba(107, 127, 215, 0.2);
+
+            --danger: #f1666a;
+            --success: #4fb783;
+            --warning: #d9a441;
+            --violet: #a78bd6;
+
+            --ease-premium: cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        body { font-family: 'Geist', 'IBM Plex Sans Thai', sans-serif; background-color: var(--bg); color: var(--text); overflow-x: hidden; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        input, select, textarea { background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; outline: none; transition: border 0.3s; }
-        input:focus, select:focus, textarea:focus { border-color: #3b82f6; }
+        input, select, textarea { background-color: rgba(255,255,255,0.05); border: 1px solid var(--border-strong); color: var(--text); outline: none; transition: border-color 0.2s var(--ease-premium), box-shadow 0.2s var(--ease-premium); font-family: 'Geist', 'IBM Plex Sans Thai', sans-serif; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
         .data-row:hover { background-color: rgba(255,255,255,0.02); }
         
         /* Section divider ใน form */
-        .form-section { padding: 28px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .form-section { padding: 28px 0; border-bottom: 1px solid var(--border); }
         .form-section:last-child { border-bottom: none; }
-        .section-title { font-size: 0.7rem; letter-spacing: 0.2em; color: #60a5fa; text-transform: uppercase; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
-        .section-title::before { content: ''; width: 4px; height: 14px; background: #3b82f6; border-radius: 2px; }
+        .section-title { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--accent-active); text-transform: uppercase; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title::before { content: ''; width: 4px; height: 14px; background: var(--accent); border-radius: 2px; }
         
         /* Option group card */
-        .option-group { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+        .option-group { background: rgba(255,255,255,0.03); border: 1px solid var(--border-strong); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
         .option-choice-row { display: grid; grid-template-columns: 1fr 1fr 1fr 80px 40px; gap: 8px; align-items: center; margin-bottom: 6px; }
         .option-choice-row input { padding: 8px 10px; font-size: 0.85rem; border-radius: 8px; }
         .option-label-row { display: grid; grid-template-columns: 1fr 1fr 1fr 110px 40px; gap: 8px; align-items: center; margin-bottom: 10px; }
         .option-label-row input { padding: 8px 10px; font-size: 0.85rem; border-radius: 8px; font-weight: 500; }
         
         /* Status selector */
-        .status-chip { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04); transition: all 0.2s; }
+        .status-chip { padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.04); transition: all 0.15s var(--ease-premium); }
         .status-chip:hover { border-color: rgba(255,255,255,0.3); }
-        .status-chip.active { background: #3b82f6; border-color: #60a5fa; color: white; }
+        .status-chip.active { background: var(--accent); border-color: var(--accent-active); color: white; }
 
         /* Toggle Switch Style */
         .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 34px; border: 1px solid rgba(255,255,255,0.1); }
-        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: #64748b; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #10b981; border-color: #059669; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.1); transition: .3s var(--ease-premium); border-radius: 34px; border: 1px solid var(--border-strong); }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: var(--text-faint); transition: .3s var(--ease-premium); border-radius: 50%; }
+        input:checked + .slider { background-color: var(--success); border-color: var(--success); }
         input:checked + .slider:before { transform: translateX(22px); background-color: white; }
         
         /* Status badge ในตาราง — สีแยกตาม status */
-        .sb-ปกติ { background: rgba(148,163,184,0.1); color: #cbd5e1; }
-        .sb-ขายดี { background: rgba(249,115,22,0.15); color: #fb923c; }
-        .sb-ต้องลอง { background: rgba(34,197,94,0.15); color: #4ade80; }
-        .sb-ใหม่ { background: rgba(168,85,247,0.15); color: #c084fc; }
-        .sb-15m { background: rgba(234,179,8,0.15); color: #facc15; }
-        .sb-30m { background: rgba(0,0,0,0.6); color: #facc15; border:1px solid rgba(234,179,8,0.3); }
-        .sb-หมด { background: rgba(239,68,68,0.2); color: #f87171; }
-        .sb-ไม่พร้อม { background: rgba(239,68,68,0.1); color: #fca5a5; }
-        .sb-TH_Only { background: rgba(168,85,247,0.1); color: #a855f7; }
-        .sb-ลบ { background: rgba(100,116,139,0.1); color: #64748b; }
+        .sb-ปกติ { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+        .sb-ขายดี { background: rgba(217,164,65,0.15); color: var(--warning); }
+        .sb-ต้องลอง { background: rgba(79,183,131,0.15); color: var(--success); }
+        .sb-ใหม่ { background: rgba(167,139,214,0.15); color: var(--violet); }
+        .sb-15m { background: rgba(217,164,65,0.15); color: var(--warning); }
+        .sb-30m { background: rgba(0,0,0,0.4); color: var(--warning); border:1px solid rgba(217,164,65,0.3); }
+        .sb-หมด { background: rgba(241,102,106,0.2); color: var(--danger); }
+        .sb-ไม่พร้อม { background: rgba(241,102,106,0.1); color: var(--danger); }
+        .sb-TH_Only { background: rgba(167,139,214,0.1); color: var(--violet); }
+        .sb-ลบ { background: rgba(255,255,255,0.05); color: var(--text-faint); }
 
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
@@ -64,10 +98,257 @@
         /* Preview image */
         .img-preview { width: 100%; aspect-ratio: 16/9; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); font-size: 0.75rem; }
         
-        /* Station group header ในตาราง */
-        .station-group-header { background: linear-gradient(90deg, rgba(59,130,246,0.08) 0%, transparent 100%); border-left: 3px solid #3b82f6; }
-        .station-group-header td { padding: 14px 18px !important; }
-        .station-group-header:not(:first-child) td { padding-top: 24px !important; }
+    /* ════════════════════════════════════════════════════
+       SIDEBAR — Glassmorphism Floating Panel (macOS style)
+       ════════════════════════════════════════════════════ */
+    #adminSidebar {
+        position: relative;
+        width: 244px;
+        margin: 12px 0 12px 12px;
+        padding: 0;
+        border-radius: 22px;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        background: rgba(24, 24, 30, 0.55);
+        backdrop-filter: blur(30px) saturate(180%);
+        -webkit-backdrop-filter: blur(30px) saturate(180%);
+        box-shadow:
+            0 24px 60px -24px rgba(0, 0, 0, 0.9),
+            0 2px 8px -2px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.07);
+        overflow: visible;          /* ให้ tooltip ลอยออกนอกกรอบได้ */
+        transition: width 0.38s var(--ease-premium);
+    }
+
+    /* สถานะพับ */
+    #adminSidebar.collapsed { width: 68px; }
+
+    /* จอเตี้ย (MacBook 13" / iPad แนวนอน) ลด margin + ย่อองค์ประกอบ */
+    @media (max-height: 820px) {
+        #adminSidebar { margin: 8px 0 8px 8px; border-radius: 18px; }
+        #adminSidebar .sb-head { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        #adminSidebar .sb-title { font-size: 17px; }
+    }
+    @media (max-height: 680px) {
+        #adminSidebar .nav-btn { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+    }
+
+    /* nav ไม่ต้อง scroll (มี 4 ปุ่ม) เพื่อไม่ให้ clip tooltip */
+    #adminSidebar nav { overflow: visible !important; }
+
+    /* ซ่อนข้อความเมื่อพับ */
+    #adminSidebar.collapsed .sidebar-text { display: none !important; }
+
+    /* จัดไอคอนให้อยู่ตรงกลางเมื่อพับ */
+    #adminSidebar.collapsed .logo-row { justify-content: center; }
+    #adminSidebar.collapsed .nav-btn  { justify-content: center; padding-left: 0; padding-right: 0; }
+    #adminSidebar.collapsed .sb-head  { padding-left: 0.875rem; padding-right: 0.875rem; }
+    #adminSidebar.collapsed nav       { padding-left: 0.875rem; padding-right: 0.875rem; }
+    #adminSidebar.collapsed .footer-btn { padding-left: 0; padding-right: 0; }
+
+    /* ── ปุ่ม Brand / สลับไอคอนตอน hover ───────────────── */
+    .sb-brand {
+        position: relative;
+        width: 34px; height: 34px;
+        flex-shrink: 0;
+        border-radius: 9px;
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent-hover), var(--accent));
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.24),
+            0 5px 14px rgba(107, 127, 215, 0.20);
+        transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.2s var(--ease-premium);
+    }
+    /* ขยายพื้นที่กดให้ถึง 48px สำหรับนิ้วบน iPad โดยไม่เปลี่ยนขนาดที่ตาเห็น */
+    .sb-brand::before { content: ''; position: absolute; inset: -7px; border-radius: 15px; }
+    .sb-brand svg {
+        position: absolute;
+        width: 18px; height: 18px;
+        color: #fff;
+        transition: opacity 0.18s ease, transform 0.22s var(--ease-premium);
+    }
+
+    /* Wordmark แบบบรรทัดเดียว */
+    .sb-title {
+        font-size: 18px;
+        font-weight: 560;
+        letter-spacing: -0.012em;
+        line-height: 1;
+        white-space: nowrap;
+        color: var(--text);
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .sb-title span { color: var(--accent-active); }
+    .sb-brand .ic-panel { opacity: 0; transform: scale(0.65) rotate(-8deg); }
+    .sb-brand .ic-user  { opacity: 1; transform: scale(1); }
+
+    /* เฉพาะตอนพับ: hover แล้วสลับเป็นไอคอนเปิด sidebar */
+    #adminSidebar.collapsed .sb-brand { cursor: pointer; }
+    #adminSidebar.collapsed .sb-brand:hover {
+        background: rgba(255, 255, 255, 0.10);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+        transform: scale(1.06);
+    }
+
+    /* ── iPad / จอสัมผัส: ไม่มี hover จึงโชว์ไอคอนเปิด sidebar ไปเลย ── */
+    @media (hover: none), (pointer: coarse) {
+        #adminSidebar.collapsed .sb-brand {
+            background: rgba(255, 255, 255, 0.075);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.11);
+        }
+        #adminSidebar.collapsed .sb-brand .ic-user  { opacity: 0; transform: scale(0.65); }
+        #adminSidebar.collapsed .sb-brand .ic-panel { opacity: 1; transform: scale(1) rotate(0); }
+        #adminSidebar.collapsed .sb-brand:active    { transform: scale(0.92); }
+    }
+    #adminSidebar.collapsed .sb-brand:hover .ic-user  { opacity: 0; transform: scale(0.65) rotate(8deg); }
+    #adminSidebar.collapsed .sb-brand:hover .ic-panel { opacity: 1; transform: scale(1) rotate(0); }
+
+    /* ── ปุ่มพับ มุมขวาบนของ sidebar (โชว์ตอนกางเท่านั้น) ── */
+    .sb-toggle {
+        margin-left: auto;
+        width: 30px; height: 30px;
+        flex-shrink: 0;
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--text-faint);
+        background: transparent;
+        transition: background 0.18s ease, color 0.18s ease;
+    }
+    .sb-toggle:hover { background: rgba(255, 255, 255, 0.07); color: var(--text); }
+    .sb-toggle svg { width: 18px; height: 18px; }
+    #adminSidebar.collapsed .sb-toggle { display: none; }
+
+    /* ── Tooltip กล่องข้อความ (โชว์เฉพาะตอนพับ) ─────────── */
+    .tip { position: relative; }
+    .tip::after {
+        content: attr(data-tip);
+        position: absolute;
+        left: calc(100% + 16px);
+        top: 50%;
+        transform: translateY(-50%) translateX(-6px);
+        padding: 7px 11px;
+        border-radius: 9px;
+        white-space: nowrap;
+        font-size: 12.5px;
+        font-weight: 500;
+        line-height: 1.2;
+        color: var(--text);
+        background: rgba(34, 34, 41, 0.78);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.10);
+        box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.9);
+        opacity: 0;
+        pointer-events: none;
+        z-index: 90;
+        transition: opacity 0.16s ease, transform 0.18s var(--ease-premium);
+    }
+    #adminSidebar.collapsed .tip:hover::after {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+
+    /* ── ปุ่มกลับหน้าแรก : จางๆ ไม่มีเส้นขอบขาว ────────── */
+    #adminSidebar .footer-btn {
+        background: rgba(255, 255, 255, 0.022);
+        border: 1px solid transparent;
+        color: var(--text-faint);
+    }
+    #adminSidebar .footer-btn:hover {
+        background: rgba(255, 255, 255, 0.055);
+        color: var(--text-dim);
+    }
+
+    /* ── ปุ่มที่ active ─────────────────────────────────── */
+    #adminSidebar .nav-btn.is-active { background: var(--accent-soft); color: var(--accent-active) !important; }
+    #adminSidebar.collapsed .nav-btn.is-active::before { left: -8px; }
+
+    /* Ambient mesh — ให้ backdrop-filter มีอะไรให้เบลอ */
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+            radial-gradient(680px circle at 6% 12%,  rgba(107, 127, 215, 0.13), transparent 62%),
+            radial-gradient(560px circle at 2% 78%,  rgba(167, 139, 214, 0.09), transparent 60%),
+            radial-gradient(900px circle at 88% 4%,  rgba(79, 99, 192, 0.06),  transparent 65%);
+    }
+
+        #view-menus .overflow-y-auto::before {
+            content: '';
+            display: block;
+            position: sticky;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 53px; /* ความสูง 53px คลุมพื้นที่ Header ได้พอดีเป๊ะ */
+            background-color: #161619;
+            z-index: 18; /* ลอยอยู่เหนือตาราง (0) แต่อยู่ใต้ตัวหนังสือของ th (20) */
+            margin-bottom: -53px; /* ดึงตารางให้สอดเข้าไปอยู่ใต้แผ่นหลัง */
+            pointer-events: none; /* ป้องกันไม่ให้แผ่นหลังไปบล็อกการคลิก */
+        }
+
+        table {
+            border-collapse: collapse !important; /* เปลี่ยนจาก separate เป็น collapse */
+            width: 100%;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background-color: #161619; /* หรือเปลี่ยนเป็น #111 ให้เนียนไปกับกล่องพื้นหลังตารางได้เลยครับ */
+            z-index: 19; /* วางไว้ด้านหลัง th */
+        }
+
+        .table-head-row th {
+            position: sticky;
+            top: 0;
+            background-color: inherit; /* ดึงสีมาจาก thead ให้เหมือนกันเป๊ะ */
+            z-index: 20; /* ลอยอยู่ด้านหน้าสุด */
+        }
+
+        .station-group-header{
+            position: static;
+        }
+
+        .station-group-header td {
+            position: sticky;
+            top: 52px; /* ค่าความสูงของ header หลักของคุณ */
+            z-index: 15;
+            
+            padding: 14px 18px !important;
+            
+            /* เปลี่ยนเป็นสีทึบ 100% ไม่มี Gradient ไม่มี Blur */
+            background-color: #1a1a1e !important; 
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            
+            /* เส้นขอบสีอ่อนๆ ด้านล่างเพื่อแยกแต่ละซุ้ม */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .station-group-header td::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: -2px; /* ยื่นเส้นขอบขึ้นไปอุดรอยต่อให้เนียน */
+            bottom: 0;
+            width: 3px;
+            background-color: var(--accent);
+            z-index: 16;
+        }
+
+        .table-head-row th::before {
+            display: none !important;
+        }
+
+        .station-body{
+            position:relative;
+        }
         
         /* Drag handle */
         .drag-handle { cursor: grab; color: rgba(255,255,255,0.25); transition: color 0.2s; padding: 4px 8px; }
@@ -75,40 +356,40 @@
         .drag-handle:active { cursor: grabbing; }
         
         /* Sortable states */
-        .sortable-ghost { opacity: 0.3; background: rgba(59,130,246,0.1) !important; }
-        .sortable-chosen { background: rgba(59,130,246,0.05) !important; }
-        .sortable-drag { background: #1a1a1a !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .sortable-ghost { opacity: 0.3; background: var(--accent-soft) !important; }
+        .sortable-chosen { background: rgba(107,127,215,0.05) !important; }
+        .sortable-drag { background: var(--surface-hover) !important; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
         /* --- Global Options New UI --- */
-        .opt-stat-card { background: linear-gradient(145deg, #111, #0a0a0a); border: 1px solid rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; }
-        .station-group-card { background: #0f0f0f; border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; margin-bottom: 24px; overflow: hidden; }
-        .station-badge { background: #3b82f6; color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .opt-stat-card { background: linear-gradient(145deg, var(--surface-2), var(--surface)); border: 1px solid var(--border); border-radius: 20px; padding: 20px; }
+        .station-group-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 24px; margin-bottom: 24px; overflow: hidden; }
+        .station-badge { background: var(--accent); color: white; padding: 4px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
 
         /* Premium Toggle Switch */
         .p-switch { position: relative; display: inline-block; width: 48px; height: 24px; }
         .p-switch input { opacity: 0; width: 0; height: 0; }
-        .p-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 34px; }
-        .p-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: #94a3b8; transition: .3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 50%; }
-        input:checked + .p-slider { background-color: #10b981; }
-        input:checked + .p-slider:before { transform: translateX(24px); background-color: white; box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .p-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.12); transition: .3s var(--ease-premium); border-radius: 34px; }
+        .p-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--text-dim); transition: .3s var(--ease-premium); border-radius: 50%; }
+        input:checked + .p-slider { background-color: var(--accent); }
+        input:checked + .p-slider:before { transform: translateX(24px); background-color: white; box-shadow: 0 0 15px rgba(107, 127, 215, 0.5); }
 
         /* Option Row */
-        .opt-row { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); transition: all 0.2s; }
+        .opt-row { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); transition: all 0.2s; }
         .opt-row:last-child { border-bottom: none; }
-        .opt-row:hover { background: rgba(255,255,255,0.01); }
-        .opt-row.is-out { background: rgba(239, 68, 68, 0.02); }
+        .opt-row:hover { background: rgba(255,255,255,0.015); }
+        .opt-row.is-out { background: rgba(241, 102, 106, 0.03); }
 
         /* --- Option Group Card Design --- */
         .group-card {
-            background: #111;
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 28px;
-            transition: border-color 0.25s, box-shadow 0.25s;
+            background: var(--surface-2);
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
+            transition: border-color 0.2s var(--ease-premium), box-shadow 0.2s var(--ease-premium);
             break-inside: avoid;
             margin-bottom: 20px;
         }
         .group-card:hover {
-            border-color: rgba(59, 130, 246, 0.35);
+            border-color: rgba(107, 127, 215, 0.35);
             box-shadow: 0 16px 40px rgba(0,0,0,0.45);
         }
 
@@ -118,64 +399,86 @@
             column-gap: 20px;
             display: block !important;
         }
-        @media (min-width: 900px) { #optionsContainer { columns: 2; } }
-        @media (min-width: 1400px) { #optionsContainer { columns: 3; } }
+        @media (min-width: 700px)  { #optionsContainer { columns: 2; } }
+        @media (min-width: 1080px) { #optionsContainer { columns: 3; column-gap: 14px; } }
+        @media (min-width: 1500px) { #optionsContainer { columns: 3; column-gap: 22px; } }
+
+        /* โหมดกระชับ — iPad แนวนอน: บีบระยะห่างทุกชั้นให้ 3 คอลัมน์อยู่ได้จริง */
+        @media (min-width: 1080px) and (max-width: 1499px) {
+            #view-options .options-tabs,
+            #view-options .options-body { padding-left: 18px; padding-right: 18px; }
+            #view-options .options-body { padding-top: 22px; }
+
+            .group-card { margin-bottom: 14px; border-radius: 12px; }
+            .group-card .gc-head { padding: 14px; }
+            .group-card .gc-body { padding: 8px; }
+            .group-card .gc-foot { padding-left: 10px; padding-right: 10px; padding-bottom: 10px; }
+
+            .item-row { padding: 9px 10px; margin-bottom: 5px; }
+            .item-row .item-name { font-size: 12.5px; }
+
+            .p-switch { width: 40px; height: 21px; }
+            .p-slider:before { height: 15px; width: 15px; }
+            input:checked + .p-slider:before { transform: translateX(19px); }
+
+            .type-badge, .linked-count-badge { padding: 3px 7px; font-size: 9px; letter-spacing: 0.04em; }
+        }
 
         /* Card header badges */
         .type-badge {
             display: inline-flex; align-items: center; gap: 5px;
-            padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 800;
+            padding: 3px 10px; border-radius: 6px; font-size: 10px; font-weight: 800;
             text-transform: uppercase; letter-spacing: 0.08em;
         }
-        .type-badge.single { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
-        .type-badge.multi  { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.25); }
+        .type-badge.single { background: var(--accent-soft); color: var(--accent-active); border: 1px solid rgba(107,127,215,0.25); }
+        .type-badge.multi  { background: rgba(167,139,214,0.15); color: var(--violet); border: 1px solid rgba(167,139,214,0.25); }
         .linked-count-badge {
             display: inline-flex; align-items: center; gap: 4px;
-            padding: 3px 9px; border-radius: 20px; font-size: 10px; font-weight: 700;
-            background: rgba(255,255,255,0.04); color: #64748b; border: 1px solid rgba(255,255,255,0.06);
+            padding: 3px 9px; border-radius: 6px; font-size: 10px; font-weight: 700;
+            background: rgba(255,255,255,0.04); color: var(--text-dim); border: 1px solid var(--border);
         }
 
         /* Item rows */
         .item-row {
             display: flex; align-items: center; justify-content: space-between;
             padding: 11px 14px;
-            border-radius: 14px;
+            border-radius: 8px;
             margin-bottom: 6px;
             border: 1px solid transparent;
             background: rgba(255,255,255,0.025);
-            transition: all 0.15s;
+            transition: all 0.15s var(--ease-premium);
         }
-        .item-row:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
-        .item-row.is-out .item-name { text-decoration: line-through; color: #475569; }
+        .item-row:hover { background: rgba(255,255,255,0.05); border-color: var(--border-strong); }
+        .item-row.is-out .item-name { text-decoration: line-through; color: var(--text-faint); }
 
         /* Price pill */
         .price-pill {
             display: inline-flex; align-items: center; gap: 3px;
-            padding: 3px 10px; border-radius: 10px;
-            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-            font-size: 11px; font-weight: 700; color: #64748b;
+            padding: 3px 10px; border-radius: 6px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--border-strong);
+            font-size: 11px; font-weight: 700; color: var(--text-dim);
             min-width: 40px; justify-content: center;
         }
-        .price-pill.has-price { color: #60a5fa; background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.2); }
+        .price-pill.has-price { color: var(--accent-active); background: var(--accent-soft); border-color: rgba(107,127,215,0.2); }
 
         /* Edit icon on item — shows on hover */
         .item-edit-btn {
-            opacity: 0.3; width: 28px; height: 28px; border-radius: 8px;
-            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);
+            opacity: 0.3; width: 28px; height: 28px; border-radius: 6px;
+            background: rgba(255,255,255,0.05); border: 1px solid var(--border-strong);
             display: flex; align-items: center; justify-content: center;
-            color: #64748b; font-size: 10px; cursor: pointer; transition: all 0.15s;
+            color: var(--text-dim); font-size: 10px; cursor: pointer; transition: all 0.15s var(--ease-premium);
             flex-shrink: 0;
         }
         .item-row:hover .item-edit-btn { opacity: 1; }
-        .item-edit-btn:hover { background: rgba(59,130,246,0.15); color: #60a5fa; border-color: rgba(59,130,246,0.3); }
+        .item-edit-btn:hover { background: var(--accent-soft-strong); color: var(--accent-active); border-color: rgba(107,127,215,0.3); }
 
         .menu-chip {
-            background: rgba(59, 130, 246, 0.08);
-            color: #60a5fa;
-            border: 1px solid rgba(59, 130, 246, 0.15);
+            background: rgba(255,255,255,0.03);
+            color: var(--text-dim);
+            border: 1px solid var(--border);
             height: 32px; /* เพิ่มบรรทัดนี้: ล็อคความสูงให้เท่ากับปุ่ม */
             padding: 0 12px; /* ปรับ Padding ใหม่ */
-            border-radius: 8px;
+            border-radius: 6px;
             font-size: 10px;
             font-weight: 600;
             display: inline-flex;
@@ -186,10 +489,55 @@
         /* View pages */
         .view-page.hidden { display: none !important; }
         .view-page { 
+            position: relative;
             display: flex; 
             width: 100%; /* เพิ่ม: บังคับเต็มความกว้าง */
             flex: 1;    /* เพิ่ม: ให้ขยายพื้นที่จนสุด */
         }
+
+        /* ── Header กระจก: ลอยทับพื้นที่ scroll เพื่อให้ content เลื่อนลอดใต้แล้วเบลอ ── */
+        .glass-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            z-index: 25;
+            min-height: 96px;
+            border: 0;
+            background: none;
+        }
+
+        /* Progressive blur — ซ้อนสองชั้น ให้ความเบลอค่อยๆ จางลงแทนที่จะตัดเป็นเส้น */
+        .glass-header::before,
+        .glass-header::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            pointer-events: none;
+        }
+
+        /* ชั้นล่าง: เบลอเบา ทอดยาวเลยขอบ header ลงไปอีก 40px */
+        .glass-header::before {
+            bottom: -40px;
+            z-index: -2;
+            backdrop-filter: blur(7px);
+            -webkit-backdrop-filter: blur(7px);
+            background: linear-gradient(to bottom,
+                rgba(9, 9, 13, 0.55) 0%,
+                rgba(9, 9, 13, 0.34) 55%,
+                rgba(9, 9, 13, 0) 100%);
+            -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 56%, rgba(0,0,0,0.42) 82%, transparent 100%);
+                    mask-image: linear-gradient(to bottom, #000 0%, #000 56%, rgba(0,0,0,0.42) 82%, transparent 100%);
+        }
+
+        /* ชั้นบน: เบลอหนัก อยู่เฉพาะช่วงบน แล้วจางหายก่อนถึงขอบล่าง */
+        .glass-header::after {
+            bottom: 4px;
+            z-index: -1;
+            backdrop-filter: blur(22px) saturate(170%);
+            -webkit-backdrop-filter: blur(22px) saturate(170%);
+            -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 40%, rgba(0,0,0,0.32) 72%, transparent 100%);
+                    mask-image: linear-gradient(to bottom, #000 0%, #000 40%, rgba(0,0,0,0.32) 72%, transparent 100%);
+        }
+        .view-page > .page-body { padding-top: 96px; }
         button, select, input {
             touch-action: manipulation;
         }
@@ -204,9 +552,15 @@
             /* เพิ่ม: ให้ข้อมูลเริ่มจากซ้ายเสมอ ไม่กระจายตัวกว้างเกินไป */
             justify-content: start; 
         }
-        .zone-card { background: #111; border: 1px solid rgba(255,255,255,0.05); border-radius: 18px; padding: 20px 22px; }
+        .zone-card { background: rgba(255, 255, 255, 0.028); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; }
         .zone-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-        .zone-title { font-size: 0.95rem; font-weight: 600; color: #cbd5e1; padding-left: 12px; border-left: 3px solid #ef4444; }
+        .zone-title { 
+                font-size: 0.95rem; 
+                font-weight: 600; 
+                color: var(--text-dim); 
+                padding-left: 12px; 
+                border-left: 3px solid var(--accent);  /* 🟣 เปลี่ยนเป็นสีม่วง/น้ำเงินสว่างพรีเมียม */
+            }
         
         .table-circle {
             /* แก้ไข: ใช้ขนาดที่แน่นอนเพื่อความสม่ำเสมอ */
@@ -219,15 +573,15 @@
             justify-content: center;
             cursor: pointer; 
             font-weight: 600;
-            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.2s var(--ease-premium);
             background: rgba(255,255,255,0.04); 
-            border: 2px solid rgba(255,255,255,0.08);
-            color: #cbd5e1;
+            border: 2px solid var(--border-strong);
+            color: var(--text-dim);
             font-size: 0.9rem;
             /* ป้องกันการซูมและช่วยให้สัมผัสแม่นยำบน iPad */
             touch-action: manipulation; 
         }
-        .table-circle:hover { transform: scale(1.1); border-color: #3b82f6; background: rgba(59,130,246,0.1); color: white; }
+        .table-circle:hover { transform: scale(1.06); border-color: var(--accent); background: var(--accent-soft); color: white; }
         .table-circle .qr-id { font-size: 0.6rem; opacity: 0.5; margin-top: 2px; font-weight: 400; }
         
         .add-table-btn {
@@ -235,31 +589,31 @@
             width: 85px; 
             height: 85px; 
             border-radius: 50%;
-            background: rgba(59,130,246,0.05); 
-            border: 2px dashed rgba(59,130,246,0.3);
+            background: var(--accent-soft); 
+            border: 2px dashed rgba(107,127,215,0.35);
             display: flex; 
             align-items: center; 
             justify-content: center;
             cursor: pointer; 
-            transition: all 0.2s;
-            color: #60a5fa;
+            transition: all 0.2s var(--ease-premium);
+            color: var(--accent-active);
             touch-action: manipulation;
         }
-        .add-table-btn:hover { background: rgba(59,130,246,0.15); border-color: #3b82f6; transform: scale(1.05); }
+        .add-table-btn:hover { background: var(--accent-soft-strong); border-color: var(--accent); transform: scale(1.04); }
         
         /* BANNERS VIEW — Card grid */
         .banner-card {
-            background: #111; border: 1px solid rgba(255,255,255,0.06); border-radius: 18px;
-            overflow: hidden; cursor: grab; transition: all 0.2s;
+            background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+            overflow: hidden; cursor: grab; transition: all 0.2s var(--ease-premium);
             display: flex; flex-direction: column;
         }
-        .banner-card:hover { border-color: rgba(255,255,255,0.15); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .banner-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         .banner-card:active { cursor: grabbing; }
         .banner-card.inactive { opacity: 0.5; }
         .banner-img { width: 100%; aspect-ratio: 16/9; background-size: cover; background-position: center; background-color: rgba(255,255,255,0.03); }
         .banner-meta { padding: 14px 16px; }
         .banner-actions { display: flex; gap: 8px; padding: 0 16px 14px; }
-        .banner-action-btn { flex: 1; padding: 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 500; transition: all 0.15s; }
+        .banner-action-btn { flex: 1; padding: 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 500; transition: all 0.15s var(--ease-premium); }
         .thai-safe-tracking {
             letter-spacing: 0.2em; /* หรือค่าที่คุณต้องการ */
             /* บังคับการแสดงผลฟอนต์ให้คงที่ */
@@ -268,121 +622,246 @@
             font-feature-settings: "kern" 0;
             text-rendering: optimizeSpeed; /* iPad จะคำนวณตำแหน่งสระแม่นยำขึ้นในโหมดนี้ */
         }
+
+        /* ────────────────────────────────────────
+           GLOBAL RESKIN
+           This page's markup leans on Tailwind's stock
+           blue/green/black utility classes inline
+           (bg-blue-600, text-blue-400, bg-[#111], etc).
+           Remapping those classes to the shared tokens
+           here reskins every button, badge, and panel
+           consistently without touching the markup or
+           any onclick/id/behavior.
+           ──────────────────────────────────────── */
+
+        /* Surfaces */
+        .bg-\[\#050505\] { background-color: var(--bg) !important; }
+        .bg-\[\#0a0a0a\] { background-color: var(--surface) !important; }
+        .bg-\[\#111\] { background-color: var(--surface-2) !important; }
+        .bg-\[\#1a1a1a\] { background-color: var(--surface-hover) !important; }
+
+        /* Borders */
+        .border-white\/5 { border-color: var(--border) !important; }
+        .border-white\/10 { border-color: var(--border-strong) !important; }
+
+        /* Accent — solid fills */
+        .bg-blue-600, .bg-blue-500 { background-color: var(--accent) !important; }
+        .hover\:bg-blue-500:hover, .hover\:bg-blue-600:hover { background-color: var(--accent-hover) !important; }
+        .bg-blue-600\/10, .bg-blue-500\/10 { background-color: var(--accent-soft) !important; }
+        .bg-blue-500\/5 { background-color: rgba(107, 127, 215, 0.06) !important; }
+
+        /* Accent — text */
+        .text-blue-300 { color: var(--accent-active) !important; }
+        .text-blue-400 { color: var(--accent-active) !important; }
+        .text-blue-500 { color: var(--accent) !important; }
+        .hover\:text-blue-300:hover, .hover\:text-blue-400:hover { color: var(--accent-active) !important; }
+
+        /* Accent — borders */
+        .border-blue-500 { border-color: var(--accent) !important; }
+        .border-blue-500\/20 { border-color: rgba(107, 127, 215, 0.2) !important; }
+        .border-blue-500\/30 { border-color: rgba(107, 127, 215, 0.3) !important; }
+        .border-blue-500\/40 { border-color: rgba(107, 127, 215, 0.4) !important; }
+        .focus\:border-blue-500:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px var(--accent-glow); }
+
+        /* Accent — shadows (Tailwind colored shadow via --tw-shadow-color) */
+        .shadow-blue-900\/20 { --tw-shadow-color: rgba(107, 127, 215, 0.16) !important; }
+        .shadow-blue-900\/30 { --tw-shadow-color: rgba(107, 127, 215, 0.25) !important; }
+
+        /* Accent — native form control accent-color */
+        .accent-blue-500 { accent-color: var(--accent) !important; }
+
+        /* Success (availability / confirm actions) */
+        .bg-green-500, .bg-green-600 { background-color: var(--success) !important; }
+        .text-green-400 { color: var(--success) !important; }
+
+        /* Modal overlays — blur the backdrop without darkening it */
+        [class*="bg-black/"] { background-color: rgba(5, 8, 20, 0.001) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; }
     </style>
 </head>
 <!-- 1. ปรับ Body ให้ล็อคความสูงไว้ที่ viewport เสมอ -->
 <body class="flex h-[100dvh] overflow-hidden bg-[#050505]">
 
-    <!-- 2. ปรับ Sidebar ให้ใช้ h-full เพื่ออิงตาม Body และล็อคตำแหน่ง -->
-    <aside class="w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col h-full shrink-0 hidden md:flex">
-        
-        <!-- Header: ใส่ shrink-0 เพื่อไม่ให้ถูกบีบความสูง -->
-        <div class="p-6 border-b border-white/5 shrink-0">
-            <h1 class="text-2xl font-black tracking-widest text-white uppercase leading-none">
-                VET <span class="text-blue-500">RESTAURANT</span>
-            </h1>
+    <!-- ════════ SIDEBAR : glass floating panel ════════ -->
+    <aside id="adminSidebar" class="flex flex-col shrink-0 hidden md:flex relative z-30">
+
+        <!-- Header: brand mark + collapse button -->
+        <div class="sb-head px-4 py-4 shrink-0">
+            <div class="flex items-center gap-4 logo-row">
+
+                <!-- Brand / ปุ่มกาง sidebar (สลับไอคอนตอน hover ในโหมดพับ) -->
+                <button id="sbBrandBtn" type="button" onclick="toggleSidebar(true)"
+                    class="sb-brand tip" data-tip="เปิดแถบเมนู" aria-label="เปิดแถบเมนู">
+                    <!-- user (default) -->
+                    <svg class="ic-user" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                    <!-- sidebar (on hover / บนจอสัมผัส) -->
+                    <svg class="ic-panel" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h12a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 18 19.5H6a2.25 2.25 0 0 1-2.25-2.25V6.75Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 4.5v15" />
+                    </svg>
+                </button>
+
+                <!-- Wordmark -->
+                <h1 class="sb-title sidebar-text">Admin <span>Panel</span></h1>
+
+                <!-- ปุ่มพับ มุมขวาบน (เห็นเฉพาะตอนกาง) -->
+                <button id="sbCollapseBtn" type="button" onclick="toggleSidebar(false)"
+                    class="sb-toggle" aria-label="ปิดแถบเมนู" title="ปิดแถบเมนู">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h12a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 18 19.5H6a2.25 2.25 0 0 1-2.25-2.25V6.75Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 4.5v15" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <!-- Navigation: ส่วนนี้จะเป็นส่วนเดียวที่เลื่อนได้ (Scroll) หากเมนูเยอะ -->
-        <nav class="flex-1 p-4 space-y-2 overflow-y-auto no-scrollbar">
-            <button data-view="menus" onclick="switchView('menus')" class="nav-btn w-full flex items-center gap-3 bg-blue-600/10 text-blue-500 px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
-                <i class="fas fa-utensils"></i> จัดการเมนูอาหาร
-            </button>
-            <button data-view="options" onclick="switchView('options')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
-                <i class="fas fa-tags"></i> จัดการ Options
-            </button>
-            <button data-view="tables" onclick="switchView('tables')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
-                <i class="fas fa-chair"></i> จัดการโต๊ะ
-            </button>
-            <button data-view="banners" onclick="switchView('banners')" class="nav-btn w-full flex items-center gap-3 text-slate-400 hover:bg-white/5 hover:text-white px-4 py-3 rounded-xl font-bold transition-all touch-manipulation">
-                <i class="fas fa-image"></i> จัดการ Banners
-            </button>
+        <!-- Navigation -->
+        <nav class="flex-1 px-3 pt-1">
+            <div class="space-y-1">
+                <button data-tip="จัดการเมนูอาหาร" aria-label="จัดการเมนูอาหาร" data-view="menus" onclick="switchView('menus')"
+                    class="nav-btn tip relative w-full flex items-center gap-3 text-slate-400 hover:bg-white/[0.06] hover:text-white px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 touch-manipulation">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" class="w-5 h-5 shrink-0" fill="currentColor">
+                        <path d="M256 410.304V96a32 32 0 0 1 64 0v314.304a96 96 0 0 0 64-90.56V96a32 32 0 0 1 64 0v223.744a160 160 0 0 1-128 156.8V928a32 32 0 0 1-64 0V476.544a160 160 0 0 1-128-156.8V96a32 32 0 0 1 64 0v223.744a96 96 0 0 0 64 90.56zM672 572.48C581.184 552.128 512 446.848 512 320c0-141.44 85.952-256 192-256s192 114.56 192 256c0 126.848-69.184 232.128-160 252.48V928a32 32 0 0 1-64 0V572.48zM704 512c66.048 0 128-82.56 128-192s-61.952-192-128-192-128 82.56-128 192 128 192 128 192z"/>
+                    </svg>
+                    <span class="sidebar-text truncate">จัดการเมนูอาหาร</span>
+                </button>
+
+                <button data-tip="จัดการ Options" aria-label="จัดการ Options" data-view="options" onclick="switchView('options')"
+                    class="nav-btn tip relative w-full flex items-center gap-3 text-slate-400 hover:bg-white/[0.06] hover:text-white px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 touch-manipulation">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" class="w-5 h-5 shrink-0">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+                    </svg>
+                    <span class="sidebar-text truncate">จัดการ Options</span>
+                </button>
+
+                <button data-tip="จัดการโต๊ะ" aria-label="จัดการโต๊ะ" data-view="tables" onclick="switchView('tables')"
+                    class="nav-btn tip relative w-full flex items-center gap-3 text-slate-400 hover:bg-white/[0.06] hover:text-white px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 touch-manipulation">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 490.641 490.641" fill="currentColor" class="w-5 h-5 shrink-0" aria-hidden="true">
+                        <path d="M487.547 179.076l-74.667-74.667c-2.027-2.027-4.693-3.093-7.573-3.093H84.027c-2.88 0-5.653 1.173-7.573 3.2L3.067 179.182c-4.16 4.16-4.053 10.987.107 15.04 2.027 1.92 4.693 3.093 7.467 3.093h42.667v181.013c0 5.333 3.84 10.133 9.067 10.88 6.613.96 12.267-4.16 12.267-10.56V197.316h42.667v95.68c0 5.333 3.84 10.133 9.067 10.88 6.613.96 12.267-4.16 12.267-10.56v-96h213.333v95.68c0 5.333 3.84 10.133 9.067 10.88 6.613.96 12.267-4.16 12.267-10.56v-96h42.667v181.013c0 5.333 3.84 10.133 9.067 10.88 6.613.96 12.267-4.16 12.267-10.56V197.316h42.667c5.867 0 10.667-4.8 10.667-10.667C490.641 183.769 489.467 181.102 487.547 179.076zM36.134 175.982l52.373-53.333h312.427l53.333 53.333H36.134z"/>
+                    </svg>
+                    <span class="sidebar-text truncate">จัดการโต๊ะ</span>
+                </button>
+
+                <button data-tip="จัดการ Banners" aria-label="จัดการ Banners" data-view="banners" onclick="switchView('banners')"
+                    class="nav-btn tip relative w-full flex items-center gap-3 text-slate-400 hover:bg-white/[0.06] hover:text-white px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors duration-150 touch-manipulation">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" class="w-5 h-5 shrink-0">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                    <span class="sidebar-text truncate">จัดการ Banners</span>
+                </button>
+            </div>
         </nav>
 
-        <!-- Footer: ล็อคปุ่มกลับหน้าแรกไว้ที่ขอบล่างของหน้าจอ iPad เป๊ะๆ -->
-        <div class="p-4 border-t border-white/5 shrink-0 bg-[#0a0a0a]">
-            <button onclick="window.location.href='index.html'" class="w-full flex items-center justify-center gap-3 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-4 py-3 rounded-xl transition-all group active:scale-95 touch-manipulation">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 transition-transform group-hover:-translate-x-1">
-                    <path fill-rule="evenodd" d="M9.53 2.47a.75.75 0 0 1 0 1.06L4.81 8.25H15a6.75 6.75 0 0 1 0 13.5h-3a.75.75 0 0 1 0-1.5h3a5.25 5.25 0 1 0 0-10.5H4.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+        <!-- Footer: back-to-home button -->
+        <div class="p-3 shrink-0">
+            <button onclick="window.location.href='index.html'" data-tip="กลับหน้าแรก" aria-label="กลับหน้าแรก"
+                class="footer-btn tip w-full flex items-center justify-center gap-2.5 px-2.5 py-2.5 rounded-xl transition-all duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7" stroke="currentColor" class="w-3.5 h-3.5 shrink-0">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
                 </svg>
-                <span class="font-bold text-sm tracking-wide">กลับหน้าแรก</span>
+                <span class="text-[13px] font-medium tracking-wide sidebar-text">กลับหน้าแรก</span>
             </button>
         </div>
+
     </aside>
+
+    <script>
+        /* ── Sidebar collapse/expand ─────────────────────────
+           อ่านค่าก่อน paint เพื่อไม่ให้เห็นการกระตุกตอนโหลด */
+        (function () {
+            try {
+                if (localStorage.getItem('vetres_admin_sidebar') === 'collapsed') {
+                    document.getElementById('adminSidebar').classList.add('collapsed');
+                }
+            } catch (e) {}
+        })();
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof switchView === 'function') switchView('menus');
+        });
+
+        function toggleSidebar(open) {
+            const sb = document.getElementById('adminSidebar');
+            if (!sb) return;
+            const isCollapsed = sb.classList.contains('collapsed');
+            // ปุ่ม brand ทำงานเฉพาะตอนพับอยู่เท่านั้น
+            if (open === true && !isCollapsed) return;
+            const next = (typeof open === 'boolean') ? !open : !isCollapsed;
+            sb.classList.toggle('collapsed', next);
+            try { localStorage.setItem('vetres_admin_sidebar', next ? 'collapsed' : 'expanded'); } catch (e) {}
+        }
+    </script>
 
         <!-- โค้ดส่วน Header และ Table ของคุณตามเดิม -->
 
-    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+    <main class="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         
         <!-- ════════════ VIEW: MENUS ════════════ -->
-        <div id="view-menus" class="view-page flex flex-col h-screen overflow-hidden">
-            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center">
+        <div id="view-menus" class="view-page flex flex-col h-full overflow-hidden">
+            <header class="page-header p-6 flex justify-between items-center shrink-0">
                 <div>
                     <h2 class="text-2xl font-bold">จัดการเมนูอาหาร</h2>
                 </div>
                 <div class="flex gap-3">
                     <div class="relative">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-                        <input type="text" id="searchInput" placeholder="ค้นหาเมนู..." class="pl-10 pr-4 py-3 rounded-xl text-sm w-64" oninput="renderTable()">
+                        <input type="text" id="searchInput" placeholder="ค้นหาเมนู..." class="pl-10 pr-4 py-3 rounded-lg text-sm w-64" oninput="renderTable()">
                     </div>
-                    <select id="filterStatus" onchange="renderTable()" class="px-4 py-3 rounded-xl text-sm">
-                        <option value="">ทุกสถานะ</option>
-                        <option value="ปกติ">ปกติ</option>
-                        <option value="ขายดี">ขายดี</option>
-                        <option value="ต้องลอง">ต้องลอง</option>
-                        <option value="ใหม่">ใหม่</option>
-                        <option value="15m">รอ 15m</option>
-                        <option value="30m">รอ 30m</option>
-                        <option value="หมด">หมด</option>
-                        <option value="ไม่พร้อม">ไม่พร้อม</option>
-                        <option value="TH_Only">TH Only</option>
+                    <select id="filterStation" onchange="renderTable()" class="px-4 py-3 rounded-lg text-sm">
+                        <option value="">ทุกซุ้ม</option>
                     </select>
-                    <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all">
+                    <button onclick="openModal('add')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all">
                         <i class="fas fa-plus"></i> เพิ่มเมนูใหม่
                     </button>
                 </div>
             </header>
 
-            <div class="flex-1 p-6 overflow-auto">
-                <div class="bg-[#111] rounded-2xl border border-white/5 overflow-hidden">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-white/5 text-slate-400 text-sm uppercase tracking-wider">
-                                <th class="p-4 font-semibold">รูปภาพ</th>
-                                <th class="p-4 font-semibold">ชื่อเมนู</th>
-                                <th class="p-4 font-semibold">หมวดหมู่</th>
-                                <th class="p-4 font-semibold text-right">ราคา</th>
-                                <th class="p-4 font-semibold text-center">สถานะ</th>
-                                <th class="p-4 font-semibold text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="menuTableBody" class="divide-y divide-white/5">
-                            <tr><td colspan="6" class="p-10 text-center text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>กำลังโหลดข้อมูล...</td></tr>
-                        </tbody>
-                    </table>
+            <div class="flex-1 px-6 pb-6 overflow-hidden flex flex-col min-h-0">
+                <div class="flex-1 bg-[#111] rounded-xl border border-white/5 overflow-hidden flex flex-col min-h-0 relative">
+                    <div class="flex-1 overflow-y-auto no-scrollbar relative">
+                        <table class="w-full text-left border-separate border-spacing-0">
+                            <thead>
+                                <!-- 🚨 ลบ bg-[#161619] ออกจากตรงนี้แล้ว เพื่อปล่อยให้ CSS ทำงาน 🚨 -->
+                                <tr class="table-head-row text-slate-400 text-sm uppercase tracking-wider">
+                                    <th class="p-4 font-semibold">รูปภาพ</th>
+                                    <th class="p-4 font-semibold">ชื่อเมนู</th>
+                                    <th class="p-4 font-semibold text-right">ราคา</th>
+                                    <th class="p-4 font-semibold text-center">สถานะ</th>
+                                    <th class="p-4 font-semibold text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menuTableBody">
+                                <tr><td colspan="5" class="p-10 text-center text-slate-500"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>กำลังโหลดข้อมูล...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="shrink-0 px-5 py-3.5 bg-[#161619] border-t border-white/5 flex items-center justify-between">
+                        <p class="text-xs text-slate-500"><span id="rowCount" class="text-slate-300 font-semibold">0</span> เมนู</p>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-600 text-center mt-4"><span id="rowCount">0</span> รายการ</p>
             </div>
         </div>
 
 
         <!-- ════════════ VIEW: TABLES ════════════ -->
-        <div id="view-tables" class="view-page hidden flex-col h-screen overflow-hidden">
+        <div id="view-tables" class="view-page hidden flex-col h-full overflow-hidden">
             <!-- ปรับ Header ให้มี min-h เทียบเท่าหน้าจัดการเมนู และใช้ items-center -->
-            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center min-h-[97px]">
+            <header class="page-header glass-header px-8 py-6 flex justify-between items-center w-full">
                 <div class="flex items-center gap-4">
                     <div>
                         <h2 class="text-2xl font-bold tracking-tight text-white">จัดการโต๊ะ</h2>
                     </div>
                 </div>
                 <div class="flex gap-3 items-center">
-                    <div class="bg-white/5 px-4 py-2 rounded-xl border border-white/5">
-                        <span id="tablesCount" class="text-lg font-bold text-blue-400">0 โต๊ะ</span>
+                    <div class="bg-white/5 px-4 py-2 rounded-lg border border-white/5">
+                        <span id="tablesCount" class="text-lg font-medium text-blue-400">0 โต๊ะ</span>
                     </div>
                 </div>
             </header>
 
-            <div class="flex-1 p-6 overflow-auto">
+            <div class="page-body flex-1 p-6 overflow-auto">
                 <div id="tablesContainer" class="space-y-6">
                     <div class="text-center text-slate-500 py-20">
                         <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>กำลังโหลด...
@@ -393,17 +872,17 @@
 
 
         <!-- ════════════ VIEW: BANNERS ════════════ -->
-        <div id="view-banners" class="view-page hidden flex-col h-screen overflow-hidden">
-            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center">
+        <div id="view-banners" class="view-page hidden flex-col h-full overflow-hidden">
+            <header class="page-header glass-header px-8 py-6 flex justify-between items-center w-full">
                 <div>
                     <h2 class="text-2xl font-bold">จัดการ Banners</h2>
                 </div>
-                <button onclick="openBannerModal('add')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all">
+                <button onclick="openBannerModal('add')" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-bold shadow-lg shadow-blue-900/20 flex items-center gap-2 transition-all">
                     <i class="fas fa-plus"></i> เพิ่ม Banner
                 </button>
             </header>
 
-            <div class="flex-1 p-6 overflow-auto">
+            <div class="page-body flex-1 p-6 overflow-auto">
                 <div id="bannersContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     <div class="text-center text-slate-500 py-20 col-span-full">
                         <i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>กำลังโหลด...
@@ -412,26 +891,27 @@
             </div>
         </div>
         <!-- ════════════ VIEW: OPTIONS ════════════ -->
-        <div id="view-options" class="view-page hidden flex-col h-screen overflow-hidden">
-            <header class="bg-[#0a0a0a] border-b border-white/5 p-6 flex justify-between items-center shrink-0">
+        <div id="view-options" class="view-page hidden flex-col h-full overflow-hidden">
+            <header class="page-header glass-header p-6 flex justify-between items-center">
                 <div>
                     <h2 class="text-2xl font-bold tracking-tight">จัดการ Options</h2>
                 </div>
                 <div class="flex items-center gap-3">
                     <div class="relative">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
-                        <input type="text" id="optionSearchInput" placeholder="ค้นหาหัวข้อ..." class="pl-10 pr-4 py-3 rounded-2xl text-sm w-60" oninput="renderOptionsView()">
+                        <input type="text" id="optionSearchInput" placeholder="ค้นหาหัวข้อ..." class="pl-10 pr-4 py-3 rounded-lg text-sm w-60" oninput="renderOptionsView()">
                     </div>
-                    <button onclick="openCreateGroupModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-900/30 touch-manipulation">
+                    <button onclick="openCreateGroupModal()" class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-3 rounded-lg font-bold text-sm transition-all shadow-lg shadow-blue-900/30 touch-manipulation">
                         <i class="fas fa-plus"></i> เพิ่มกลุ่ม Option
                     </button>
                 </div>
             </header>
 
-            <div class="bg-[#0a0a0a] px-8 py-4 border-b border-white/5 flex gap-2 overflow-x-auto no-scrollbar" id="optionStationTabs"></div>
-
-            <div class="flex-1 p-8 overflow-y-auto no-scrollbar bg-[#050505]">
-                <div id="optionsContainer" class="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-32"></div>
+            <div class="page-body flex-1 overflow-y-auto no-scrollbar">
+                <div class="options-tabs px-8 pt-4 pb-2 flex gap-2 overflow-x-auto no-scrollbar" id="optionStationTabs"></div>
+                <div class="options-body p-8 pt-7">
+                    <div id="optionsContainer" class="grid grid-cols-1 xl:grid-cols-2 gap-8 pb-32"></div>
+                </div>
             </div>
         </div>
 </main>
@@ -461,26 +941,26 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">ชื่อเมนู (TH) *</label>
-                            <input type="text" id="item_th" required class="w-full p-3 rounded-xl" placeholder="เช่น กระต่ายทอดกระเทียม">
+                            <input type="text" id="item_th" required class="w-full p-3 rounded-lg" placeholder="เช่น กระต่ายทอดกระเทียม">
                         </div>
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">ชื่อเมนู (EN)</label>
-                            <input type="text" id="item_en" class="w-full p-3 rounded-xl" placeholder="Garlic Fried Rabbit">
+                            <input type="text" id="item_en" class="w-full p-3 rounded-lg" placeholder="Garlic Fried Rabbit">
                         </div>
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">ชื่อเมนู (CN)</label>
-                            <input type="text" id="item_cn" class="w-full p-3 rounded-xl" placeholder="蒜香炸兔肉">
+                            <input type="text" id="item_cn" class="w-full p-3 rounded-lg" placeholder="蒜香炸兔肉">
                         </div>
                     </div>
                     
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">ราคาปกติ *</label>
-                            <input type="number" id="price" required step="0.01" class="w-full p-3 rounded-xl">
+                            <input type="number" id="price" required step="0.01" class="w-full p-3 rounded-lg">
                         </div>
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">ราคาลด (ถ้ามี)</label>
-                            <input type="number" id="new_price" step="0.01" class="w-full p-3 rounded-xl placeholder-slate-600" placeholder="เว้นว่าง = ไม่ลด">
+                            <input type="number" id="new_price" step="0.01" class="w-full p-3 rounded-lg placeholder-slate-600" placeholder="เว้นว่าง = ไม่ลด">
                         </div>
                         <div class="flex items-end">
                             <p class="text-xs text-slate-500 pb-3"><i class="fas fa-grip-vertical mr-1"></i> ลากแถวเพื่อเรียงลำดับ</p>
@@ -499,14 +979,14 @@
                     
                     <div>
                         <label class="text-xs text-slate-400 mb-1 block">เลือกซุ้ม *</label>
-                        <select id="stationDropdown" onchange="onStationDropdownChange()" required class="w-full p-3 rounded-xl">
+                        <select id="stationDropdown" onchange="onStationDropdownChange()" required class="w-full p-3 rounded-lg">
                             <option value="">-- กรุณาเลือก --</option>
                             <!-- Populated by populateStationDropdown() -->
                         </select>
                     </div>
 
                     <!-- Display เมื่อเลือกซุ้มแล้ว — แสดงทั้ง 3 ภาษาให้เห็น -->
-                    <div id="stationPreview" class="hidden mt-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl">
+                    <div id="stationPreview" class="hidden mt-3 p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
                         <div class="grid grid-cols-3 gap-4 text-sm">
                             <div>
                                 <p class="text-xs text-slate-500">ภาษาไทย</p>
@@ -529,7 +1009,7 @@
                     <div class="section-title text-lg">Image</div>
                     <div>
                         <label class="text-xs text-slate-400 mb-1 block">รูปเมนู (URL) *</label>
-                        <input type="url" id="image_url" oninput="updatePreview('image_url','imgPreview')" class="w-full p-3 rounded-xl text-blue-400 text-sm" placeholder="https://...">
+                        <input type="url" id="image_url" oninput="updatePreview('image_url','imgPreview')" class="w-full p-3 rounded-lg text-blue-400 text-sm" placeholder="https://...">
                         <div id="imgPreview" class="img-preview mt-3" style="max-width: 480px;"><span>preview รูปเมนู</span></div>
                     </div>
                     <input type="hidden" id="cat_image">
@@ -541,15 +1021,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">คำอธิบาย (TH)</label>
-                            <textarea id="desc_th" rows="3" class="w-full p-3 rounded-xl text-sm" placeholder="เช่น เนื้อกระต่ายทอดน้ำมันกระเทียม หอมเด็ด เสิร์ฟพร้อมน้ำจิ้ม"></textarea>
+                            <textarea id="desc_th" rows="3" class="w-full p-3 rounded-lg text-sm" placeholder="เช่น เนื้อกระต่ายทอดน้ำมันกระเทียม หอมเด็ด เสิร์ฟพร้อมน้ำจิ้ม"></textarea>
                         </div>
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">คำอธิบาย (EN)</label>
-                            <textarea id="desc_en" rows="3" class="w-full p-3 rounded-xl text-sm"></textarea>
+                            <textarea id="desc_en" rows="3" class="w-full p-3 rounded-lg text-sm"></textarea>
                         </div>
                         <div>
                             <label class="text-xs text-slate-400 mb-1 block">คำอธิบาย (CN)</label>
-                            <textarea id="desc_cn" rows="3" class="w-full p-3 rounded-xl text-sm"></textarea>
+                            <textarea id="desc_cn" rows="3" class="w-full p-3 rounded-lg text-sm"></textarea>
                         </div>
                     </div>
                 </div>
@@ -568,8 +1048,11 @@
 
             <!-- Footer (sticky) -->
             <div class="p-6 border-t border-white/10 flex gap-4 shrink-0 bg-[#111] rounded-b-3xl">
-                <button type="button" onclick="closeModal()" class="flex-1 py-3.5 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
-                <button type="submit" form="menuForm" id="btnSave" class="flex-1 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                <button type="button" id="btnDeleteMenu" onclick="askDelete(document.getElementById('menuId').value)" class="hidden py-3.5 px-5 rounded-lg bg-red-600/10 text-red-500 font-bold hover:bg-red-600 hover:text-white transition-all inline-flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                </button>
+                <button type="button" onclick="closeModal()" class="flex-1 py-3.5 rounded-lg bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
+                <button type="submit" form="menuForm" id="btnSave" class="flex-1 py-3.5 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
                     <i class="fas fa-save mr-2"></i> บันทึกข้อมูล
                 </button>
             </div>
@@ -595,33 +1078,33 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-xs text-slate-400 mb-1 block">ชื่อซุ้ม (TH) *</label>
-                        <input type="text" id="stationFormTh" required class="w-full p-3 rounded-xl" placeholder="กระต่าย">
+                        <input type="text" id="stationFormTh" required class="w-full p-3 rounded-lg" placeholder="กระต่าย">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400 mb-1 block">Name (EN)</label>
-                        <input type="text" id="stationFormEn" class="w-full p-3 rounded-xl" placeholder="Rabbit">
+                        <input type="text" id="stationFormEn" class="w-full p-3 rounded-lg" placeholder="Rabbit">
                     </div>
                     <div>
                         <label class="text-xs text-slate-400 mb-1 block">名称 (CN)</label>
-                        <input type="text" id="stationFormCn" class="w-full p-3 rounded-xl" placeholder="兔肉">
+                        <input type="text" id="stationFormCn" class="w-full p-3 rounded-lg" placeholder="兔肉">
                     </div>
                 </div>
 
                 <div>
                     <label class="text-xs text-slate-400 mb-1 block">รูป Category Header (URL)</label>
-                    <input type="url" id="stationFormCatImage" oninput="updatePreview('stationFormCatImage','stationFormCatPreview')" class="w-full p-3 rounded-xl text-blue-400 text-sm" placeholder="https://...">
+                    <input type="url" id="stationFormCatImage" oninput="updatePreview('stationFormCatImage','stationFormCatPreview')" class="w-full p-3 rounded-lg text-blue-400 text-sm" placeholder="https://...">
                     <div id="stationFormCatPreview" class="img-preview mt-3"><span>preview รูป category header</span></div>
                 </div>
 
-                <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300 leading-relaxed hidden" id="stationEditWarning">
+                <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3 text-xs text-yellow-300 leading-relaxed hidden" id="stationEditWarning">
                     <i class="fas fa-exclamation-triangle mr-1"></i>
                     <strong>หมายเหตุ:</strong> เมื่อแก้ไขชื่อซุ้ม EN/CN หรือรูป — ระบบจะ sync ไปยังทุกเมนูในซุ้มนี้อัตโนมัติ
                 </div>
             </form>
 
             <div class="p-6 border-t border-white/10 flex gap-3 shrink-0 bg-[#111] rounded-b-3xl">
-                <button type="button" onclick="closeModal('stationModal')" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
-                <button type="submit" form="stationForm" id="btnSaveStation" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                <button type="button" onclick="closeModal('stationModal')" class="flex-1 py-3 rounded-lg bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
+                <button type="submit" form="stationForm" id="btnSaveStation" class="flex-1 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
                     <i class="fas fa-save mr-2"></i> บันทึก
                 </button>
             </div>
@@ -646,7 +1129,7 @@
                 
                 <div>
                     <label class="text-xs text-slate-400 mb-1 block">รหัสโต๊ะ</label>
-                    <div id="tableFormIdDisplay" class="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-2xl font-bold text-center text-white"></div>
+                    <div id="tableFormIdDisplay" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-2xl font-bold text-center text-white"></div>
                 </div>
 
                 <div>
@@ -654,21 +1137,21 @@
                     <div class="flex items-center gap-2">
                         <span id="tableFormQrPrefix" class="text-slate-400 font-mono text-lg"></span>
                         <span class="text-slate-500">-</span>
-                        <input type="text" id="tableFormQrSuffix" maxlength="2" required pattern="[A-Za-z0-9]{2}" class="flex-1 p-3 rounded-xl text-center text-lg font-mono uppercase tracking-wider" placeholder="AA" oninput="this.value=this.value.toUpperCase()">
+                        <input type="text" id="tableFormQrSuffix" maxlength="2" required pattern="[A-Za-z0-9]{2}" class="flex-1 p-3 rounded-lg text-center text-lg font-mono uppercase tracking-wider" placeholder="AA" oninput="this.value=this.value.toUpperCase()">
                     </div>
                     <p class="text-xs text-slate-500 mt-2"><i class="fas fa-info-circle mr-1"></i> สำหรับ deactivate QR เก่าเมื่อรูป QR หลุด</p>
                 </div>
 
-                <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-xl p-3 text-xs text-yellow-300 leading-relaxed">
+                <div class="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-3 text-xs text-yellow-300 leading-relaxed">
                     <i class="fas fa-exclamation-triangle mr-1"></i>
                     <strong>Note:</strong> เมื่อเปลี่ยน QR ID — รูป QR ต้องพิมพ์ QR ใหม่ไปติดแทนอันเก่า
                 </div>
 
                 <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="askDeleteTable()" id="btnDeleteTable" class="flex-1 py-3 rounded-xl bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 font-bold transition-all">
-                        <i class="fas fa-trash mr-1"></i> ลบโต๊ะ
+                    <button type="button" onclick="askDeleteTable()" id="btnDeleteTable" class="flex-1 py-3 rounded-lg bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 font-bold transition-all inline-flex items-center justify-center gap-1.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg> ลบโต๊ะ
                     </button>
-                    <button type="submit" id="btnSaveTable" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                    <button type="submit" id="btnSaveTable" class="flex-1 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
                         <i class="fas fa-save mr-1"></i> บันทึก
                     </button>
                 </div>
@@ -692,26 +1175,26 @@
 
                 <div>
                     <label class="text-xs text-slate-400 mb-1 block">URL รูปภาพ *</label>
-                    <input type="url" id="bannerFormImage" required oninput="updatePreview('bannerFormImage','bannerFormPreview')" class="w-full p-3 rounded-xl text-blue-400 text-sm" placeholder="https://...">
+                    <input type="url" id="bannerFormImage" required oninput="updatePreview('bannerFormImage','bannerFormPreview')" class="w-full p-3 rounded-lg text-blue-400 text-sm" placeholder="https://...">
                     <div id="bannerFormPreview" class="img-preview mt-3"></div>
                 </div>
 
                 <div>
                     <label class="text-xs text-slate-400 mb-1 block">เมื่อกด Banner ให้ไปที่ซุ้ม</label>
-                    <select id="bannerFormAction" class="w-full p-3 rounded-xl">
+                    <select id="bannerFormAction" class="w-full p-3 rounded-lg">
                         <option value="">-- ไม่ทำอะไร --</option>
                         <!-- populated by populateBannerStations() -->
                     </select>
                 </div>
 
-                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
+                <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
                     <input type="checkbox" id="bannerFormActive" checked class="w-5 h-5 accent-blue-500 cursor-pointer">
                     <label for="bannerFormActive" class="text-sm cursor-pointer flex-1">Active</label>
                 </div>
 
                 <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closeModal('bannerModal')" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
-                    <button type="submit" id="btnSaveBanner" class="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
+                    <button type="button" onclick="closeModal('bannerModal')" class="flex-1 py-3 rounded-lg bg-white/5 hover:bg-white/10 font-bold transition-all">ยกเลิก</button>
+                    <button type="submit" id="btnSaveBanner" class="flex-1 py-3 rounded-lg bg-blue-600 hover:bg-blue-500 font-bold shadow-lg shadow-blue-900/30 transition-all">
                         <i class="fas fa-save mr-1"></i> บันทึก
                     </button>
                 </div>
@@ -723,13 +1206,13 @@
     <!-- Delete confirmation modal -->
     <div id="deleteModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
         <div class="bg-[#111] w-full max-w-md rounded-3xl border border-white/10 p-8 text-center">
-            <div class="w-16 h-16 rounded-full bg-red-500/10 mx-auto flex items-center justify-center mb-4"><i class="fas fa-trash-alt text-red-500 text-2xl"></i></div>
+            <div class="w-16 h-16 rounded-full bg-red-500/10 mx-auto flex items-center justify-center mb-4"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-7 h-7 text-red-500"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg></div>
             <h3 class="text-xl font-bold mb-2">ลบเมนูนี้?</h3>
             <p class="text-slate-400 text-sm mb-2" id="deleteItemName"></p>
             <p class="text-xs text-slate-500 mb-6">เมนูจะถูกซ่อนออกจากหน้าลูกค้า แต่ข้อมูลออเดอร์เก่าจะยังอยู่</p>
             <div class="flex gap-3">
-                <button onclick="closeModal('deleteModal')" class="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 font-medium">ยกเลิก</button>
-                <button onclick="confirmDelete()" class="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 font-bold">ยืนยันลบ</button>
+                <button onclick="closeModal('deleteModal')" class="flex-1 py-3 rounded-lg bg-white/5 hover:bg-white/10 font-medium">ยกเลิก</button>
+                <button onclick="confirmDelete()" class="flex-1 py-3 rounded-lg bg-red-600 hover:bg-red-500 font-bold">ยืนยันลบ</button>
             </div>
         </div>
     </div>
@@ -769,13 +1252,28 @@
         let sortableInstances = [];
 
         // ════════════════════════════════════════════════════════
+        // ICON SET (Heroicons outline, inline SVG — replaces Font Awesome
+        // for the icons the design system controls)
+        // ════════════════════════════════════════════════════════
+        const ICONS = {
+            pencil: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="${cls}"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>`,
+            trash: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="${cls}"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>`,
+            folder: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="${cls}"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>`,
+            photo: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="${cls}"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>`,
+            eyeOff: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="${cls}"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg>`,
+            eye: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="${cls}"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>`,
+            link: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="${cls}"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" /></svg>`,
+            dotsVertical: (cls = 'w-4 h-4') => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="${cls}"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>`,
+        };
+
+        // ════════════════════════════════════════════════════════
         // TOAST NOTIFICATION
         // ════════════════════════════════════════════════════════
         function toast(msg, type = 'success') {
             const bg = type === 'success' ? 'bg-green-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
             const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle');
             const el = document.createElement('div');
-            el.className = `${bg} text-white px-5 py-3 rounded-xl shadow-2xl mb-2 flex items-center gap-3 pointer-events-auto font-medium animate-[slideIn_0.3s_ease-out]`;
+            el.className = `${bg} text-white px-5 py-3 rounded-lg shadow-2xl mb-2 flex items-center gap-3 pointer-events-auto font-medium animate-[slideIn_0.3s_ease-out]`;
             el.innerHTML = `<i class="fas ${icon}"></i> ${msg}`;
             document.getElementById('toast').appendChild(el);
             setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 2500);
@@ -806,6 +1304,8 @@
             }
         })();
 
+        
+
         // ════════════════════════════════════════════════════════
         // FETCH (menus + stations พร้อมกัน)
         // ════════════════════════════════════════════════════════
@@ -828,14 +1328,26 @@
             stationsData = stationRes.data || [];
             renderTable();
             populateStationDropdown();
+            populateStationFilter();
         }
 
         // Backward compat alias
         const fetchMenus = fetchAll;
 
+        // ซุ้ม filter dropdown บน header หน้าจัดการเมนู
+        function populateStationFilter() {
+            const sel = document.getElementById('filterStation');
+            if (!sel) return;
+            const current = sel.value;
+            const sorted = [...stationsData].sort((a, b) => (a.sort_order ?? 9999) - (b.sort_order ?? 9999));
+            sel.innerHTML = `<option value="">ทุกซุ้ม</option>` + sorted.map(s => `<option value="${s.station_th}">${s.station_th}</option>`).join('');
+            if (current && sorted.some(s => s.station_th === current)) sel.value = current;
+        }
+
         function renderTable() {
             const search = document.getElementById('searchInput').value.toLowerCase().trim();
-            const filterStatus = document.getElementById('filterStatus').value;
+            const filterStationEl = document.getElementById('filterStation');
+            const filterStation = filterStationEl ? filterStationEl.value : '';
             let filtered = menuData;
             
             if (search) {
@@ -845,15 +1357,15 @@
                     (m.station_th || '').toLowerCase().includes(search)
                 );
             }
-            if (filterStatus) {
-                filtered = filtered.filter(m => m.status === filterStatus);
+            if (filterStation) {
+                filtered = filtered.filter(m => m.station_th === filterStation);
             }
 
             document.getElementById('rowCount').innerText = filtered.length;
             const tbody = document.getElementById('menuTableBody');
             
             if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-500">ไม่พบข้อมูลที่ค้นหา</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-slate-500">ไม่พบข้อมูลที่ค้นหา</td></tr>`;
                 destroyAllSortables();
                 return;
             }
@@ -872,20 +1384,20 @@
                 return (stationOrder[a] ?? 9999) - (stationOrder[b] ?? 9999);
             });
 
-            const isFiltered = search || filterStatus;
+            const isFiltered = search || filterStation;
             
             // ใช้ tbody เดียว แต่แบ่ง row ด้วย class — Sortable จะจัดการกลุ่มผ่าน group config
             tbody.innerHTML = sortedStationKeys.map(stationKey => {
                 const items = grouped[stationKey];
                 const station = stationsData.find(s => s.station_th === stationKey);
                 const editBtn = station 
-                    ? `<button onclick="openStationModal('edit', '${station.id}')" class="ml-3 text-blue-400 hover:text-blue-300 text-xs font-medium"><i class="fas fa-edit mr-1"></i>แก้ไขซุ้ม</button>`
+                    ? `<button onclick="openStationModal('edit', '${station.id}')" class="ml-3 inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 text-xs font-medium">${ICONS.pencil('w-3 h-3')}แก้ไขซุ้ม</button>`
                     : `<span class="ml-3 text-yellow-400 text-xs"><i class="fas fa-exclamation-triangle mr-1"></i>ซุ้มนี้ยังไม่อยู่ใน stations table</span>`;
                 
                 const rowsHTML = items.map(m => {
                     const img = m.image_url 
                         ? `<img src="${m.image_url}" class="w-12 h-12 rounded-lg object-cover bg-white/10" onerror="this.style.display='none'">`
-                        : `<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center text-slate-600"><i class="fas fa-image"></i></div>`;
+                        : `<div class="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center text-slate-600">${ICONS.photo('w-5 h-5')}</div>`;
                     const priceDisplay = m.new_price 
                         ? `<span class="line-through text-slate-500 text-xs mr-2">฿${m.price}</span><span class="text-green-400 font-bold">฿${m.new_price}</span>` 
                         : `<span class="font-bold">฿${m.price}</span>`;
@@ -893,34 +1405,46 @@
                     const dragHandle = isFiltered ? '' : `<span class="drag-handle inline-block" title="ลากเพื่อเรียงลำดับ"><i class="fas fa-grip-vertical"></i></span>`;
 
                     return `
-                        <tr class="data-row sortable-row transition-all" data-id="${m.id}" data-station="${stationKey}">
-                            <td class="p-4"><div class="flex items-center gap-2">${dragHandle}${img}</div></td>
-                            <td class="p-4">
-                                <p class="font-bold text-white">${m.item_th}</p>
-                            </td>
-                            <td class="p-4">
-                                <p class="text-sm"><i class="fas fa-folder text-slate-500 mr-2"></i>${m.station_th}</p>
-                            </td>
-                            <td class="p-4 text-right">${priceDisplay}</td>
-                            <td class="p-4 text-center"><span class="${statusClass} px-3 py-1 rounded-full text-xs font-bold">${m.status}</span></td>
-                            <td class="p-4 text-center">
-                                <button onclick="openModal('edit', '${m.id}')" class="text-blue-400 hover:text-blue-300 mx-2 transition-all" title="แก้ไข"><i class="fas fa-edit"></i></button>
-                                <button onclick="askDelete('${m.id}')" class="text-red-500 hover:text-red-400 mx-2 transition-all" title="ลบ"><i class="fas fa-trash-alt"></i></button>
-                            </td>
-                        </tr>
-                    `;
+                    <tr class="data-row sortable-row transition-all" data-id="${m.id}" data-station="${stationKey}">
+                        <td class="p-4"><div class="flex items-center gap-2">${dragHandle}${img}</div></td>
+                        <td class="p-4">
+                            <p class="font-bold text-white">${m.item_th}</p>
+                        </td>
+                        <!-- ลบ td หมวดหมู่ (m.station_th) ออกจากตรงนี้ -->
+                        <td class="p-4 text-right">${priceDisplay}</td>
+                        <td class="p-4 text-center"><span class="${statusClass} px-3 py-1 rounded-full text-xs font-bold">${m.status}</span></td>
+                        <td class="p-4 text-center">
+                            <button onclick="openModal('edit', '${m.id}')" class="text-blue-400 hover:text-blue-300 transition-all inline-flex items-center justify-center" title="แก้ไข">${ICONS.pencil('w-4 h-4')}</button>
+                        </td>
+                    </tr>
+                `;
                 }).join('');
 
                 return `
-                    <tr class="station-group-header non-draggable" data-station-header="${stationKey}">
-                        <td colspan="6" class="text-blue-300 text-sm font-bold">
-                            <i class="fas fa-folder-open mr-2"></i> ${stationKey}
-                            <span class="text-slate-500 font-normal ml-2">(${items.length} เมนู)</span>
+                    <tbody class="station-body">
+
+                    <tr class="station-group-header non-draggable"
+                        data-station-header="${stationKey}">
+                        <td colspan="5" class="text-blue-300 text-sm font-bold">
+
+                            <span class="inline-flex items-center gap-2">
+                                ${ICONS.folder('w-4 h-4')}
+                                ${stationKey}
+                            </span>
+
+                            <span class="text-slate-500 font-normal ml-2">
+                                (${items.length} เมนู)
+                            </span>
+
                             ${editBtn}
+
                         </td>
                     </tr>
+
                     ${rowsHTML}
-                `;
+
+                    </tbody>
+                    `;
             }).join('');
 
             // Init Sortable (ทำงานทั้ง tbody) — แต่ลากได้เฉพาะภายในซุ้มเดียวกัน (validate ตอน onMove)
@@ -1193,7 +1717,7 @@
             const stations = ['ทั้งหมด', ...new Set(optionsMasterData.map(o => o.station_th))].filter(Boolean);
             tabsContainer.innerHTML = stations.map(s => `
                 <button onclick="setOptionStationFilter('${s}')" 
-                    class="px-6 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${selectedOptionStation === s ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30' : 'bg-white/5 text-slate-500 hover:text-white'}">
+                    class="px-6 py-2 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${selectedOptionStation === s ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/30' : 'bg-white/5 text-slate-500 hover:text-white'}">
                     ${s}
                 </button>
             `).join('');
@@ -1248,15 +1772,13 @@
                                 <span class="item-name font-semibold text-sm ${isOut ? 'text-slate-600' : 'text-slate-200'} truncate">${opt.name_th}</span>
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0">
-                                <span class="price-pill ${hasPrice ? 'has-price' : ''}">
-                                    ฿${opt.extra_price}
-                                </span>
+                                ${hasPrice ? `<span class="price-pill has-price">฿${opt.extra_price}</span>` : ''}
                                 <label class="p-switch">
                                     <input type="checkbox" ${!isOut ? 'checked' : ''} onchange="toggleOptionStatus('${opt.id}', this.checked ? 'ปกติ' : 'หมด')">
                                     <span class="p-slider"></span>
                                 </label>
                                 <button class="item-edit-btn" onclick="openItemEditModal('${opt.id}', '${group.label}', '${group.station}')" title="แก้ไข">
-                                    <i class="fas fa-pencil-alt"></i>
+                                    ${ICONS.pencil('w-3 h-3')}
                                 </button>
                             </div>
                         </div>
@@ -1265,7 +1787,7 @@
 
                 return `
                     <div class="group-card flex flex-col">
-                        <div class="p-5 border-b border-white/[0.06] flex items-start justify-between gap-3">
+                        <div class="gc-head p-5 border-b border-white/[0.06] flex items-start justify-between gap-3">
                             <div class="min-w-0">
                                 <h3 class="text-base font-black text-white leading-tight mb-2 truncate">${group.label}</h3>
                                 <div class="flex items-center flex-wrap gap-2">
@@ -1282,19 +1804,19 @@
                                 </div>
                             </div>
                             <button onclick="openEditGroupModal('${group.label}', '${group.station}', '${group.type}')"
-                                    class="flex-shrink-0 w-8 h-8 rounded-xl bg-white/5 border border-white/5 text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 flex items-center justify-center transition-all group/edit"
+                                    class="flex-shrink-0 w-8 h-8 rounded-lg bg-white/5 border border-white/5 text-slate-600 hover:text-blue-400 hover:bg-blue-500/10 flex items-center justify-center transition-all group/edit"
                                     title="แก้ไขกลุ่ม">
-                                <i class="fas fa-pencil-alt text-[10px] opacity-40 group-hover/edit:opacity-100"></i>
+                                <span class="opacity-40 group-hover/edit:opacity-100 inline-flex">${ICONS.dotsVertical('w-4 h-4')}</span>
                             </button>
                         </div>
-                        <div class="p-3 opt-list-container">${itemsHtml.length ? itemsHtml : '<p class="text-center text-slate-600 text-xs py-4 italic">ยังไม่มีตัวเลือก</p>'}</div>
-                        <div class="px-4 pb-4 flex justify-between items-end gap-3">
+                        <div class="gc-body p-3 opt-list-container">${itemsHtml.length ? itemsHtml : '<p class="text-center text-slate-600 text-xs py-4 italic">ยังไม่มีตัวเลือก</p>'}</div>
+                        <div class="gc-foot px-4 pb-4 flex justify-between items-end gap-3">
                             <div class="flex flex-wrap gap-1.5 flex-1">
                                 ${group.linkedMenus.map(m => `<span class="menu-chip"><i class="fas fa-utensils text-[9px]"></i> ${m.name}</span>`).join('')}
                             </div>
                             <!-- เพิ่มปุ่ม + เพิ่มตัวเลือก ด้านขวาล่าง ความสูง 32px (h-[32px]) เท่ากับชิป -->
                             <button onclick="openAddItemToGroupModal('${group.label}', '${group.station}')" 
-                                    class="flex-shrink-0 h-[32px] px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-blue-900/30 active:scale-95">
+        class="flex-shrink-0 h-[32px] px-4 bg-white/[0.04] hover:bg-white/[0.15] hover:border-white/20 text-slate-400 hover:text-white border border-white/8 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95">
                                 <i class="fas fa-plus text-[9px]"></i> เพิ่มตัวเลือก
                             </button>
                         </div>
@@ -1335,6 +1857,7 @@
         function openModal(mode, id = null) {
             isEditMode = (mode === 'edit');
             document.getElementById('modalTitle').innerText = isEditMode ? 'แก้ไขเมนู' : 'เพิ่มเมนูใหม่';
+            document.getElementById('btnDeleteMenu').classList.toggle('hidden', !isEditMode);
             
             // Reset
             document.getElementById('menuForm').reset();
@@ -1460,6 +1983,7 @@
             if (!deleteTargetId) return;
             const { error } = await supabaseClient.from('menus').update({ status: 'ลบ' }).eq('id', deleteTargetId);
             closeModal('deleteModal');
+            closeModal('menuModal');
             if (error) {
                 toast('เกิดข้อผิดพลาดในการลบ', 'error');
             } else {
@@ -1486,8 +2010,7 @@
             // Update nav button styles
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 const isActive = btn.dataset.view === view;
-                btn.classList.toggle('bg-blue-600/10', isActive);
-                btn.classList.toggle('text-blue-500', isActive);
+                btn.classList.toggle('is-active', isActive);
                 btn.classList.toggle('text-slate-400', !isActive);
             });
 
@@ -1544,7 +2067,7 @@
                     <div class="text-center py-20">
                         <i class="fas fa-th-large text-6xl text-slate-700 mb-4"></i>
                         <p class="text-slate-500 mb-6">ยังไม่มีโต๊ะในระบบ</p>
-                        <button onclick="askAddZone()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition-all">
+                        <button onclick="askAddZone()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-bold transition-all">
                             <i class="fas fa-plus mr-2"></i> เพิ่ม Zone แรก
                         </button>
                     </div>
@@ -1727,7 +2250,7 @@
             if (bannersData.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full text-center py-20">
-                        <i class="fas fa-image text-6xl text-slate-700 mb-4"></i>
+                        <div class="flex justify-center mb-4">${ICONS.photo('w-16 h-16 text-slate-700')}</div>
                         <p class="text-slate-500">ยังไม่มี banner ในระบบ</p>
                     </div>
                 `;
@@ -1738,7 +2261,7 @@
             container.innerHTML = bannersData.map((b, idx) => {
                 const stationName = b.action || '';
                 const actionBadge = stationName 
-                    ? `<span class="text-xs text-blue-400"><i class="fas fa-link mr-1"></i> ${stationName}</span>`
+                    ? `<span class="text-xs text-blue-400 inline-flex items-center gap-1">${ICONS.link('w-3 h-3')} ${stationName}</span>`
                     : `<span class="text-xs text-slate-500">ไม่มีลิงก์</span>`;
                 
                 return `
@@ -1754,14 +2277,14 @@
                                 : `<span class="text-xs bg-slate-500/15 text-slate-400 px-2 py-1 rounded-full">Inactive</span>`}
                         </div>
                         <div class="banner-actions">
-                            <button onclick="toggleBannerActive('${b.id}', ${!b.is_active})" class="banner-action-btn ${b.is_active ? 'bg-yellow-600/10 text-yellow-400 hover:bg-yellow-600 hover:text-white border border-yellow-500/30' : 'bg-green-600/10 text-green-400 hover:bg-green-600 hover:text-white border border-green-500/30'}">
-                                <i class="fas fa-${b.is_active ? 'eye-slash' : 'eye'} mr-1"></i> ${b.is_active ? 'ปิด' : 'เปิด'}
+                            <button onclick="toggleBannerActive('${b.id}', ${!b.is_active})" class="banner-action-btn ${b.is_active ? 'bg-yellow-600/10 text-yellow-400 hover:bg-yellow-600 hover:text-white border border-yellow-500/30' : 'bg-green-600/10 text-green-400 hover:bg-green-600 hover:text-white border border-green-500/30'} inline-flex items-center justify-center gap-1">
+                                ${b.is_active ? ICONS.eyeOff('w-3.5 h-3.5') : ICONS.eye('w-3.5 h-3.5')} ${b.is_active ? 'ปิด' : 'เปิด'}
                             </button>
-                            <button onclick="openBannerModal('edit', '${b.id}')" class="banner-action-btn bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30">
-                                <i class="fas fa-edit mr-1"></i> แก้ไข
+                            <button onclick="openBannerModal('edit', '${b.id}')" class="banner-action-btn bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 inline-flex items-center justify-center gap-1">
+                                ${ICONS.pencil('w-3.5 h-3.5')} แก้ไข
                             </button>
-                            <button onclick="askDeleteBanner('${b.id}')" class="banner-action-btn bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30">
-                                <i class="fas fa-trash mr-1"></i> ลบ
+                            <button onclick="askDeleteBanner('${b.id}')" class="banner-action-btn bg-red-600/10 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 inline-flex items-center justify-center gap-1">
+                                ${ICONS.trash('w-3.5 h-3.5')} ลบ
                             </button>
                         </div>
                     </div>
@@ -2619,8 +3142,8 @@
         </div>
 
         <div class="p-8 border-t border-white/10 flex gap-4 shrink-0">
-        <button onclick="deleteGroupHeader()" class="px-6 py-4 rounded-2xl bg-red-600/10 text-red-500 font-bold hover:bg-red-600 hover:text-white transition-all">
-            <i class="fas fa-trash-alt mr-2"></i> ลบกลุ่มนี้
+        <button onclick="deleteGroupHeader()" class="px-6 py-4 rounded-2xl bg-red-600/10 text-red-500 font-bold hover:bg-red-600 hover:text-white transition-all inline-flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg> ลบกลุ่มนี้
         </button>
         <div class="flex-1 flex gap-4">
             <button onclick="closeModal('editGroupModal')" class="flex-1 py-4 rounded-2xl bg-white/5 text-slate-400 font-bold">ยกเลิก</button>
@@ -2695,8 +3218,8 @@
             </div>
         </div>
         <div class="flex gap-3 mt-6">
-            <button onclick="deleteItemFromModal()" class="px-4 py-3 rounded-2xl bg-red-600/10 text-red-500 font-bold hover:bg-red-600 hover:text-white transition-all text-sm">
-                <i class="fas fa-trash-alt mr-1"></i> ลบ
+            <button onclick="deleteItemFromModal()" class="px-4 py-3 rounded-2xl bg-red-600/10 text-red-500 font-bold hover:bg-red-600 hover:text-white transition-all text-sm inline-flex items-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg> ลบ
             </button>
             <button onclick="closeModal('itemEditModal')" class="flex-1 py-3 rounded-2xl bg-white/5 text-slate-400 font-bold hover:bg-white/10 transition-all text-sm">ยกเลิก</button>
             <button id="btnSaveItemEdit" onclick="saveItemEdit()" class="flex-1 py-3 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-all text-sm shadow-lg shadow-blue-900/30">
