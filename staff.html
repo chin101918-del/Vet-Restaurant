@@ -1590,14 +1590,22 @@
         .receipt-capture .receipt-header p.r-subtitle { font-size: 29px !important; font-weight: 500; }
         .receipt-capture .receipt-header p.r-address { font-size: 22px !important; color: #444; }
         .receipt-capture .r-reserve { margin-top: 10px !important; font-weight: 600; }
-        .receipt-capture .r-divider { height: 1px; margin: 8px 0; overflow: hidden; border-top: 1px dashed #000; }
-        .receipt-capture .receipt-info { margin: 30px 0; font-size: 34px; font-weight: bold; line-height: 1.35; overflow-wrap: anywhere; }
+        .receipt-capture .r-divider { height: 1px; margin: 4px 0; overflow: hidden; border-top: 1px dashed #000; }
+        .receipt-capture .receipt-info { margin: 15px 0; font-size: 34px; font-weight: bold; line-height: 1.35; overflow-wrap: anywhere; }
         .receipt-capture #r-table-no { font-size: inherit !important; }
         .receipt-capture .r-row, .receipt-capture .r-summary-row { display: flex; justify-content: space-between; }
-        .receipt-capture .receipt-items-table { width: 100%; margin: 30px 0; border-collapse: collapse; table-layout: fixed; font-size: 34px; }
-        .receipt-capture .receipt-items-table th { padding: 15px 0; border-bottom: 3px solid #000; text-align: left; font-weight: 600; overflow-wrap: anywhere; }
+        .receipt-capture .receipt-items-table { width: 100%; margin: 15px 0; border-collapse: collapse; table-layout: fixed; font-size: 34px; }
+        .receipt-capture .receipt-items-table th {
+            font-size: 26px !important;    /* ลดขนาดลง (เดิม 34px) */
+            font-weight: 500 !important;   /* ลดความหนา (เดิม 600) */
+            padding: 10px 0 !important;    /* ลดพื้นที่บนล่างให้บางลง */
+            border-bottom: 2px solid #000 !important; /* ปรับเส้นใต้ให้บางลงรับกับตัวอักษร */
+        }
         .receipt-capture .receipt-items-table td { padding: 18px 0; vertical-align: top; overflow-wrap: anywhere; word-break: break-word; }
-        .receipt-capture .receipt-items-table th:nth-child(1), .receipt-capture .receipt-items-table td:nth-child(1) { width: 55% !important; }
+        .receipt-capture .receipt-items-table th:nth-child(1), .receipt-capture .receipt-items-table td:nth-child(1) {
+            text-align: left !important;
+            padding-left: 0 !important;
+        }
         .receipt-capture .receipt-items-table th:nth-child(2), .receipt-capture .receipt-items-table td:nth-child(2) { width: 20% !important; }
         .receipt-capture .receipt-items-table th:nth-child(3), .receipt-capture .receipt-items-table td:nth-child(3) { width: 25% !important; }
         .receipt-capture .r-item-name { display: block; font-weight: 600; }
@@ -1612,11 +1620,59 @@
            ค่าด้านล่างคือ -15% ตัวหนังสือ / -50% spacing จากค่าตั้งต้นด้านบน */
         .receipt-capture.receipt-bill-compact { padding: 15px; }
         .receipt-capture.receipt-bill-compact .r-divider { margin: 4px 0; }
-        .receipt-capture.receipt-bill-compact .receipt-info { margin: 15px 0; font-size: 29px; }
+        /* ใบเสร็จ: บรรทัด โต๊ะ/เวลา/จำนวนลูกค้า ให้บางลง + เล็กลง (เดิม font-weight สืบทอดมาจาก .receipt-info ที่เป็น bold) */
+        .receipt-capture.receipt-bill-compact .receipt-info { margin: 15px 0; font-size: 24px; font-weight: 400; }
         .receipt-capture.receipt-bill-compact .receipt-items-table { margin: 15px 0; font-size: 29px; }
-        .receipt-capture.receipt-bill-compact .receipt-items-table th { padding: 8px 0; }
+        /* ใบเสร็จ: หัวตาราง รายการ/จำนวน/ราคา ให้บางลงกว่าปกติ (ปกติ th = font-weight 500) */
+        .receipt-capture.receipt-bill-compact .receipt-items-table th { padding: 8px 0; font-weight: 300 !important; }
         .receipt-capture.receipt-bill-compact .receipt-items-table td { padding: 9px 0; }
         .receipt-capture.receipt-bill-compact .r-item-option { padding-left: 12px; font-size: 25px; }
+        /* บิลใบเสร็จ: ไม่แสดงวงกลมดำเลขโต๊ะ (ใช้เฉพาะบิลออเดอร์เข้าครัวเท่านั้น) */
+        .receipt-capture.receipt-bill-compact .r-table-badge-wrapper { display: none; }
+        /* บิลใบเสร็จ: แสดงบรรทัด "โต๊ะ:" แบบข้อความแทนวงกลม / บิลออเดอร์ไม่แสดง */
+        .receipt-capture .r-table-text-row { display: none; }
+        .receipt-capture.receipt-bill-compact .r-table-text-row { display: flex; }
+        /* 1. วงกลมสีดำพร้อมตัวหนังสือสีขาวสำหรับเลขโต๊ะ (จัดกึ่งกลาง) */
+        .receipt-capture .r-table-badge-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center; 
+            margin-bottom: 15px; 
+            padding-top: 10px;
+        }
+        .receipt-capture .r-table-badge {
+            background-color: #000000;
+            color: #ffffff;
+            width: 90px;         
+            height: 90px;        
+            border-radius: 50%;
+            display: flex;
+            align-items: center;     
+            justify-content: center; 
+            font-size: 38px;         
+            font-weight: 900;
+            line-height: 1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); 
+        }
+
+        /* 🎯 ไม้ตาย: บังคับขยับเฉพาะตัวเลขขึ้นไปตรงๆ */
+        .receipt-capture .r-table-badge span {
+            position: relative;
+            top: -14px; /* ⬆️ เพิ่มเลขนี้ (เช่น -16px, -18px) ถ้าต้องการให้ขยับขึ้นอีก */
+        }
+        
+        /* ย่อขนาดวงกลมลงนิดหน่อยเวลาพิมพ์ใบเสร็จเต็ม (Receipt) */
+        .receipt-capture.receipt-bill-compact .r-table-badge {
+            width: 70px;
+            height: 70px;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        /* ขยับตัวเลขของวงกลมเล็กขึ้นนิดหน่อย */
+        .receipt-capture.receipt-bill-compact .r-table-badge span {
+            top: -2px; 
+        }
 
     @media print {
             /* บังคับหน้ากระดาษความร้อน 80 มม. พิมพ์ยาวต่อเนื่องตามเนื้อหา */
@@ -2171,6 +2227,13 @@
     </div>
 
     <div id="print-receipt-container">
+        <!-- 🌟 1. เพิ่มโค้ดวงกลมดำสำหรับเลขโต๊ะ ไว้บนสุดของ Container -->
+        <div class="r-table-badge-wrapper">
+            <div class="r-table-badge">
+                <span id="r-table-no"></span>
+            </div>
+        </div>
+
         <div class="receipt-header">
             <h2 class="r-store-name">Vet Restaurant</h2>
             <p class="r-subtitle">ร้านอาหารนิสิตสัตวแพทย์</p>
@@ -2178,7 +2241,9 @@
         </div>
 
         <div class="receipt-info">
-            <div class="r-row"><strong>โต๊ะ:</strong> <strong id="r-table-no" style="font-size: 18px;"></strong></div>
+            <!-- แสดงเฉพาะบิลใบเสร็จ (receipt-bill-compact) เท่านั้น บิลออเดอร์เข้าครัวจะไม่แสดงบรรทัดนี้ -->
+            <div class="r-row r-table-text-row"><span>โต๊ะ:</span> <span id="r-table-no-text"></span></div>
+
             <div class="r-row"><span>เวลา:</span> <span id="r-datetime"></span></div>
             <div class="r-row"><span>จำนวนลูกค้า:</span> <span id="r-pax"></span></div>
         </div>
@@ -2440,7 +2505,7 @@
             <span class="link-hub-label"><b>Waiter</b><small>ลิงก์สำหรับบริกร</small></span>
         </button>
         <button type="button" role="menuitem" class="link-hub-item" data-link-key="food">
-            <span class="link-hub-ico" style="color:#fcd34d;" aria-hidden="true">
+            <span class="link-hub-ico" style="color:#7dd3fc;" aria-hidden="true">
                 <i class="fas fa-utensils"></i>
             </span>
             <span class="link-hub-label"><b>Food order</b><small>ลิงก์สั่งอาหารพนักงาน</small></span>
@@ -2569,10 +2634,22 @@
         async function getPrinterDevice() {
             if (!navigator.usb) throw new Error('เบราว์เซอร์นี้ไม่รองรับ WebUSB');
 
-            // ⏮️ กลับไปใช้ตรรกะเดิม: เด้ง dialog เลือกเครื่องพิมพ์ทุกครั้งที่กดพิมพ์
-            //    (ตัด logic "จำเครื่องพิมพ์ผ่าน getDevices()" ออก เพราะทำให้พิมพ์ไม่ผ่าน
-            //    — อาจเป็นเพราะเครื่องพิมพ์ตัวนี้ถูก macOS ผูกไว้กับ driver อื่น (CUPS)
-            //    ทำให้ getDevices() มองไม่เห็นอุปกรณ์ที่เคยอนุญาตไว้ ต้องขอสิทธิ์ใหม่เสมอ)
+            // 1. ลองค้นหาเครื่องพิมพ์ที่เคยจับคู่ไว้แบบเงียบๆ
+            const devices = await navigator.usb.getDevices();
+            if (devices.length > 0) {
+                const device = devices.find(d => d.productName && d.productName.includes('Printer-80')) || devices[0];
+                
+                try {
+                    // ทดสอบเปิดการเชื่อมต่อ (ถ้าโดน OS แย่ง หรือพอร์ตดับ จะกระโดดไป catch ทันที)
+                    if (!device.opened) await device.open();
+                    return device; 
+                } catch (e) {
+                    console.warn('พอร์ตเดิมค้าง หรือโดนระบบบล็อก ต้องเด้ง Popup ขอสิทธิ์ใหม่', e);
+                    // ปล่อยให้โค้ดไหลไปทำขั้นตอนที่ 2 ด้านล่าง
+                }
+            }
+
+            // 2. ถ้าวิธีแอบเชื่อมต่อล้มเหลว หรือเพิ่งเปิดเว็บครั้งแรก ค่อยเด้ง Popup
             cachedPrinterDevice = await navigator.usb.requestDevice({ filters: [] });
             return cachedPrinterDevice;
         }
@@ -5002,6 +5079,7 @@
                 container.classList.remove('receipt-bill-compact'); // ใบสั่งเข้าครัว = ขนาดเดิมเสมอ
 
                 document.getElementById('r-table-no').innerText = tableId;
+                document.getElementById('r-table-no-text').innerText = tableId;
                 document.getElementById('r-datetime').innerText = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
 
                 const pax = (typeof activeSessionData !== 'undefined' && activeSessionData?.pax) ? activeSessionData.pax : 1;
@@ -5038,6 +5116,7 @@
     container.classList.add('receipt-bill-compact'); // ใบเสร็จรับเงิน = ขนาดย่อ (-15% ตัวหนังสือ / -50% spacing)
 
     document.getElementById('r-table-no').innerText = tableId;
+    document.getElementById('r-table-no-text').innerText = tableId;
     document.getElementById('r-datetime').innerText = new Date().toLocaleString('th-TH');
 
     let totalGross = 0;
