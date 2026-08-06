@@ -11,6 +11,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <!-- เพิ่ม Script ของ QZ Tray -->
      <script src="https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js"></script>
+    <!-- QR code generator (ใช้กับ modal รวมลิงก์) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -231,13 +233,99 @@
             animation: nav-shake 0.4s ease-in-out infinite;
         }
 
+        /* =========================================
+           📐 RESPONSIVE FLOOR PLAN SCALE
+           ขนาดโต๊ะ/ระยะห่างถูกคุมจากตัวแปรชุดเดียว
+           เพื่อให้ผังร้านพอดีจอทั้ง Desktop / iPad / มือถือ
+           ========================================= */
+        :root {
+            --tbl-size: 62px;
+            --tbl-gap: 10px;
+            --tbl-font: 0.9rem;   /* เท่าไฟล์ต้นฉบับ */
+            --zone-pad: 11px;
+            --floor-colgap: 12px;    /* ระยะระหว่างแถวโซนในคอลัมน์หลัก */
+            --floor-laygap: 19px;    /* ระยะระหว่างคอลัมน์หลักกับโซน W */
+            --floor-sidetop: 31px;   /* ระยะเยื้องลงของโซน W */
+            --tbl-badge: 18px;
+        }
+        /* Desktop / iPad: ขนาดจริงถูกคำนวณโดย fitFloorPlan() ตอน runtime
+           ค่าใน :root ข้างบนเป็นเพียงค่าตั้งต้นก่อน JS ทำงาน (กัน layout กระพริบ)
+
+           มือถือ: จอแคบเกินกว่าจะใส่ 14 โต๊ะในบรรทัดเดียวโดยยังอ่านออก
+           จึงกลับไปใช้โหมด wrap + เลื่อนดูแทน */
+        @media (max-width: 767px) {
+            :root {
+                --tbl-size: 46px; --tbl-gap: 7px; --tbl-font: 0.75rem; --zone-pad: 9px;
+                --floor-colgap: 9px; --floor-laygap: 10px; --floor-sidetop: 0px; --tbl-badge: 16px;
+            }
+            .unified-grid { flex-wrap: wrap; }
+            .floor-row { flex-wrap: wrap; }
+        }
+        @media (max-width: 420px) {
+            :root { --tbl-size: 40px; --tbl-gap: 6px; --tbl-font: 0.68rem; --zone-pad: 8px; --tbl-badge: 14px; }
+        }
+
+        #floorPlan { width: 100%; }
+
+        .floor-layout {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: var(--floor-laygap);
+            width: 100%;
+            max-width: 100%;
+            padding: 8px 4px;
+            box-sizing: border-box;
+        }
+        .floor-col-main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--floor-colgap);
+            min-width: 0;
+        }
+        .floor-stack {
+            display: flex;
+            flex-direction: column;
+            gap: var(--floor-colgap);
+            min-width: 0;
+        }
+        .floor-row {
+            display: flex;
+            justify-content: center;
+            flex-wrap: nowrap;      /* ห้ามตัดบรรทัด — ขนาดโต๊ะถูกคำนวณให้พอดีอยู่แล้ว */
+            gap: var(--floor-colgap);
+            min-width: 0;
+        }
+        .floor-col-side {
+            padding-top: var(--floor-sidetop);
+            min-width: 0;
+        }
+        /* มือถือ: โซน W ย้ายลงมาต่อท้าย และเรียงแนวนอนแทนแนวตั้ง */
+        @media (max-width: 767px) {
+            .floor-layout { flex-wrap: wrap; padding: 16px 8px 28px; }
+            .floor-col-side {
+                padding-top: 0;
+                width: 100%;
+                display: flex;
+                justify-content: center;
+            }
+            .vertical-zone .unified-grid { flex-direction: row; flex-wrap: wrap; }
+        }
+        /* จอสัมผัส: ตัด hover effect ที่ทำให้โต๊ะกระโดดล้นขอบ */
+        @media (hover: none) {
+            .table-circle:hover { transform: none; box-shadow: none; }
+        }
+
         /* --- กล่องสี่เหลี่ยมขอบมนล้อมรอบแต่ละโซน (ปรับให้กระชับขึ้น) --- */
         .zone-wrapper {
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            padding: 16px;
+            padding: var(--zone-pad);
             background: rgba(255, 255, 255, 0.02);
             width: fit-content;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         /* ปรับขนาดตัวหนังสือชื่อโซนให้เล็กลงนิดหน่อย */
@@ -254,11 +342,11 @@
         /* --- เปลี่ยนมาใช้ Flexbox จัดเรียงโต๊ะ --- */
         .unified-grid {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: center;
             /* จัดให้โต๊ะอยู่กึ่งกลางกล่องเสมอ (มีผลชัดเจนกับโซน Y) */
-            gap: clamp(6px, 0.8vw, 16px);
-            /* 🌟 ปรับระยะห่างระหว่างโต๊ะให้ยืดหยุ่นตามหน้าจอ */
+            gap: var(--tbl-gap);
+            /* 🌟 ระยะห่างระหว่างโต๊ะ อิงตัวแปรกลาง = พอดีทุกขนาดจอ */
         }
 
         .vertical-zone .unified-grid {
@@ -266,10 +354,12 @@
         }
 
         .table-circle {
-            width: clamp(48px, 5vw, 85px);
-            height: clamp(48px, 5vw, 85px);
+            width: var(--tbl-size);
+            height: var(--tbl-size);
+            flex: 0 0 auto;
             border-radius: 50%;
-            font-size: 0.9rem;
+            font-family: 'Geist', 'IBM Plex Sans Thai', sans-serif;
+            font-size: var(--tbl-font);
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -365,8 +455,9 @@
             color: #000000;
             font-size: 0.65rem;
             font-weight: 900;
-            min-width: 20px;
-            height: 20px;
+            min-width: var(--tbl-badge);
+            height: var(--tbl-badge);
+            font-size: calc(var(--tbl-badge) * 0.58);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -906,6 +997,252 @@
             color: rgba(255, 255, 255, 0.78);
         }
         .staff-free-tables.is-full b { color: var(--danger); }
+
+
+        /* =========================================
+           🔌 CONNECTION STATUS (Offline badge + banner)
+           ========================================= */
+        .conn-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 10px;
+            padding: 3px 9px 3px 8px;
+            border-radius: 999px;
+            font-family: 'Geist', 'IBM Plex Sans Thai', sans-serif;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #fca5a5;
+            background: rgba(241, 102, 106, 0.12);
+            border: 1px solid rgba(241, 102, 106, 0.32);
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .conn-badge.is-hidden { display: none; }
+        .conn-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #f1666a;
+            animation: conn-pulse 1.9s var(--ease-premium) infinite;
+        }
+        @keyframes conn-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(241, 102, 106, 0.55); }
+            70%  { box-shadow: 0 0 0 7px rgba(241, 102, 106, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(241, 102, 106, 0); }
+        }
+        @media (max-width: 620px) {
+            .conn-badge { margin-left: 7px; padding: 3px 7px; font-size: 0; gap: 0; }
+            .conn-badge .conn-dot { width: 7px; height: 7px; }
+        }
+
+        .offline-banner {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-14px);
+            z-index: 200;
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            width: min(calc(100vw - 24px), 460px);
+            box-sizing: border-box;
+            padding: 14px 14px 14px 16px;
+            border-radius: 16px;
+            background: #1a1113;
+            border: 1px solid rgba(241, 102, 106, 0.34);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 240ms var(--ease-premium), transform 240ms var(--ease-premium), visibility 240ms;
+        }
+        .offline-banner.is-open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .offline-banner-icon {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 auto;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(241, 102, 106, 0.14);
+            color: #f1666a;
+            font-size: 15px;
+        }
+        .offline-banner-text { min-width: 0; flex: 1 1 auto; }
+        .offline-banner-text strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+        .offline-banner-text span {
+            display: block;
+            font-size: 12.5px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.58);
+        }
+        .offline-banner-close {
+            width: 30px;
+            height: 30px;
+            flex: 0 0 auto;
+            border-radius: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+            transition: color 160ms var(--ease-premium), background 160ms var(--ease-premium);
+        }
+        .offline-banner-close:hover { color: #fff; background: rgba(255, 255, 255, 0.11); }
+        .offline-banner-close:active { transform: scale(0.95); }
+
+        /* =========================================
+           🔗 LINK HUB (Discord / Waiter / Food order)
+           menu ถูกวางไว้ระดับ <body> เพราะ .glass-header
+           มีทั้ง overflow:hidden และ backdrop-filter
+           ซึ่งจะ clip + ยึด position:fixed ผิดตำแหน่ง
+           ========================================= */
+        .link-hub-menu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 190;
+            width: 244px;
+            padding: 7px;
+            border-radius: 16px;
+            background: #17171b;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            box-shadow: 0 20px 46px rgba(0, 0, 0, 0.58);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transform: translateY(-6px) scale(0.97);
+            transform-origin: top right;
+            transition: opacity 180ms var(--ease-premium), transform 180ms var(--ease-premium), visibility 180ms;
+        }
+        .link-hub-menu.is-open {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+        .link-hub-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 11px;
+            border-radius: 11px;
+            text-align: left;
+            background: transparent;
+            transition: background 150ms var(--ease-premium);
+        }
+        .link-hub-item:hover,
+        .link-hub-item:focus-visible {
+            background: rgba(255, 255, 255, 0.06);
+            outline: none;
+        }
+        .link-hub-item:active { transform: scale(0.985); }
+        .link-hub-ico {
+            width: 34px;
+            height: 34px;
+            flex: 0 0 auto;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 14px;
+        }
+        .link-hub-ico svg { width: 17px; height: 17px; }
+        .link-hub-label { min-width: 0; }
+        .link-hub-label b {
+            display: block;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #f5f6fa;
+            line-height: 1.25;
+        }
+        .link-hub-label small {
+            display: block;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.42);
+            margin-top: 2px;
+        }
+        .staff-discord-button.is-active {
+            color: #a5b4fc;
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.06);
+        }
+
+        /* ── QR modal ── */
+        .qr-box {
+            width: 232px;
+            height: 232px;
+            margin: 0 auto;
+            padding: 14px;
+            box-sizing: border-box;
+            border-radius: 18px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .qr-box img, .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
+        .qr-box .qr-fallback {
+            font-size: 12px;
+            line-height: 1.55;
+            color: #52525b;
+            text-align: center;
+            padding: 0 8px;
+        }
+        .qr-url {
+            margin: 16px auto 0;
+            max-width: 100%;
+            font-family: 'Geist', monospace;
+            font-size: 11.5px;
+            line-height: 1.5;
+            color: rgba(255, 255, 255, 0.42);
+            word-break: break-all;
+        }
+        .qr-copy-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #cbd5e1;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            transition: all 170ms var(--ease-premium);
+        }
+        .qr-copy-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.11); }
+        .qr-copy-btn:active { transform: scale(0.97); }
+        .qr-copy-btn.is-done {
+            color: #6ee7b7;
+            background: rgba(16, 185, 129, 0.13);
+            border-color: rgba(16, 185, 129, 0.32);
+        }
 
         /* ปุ่ม Discord */
         .staff-discord-button {
@@ -1528,6 +1865,10 @@
                             </svg>
                         </div>
                         <h1 class="staff-brand-title">Staff <span>Panel</span></h1>
+                        <span id="connBadge" class="conn-badge is-hidden" role="status" aria-live="polite"
+                            title="ไม่มีการเชื่อมต่ออินเทอร์เน็ต">
+                            <span class="conn-dot" aria-hidden="true"></span>Offline
+                        </span>
                     </div>
                 </div>
 
@@ -1536,12 +1877,15 @@
                     <button type="button" onclick="toggleAudio()" id="btnAudio" class="staff-audio-button" title="เปิดหรือปิดเสียง" aria-label="เปิดหรือปิดเสียง">
                         <i class="fas fa-volume-mute" aria-hidden="true"></i>
                     </button>
-                    <a href="https://discord.gg/UzdybfaSc" target="_blank" rel="noopener noreferrer"
-                        class="staff-discord-button" title="เปิด Discord" aria-label="เปิด Discord">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127c-.598.35-1.22.645-1.873.891a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.056c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z" />
+                    <button type="button" id="linkHubBtn" class="staff-discord-button"
+                        title="รวมลิงก์ (Discord / Waiter / Food order)" aria-label="รวมลิงก์"
+                        aria-haspopup="true" aria-expanded="false" aria-controls="linkHubMenu">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
                         </svg>
-                    </a>
+                    </button>
                     <button type="button" onclick="openHistoryModal()" class="staff-history-button mr-3" aria-label="เปิดประวัติ">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
@@ -2078,6 +2422,69 @@
         </button>
 </div>
 
+    <!-- 🔗 เมนูรวมลิงก์ — ต้องอยู่ระดับ body ไม่ใช่ใน .glass-header
+         (header มี overflow:hidden + backdrop-filter ซึ่งจะ clip และยึด position:fixed ผิดจุด) -->
+    <div id="linkHubMenu" class="link-hub-menu" role="menu" aria-labelledby="linkHubBtn">
+        <button type="button" role="menuitem" class="link-hub-item" data-link-key="discord">
+            <span class="link-hub-ico" style="color:#a5b4fc;" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127c-.598.35-1.22.645-1.873.891a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.056c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z" />
+                </svg>
+            </span>
+            <span class="link-hub-label"><b>Discord</b><small>รับการแจ้งเตือน</small></span>
+        </button>
+        <button type="button" role="menuitem" class="link-hub-item" data-link-key="waiter">
+            <span class="link-hub-ico" style="color:#93A5F3;" aria-hidden="true">
+                <i class="fas fa-concierge-bell"></i>
+            </span>
+            <span class="link-hub-label"><b>Waiter</b><small>ลิงก์สำหรับบริกร</small></span>
+        </button>
+        <button type="button" role="menuitem" class="link-hub-item" data-link-key="food">
+            <span class="link-hub-ico" style="color:#fcd34d;" aria-hidden="true">
+                <i class="fas fa-utensils"></i>
+            </span>
+            <span class="link-hub-label"><b>Food order</b><small>ลิงก์สั่งอาหารพนักงาน</small></span>
+        </button>
+    </div>
+
+    <!-- 📶 แจ้งเตือนเน็ตหลุด (ปิดได้ ใช้งานหน้าจอต่อได้ตามปกติ) -->
+    <div id="offlineBanner" class="offline-banner" role="alert" aria-live="assertive">
+        <div class="offline-banner-icon" aria-hidden="true"><i class="fas fa-wifi"></i></div>
+        <div class="offline-banner-text">
+            <strong>ไม่มีการเชื่อมต่ออินเทอร์เน็ต</strong>
+            <span>ข้อมูลจะไม่อัปเดตชั่วคราว</span>
+        </div>
+        <button type="button" class="offline-banner-close" onclick="dismissOfflineBanner()"
+            aria-label="ปิดแจ้งเตือน" title="ปิดแจ้งเตือน"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- 🔳 QR modal ของแต่ละลิงก์ -->
+    <div id="linkQrModal" data-modal-backdrop
+        class="modal-backdrop hidden fixed inset-0 flex items-center justify-center p-4 z-[160]">
+        <div class="bg-[#141414] w-full max-w-sm rounded-3xl border border-white/10 p-7 shadow-2xl glass-card">
+            <div class="flex justify-between items-start mb-6">
+                <div class="min-w-0">
+                    <h2 id="linkQrTitle" class="text-xl font-bold text-white leading-tight"></h2>
+                    <p id="linkQrDesc" class="text-xs text-slate-500 mt-1"></p>
+                </div>
+                <button type="button" onclick="closeModal('linkQrModal')"
+                    class="text-slate-400 hover:text-white bg-white/5 w-9 h-9 rounded-full flex items-center justify-center transition-all shrink-0 ml-3"
+                    aria-label="ปิด">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="linkQrBox" class="qr-box"></div>
+
+            <div class="text-center">
+                <p id="linkQrUrl" class="qr-url"></p>
+                <button type="button" id="linkQrCopyBtn" class="qr-copy-btn" onclick="copyLinkHubUrl()">
+                    <i class="fas fa-copy"></i><span>คัดลอกลิงก์</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="toastContainer" class="fixed bottom-8 right-8 z-[150] pointer-events-none"></div>
 
     <script>
@@ -2555,18 +2962,18 @@
 
             // 🌟 สร้าง Layout โครงร่างของร้าน (บน, กลางซ้าย, กลางขวา, ล่าง)
             container.innerHTML = `
-                <div class="flex justify-center items-start gap-4 md:gap-8 w-full pt-6 pb-8">
-                    
+                <div class="floor-layout">
+
                     <!-- 📍 คอลัมน์หลัก (ฝั่งซ้าย): รวมโซน D, A, B, C, Y ให้เรียงต่อกัน -->
-                    <div class="flex flex-col items-center gap-3 md:gap-4">
-                        <div id="layout-top" class="flex justify-center"></div>
-                        <div id="layout-mid-left" class="flex flex-col gap-3 md:gap-4"></div>
-                        <div id="layout-bottom" class="flex justify-center mt-2"></div>
+                    <div class="floor-col-main">
+                        <div id="layout-top" class="floor-row"></div>
+                        <div id="layout-mid-left" class="floor-stack"></div>
+                        <div id="layout-bottom" class="floor-row"></div>
                     </div>
 
                     <!-- 📍 คอลัมน์ข้าง (ฝั่งขวา): สำหรับโซน W โดยเฉพาะ -->
-                    <div id="layout-mid-right" class="pt-10 md:pt-16"></div>
-                    
+                    <div id="layout-mid-right" class="floor-col-side"></div>
+
                 </div>
             `;
 
@@ -2620,7 +3027,167 @@
             renderZone('W', 'layout-mid-right', true);      // W อยู่ตรงกลางฝั่งขวา (แนวตั้ง - true)
             renderZone('Y', 'layout-bottom', false);        // Y อยู่ล่างสุดตรงกลาง (แนวนอน)
             renderZone('X', 'layout-bottom', false);        // X (ถ้ามี) อยู่ล่างสุดตรงกลาง (แนวนอน)
+
+            // 📐 ปรับขนาดให้ผังทั้งหมดพอดีหน้าจอเดียว (ต้องเรียกหลังวาดครบทุกโซน)
+            fitFloorPlan();
         }
+
+
+        // ════════════════════════════════════════════════════════
+        // 📐 FIT FLOOR PLAN — ย่อ/ขยายผังร้านให้พอดี 1 หน้าจอ
+        //
+        // เป้าหมาย: ทุกโซนอยู่บรรทัดเดียว (A01–A14 ไม่ตัดบรรทัด)
+        //           และเห็นครบทุกโต๊ะโดยไม่ต้องเลื่อน + ไม่โดน navbar บัง
+        //
+        // วิธี: ทุกระยะ (gap / padding โซน / ระยะคอลัมน์) ถูกนิยามเป็น
+        //       "สัดส่วนของขนาดโต๊ะ" ทำให้ความกว้าง-สูงที่ต้องใช้เป็น
+        //       ฟังก์ชันเชิงเส้นของ s → แก้สมการหา s ที่ใหญ่สุดที่ยังพอดี
+        //       s = min(availWidth / kw, availHeight / kh)
+        // ════════════════════════════════════════════════════════
+        const FIT = {
+            GAP: 0.16,      // ระยะระหว่างโต๊ะ
+            PAD: 0.18,      // padding ในกล่องโซน
+            COLGAP: 0.20,   // ระยะระหว่างแถวโซน
+            LAYGAP: 0.30,   // ระยะคอลัมน์หลัก ↔ โซน W
+            SIDETOP: 0.50,  // ระยะเยื้องลงของโซน W
+            MIN: 30,
+            MAX: 110
+        };
+
+        // ขนาดที่โซนหนึ่งต้องใช้ (หน่วย = เท่าของขนาดโต๊ะ)
+        function zoneCoeff(n, vertical) {
+            const line = n + (n - 1) * FIT.GAP + 2 * FIT.PAD;  // ด้านที่โต๊ะเรียงกัน
+            const cross = 1 + 2 * FIT.PAD;                     // อีกด้าน
+            return vertical ? { w: cross, h: line } : { w: line, h: cross };
+        }
+
+        function fitFloorPlan() {
+            const plan = document.getElementById('floorPlan');
+            if (!plan || !plan.querySelector('.zone-wrapper')) return;
+
+            // มือถือใช้โหมด wrap ตาม media query — ไม่ต้องคำนวณ
+            if (window.innerWidth < 768) {
+                ['--tbl-size', '--tbl-gap', '--tbl-font', '--zone-pad',
+                 '--floor-colgap', '--floor-laygap', '--floor-sidetop', '--tbl-badge']
+                    .forEach(v => document.documentElement.style.removeProperty(v));
+                return;
+            }
+
+            const countIn = (id) => Array.from(document.querySelectorAll('#' + id + ' > .zone-wrapper'))
+                .map(w => ({
+                    n: w.querySelectorAll('.table-circle').length,
+                    vertical: w.classList.contains('vertical-zone')
+                }))
+                .filter(z => z.n > 0);
+
+            // แถวของคอลัมน์หลัก: D / A / B / C / (Y+X)
+            const rows = [];
+            const top = countIn('layout-top');
+            if (top.length) rows.push(top);
+            countIn('layout-mid-left').forEach(z => rows.push([z]));   // แต่ละโซนคือหนึ่งแถว
+            const bottom = countIn('layout-bottom');
+            if (bottom.length) rows.push(bottom);
+
+            const side = countIn('layout-mid-right');
+            if (!rows.length && !side.length) return;
+
+            // ── สัมประสิทธิ์ความกว้าง/สูงของคอลัมน์หลัก ──
+            let mainW = 0, mainH = 0;
+            rows.forEach((row, i) => {
+                let rw = 0, rh = 0;
+                row.forEach((z, j) => {
+                    const c = zoneCoeff(z.n, z.vertical);
+                    rw += c.w + (j > 0 ? FIT.COLGAP : 0);
+                    rh = Math.max(rh, c.h);
+                });
+                mainW = Math.max(mainW, rw);
+                mainH += rh + (i > 0 ? FIT.COLGAP : 0);
+            });
+
+            // ── สัมประสิทธิ์ของโซนข้าง (W) ──
+            let sideW = 0, sideH = 0;
+            side.forEach(z => {
+                const c = zoneCoeff(z.n, z.vertical);
+                sideW = Math.max(sideW, c.w);
+                sideH = Math.max(sideH, c.h + FIT.SIDETOP);
+            });
+
+            const kw = mainW + (sideW > 0 ? FIT.LAYGAP + sideW : 0);
+            const kh = Math.max(mainH, sideH);
+            if (kw <= 0 || kh <= 0) return;
+
+            // ── พื้นที่ที่ใช้ได้จริง ──
+            const content = document.querySelector('.channel-content');
+            const nav = document.querySelector('.floating-nav');
+            const contentTop = content ? content.getBoundingClientRect().top : 0;
+
+            // navbar ลอยอยู่ 30px จากขอบล่าง + เผื่อช่องว่าง 18px ไม่ให้โต๊ะแตะขอบ
+            const navReserve = (nav ? nav.offsetHeight : 64) + 30 + 18;
+            const framePad = 8 + 8 + 6; // padding บน/ล่างของ .floor-layout + เผื่อปัดเศษ
+
+            const availW = plan.clientWidth - 8;
+            const availH = window.innerHeight - contentTop - navReserve - framePad;
+            if (availW <= 0 || availH <= 0) return;
+
+            let sz = Math.min(availW / kw, availH / kh);
+            sz = Math.max(FIT.MIN, Math.min(FIT.MAX, Math.floor(sz)));
+
+            const root = document.documentElement.style;
+            const layout = plan.querySelector('.floor-layout');
+
+            const apply = (size, colGap) => {
+                root.setProperty('--tbl-size', size + 'px');
+                root.setProperty('--tbl-gap', (size * FIT.GAP).toFixed(1) + 'px');
+                root.setProperty('--zone-pad', (size * FIT.PAD).toFixed(1) + 'px');
+                root.setProperty('--floor-colgap', (colGap != null ? colGap : size * FIT.COLGAP).toFixed(1) + 'px');
+                root.setProperty('--floor-laygap', (size * FIT.LAYGAP).toFixed(1) + 'px');
+                root.setProperty('--floor-sidetop', (size * FIT.SIDETOP).toFixed(1) + 'px');
+                // ขนาดตัวอักษรเลขโต๊ะ: ยึด 0.9rem เท่าไฟล์ต้นฉบับ
+                // ย่อลงเฉพาะตอนโต๊ะเล็กจนตัวเลขล้นวงกลม
+                root.setProperty('--tbl-font', Math.max(9, Math.min(14.4, size * 0.30)).toFixed(1) + 'px');
+                root.setProperty('--tbl-badge', Math.max(14, Math.round(size * 0.26)) + 'px');
+            };
+
+            apply(sz);
+
+            // ── รอบวัดจริง ──
+            // สมการข้างบนไม่นับ border 1px ของแต่ละโซนและการปัดเศษ sub-pixel
+            // จึงอาจคลาดไปไม่กี่สิบ px จนโซน W ล้นขอบขวา — วัดของจริงแล้วหดตาม
+            if (layout) {
+                for (let pass = 0; pass < 3; pass++) {
+                    const realW = layout.scrollWidth;
+                    const realH = layout.scrollHeight;
+                    const ratio = Math.min(availW / realW, availH / realH);
+                    if (ratio >= 0.995 || sz <= FIT.MIN) break;
+                    sz = Math.max(FIT.MIN, Math.floor(sz * ratio));
+                    apply(sz);
+                }
+
+                // ── เกลี่ยพื้นที่แนวตั้งที่เหลือ ──
+                // ให้แถวล่างสุดจบพอดีเหนือ navbar แทนที่จะกองอยู่ครึ่งบน
+                const gapCount = Math.max(0, rows.length - 1);
+                if (gapCount > 0) {
+                    const leftover = availH - layout.scrollHeight;
+                    if (leftover > 4) {
+                        const base = sz * FIT.COLGAP;
+                        const grown = Math.min(base + leftover / gapCount, sz * 1.15);
+                        apply(sz, grown);
+                    }
+                }
+            }
+        }
+
+        // จอหมุน / ย่อขยายหน้าต่าง / เปิดแท็บ Chrome dev tools → คำนวณใหม่
+        let fitTimer = null;
+        function scheduleFit() {
+            clearTimeout(fitTimer);
+            fitTimer = setTimeout(fitFloorPlan, 90);
+        }
+        window.addEventListener('resize', scheduleFit);
+        window.addEventListener('orientationchange', scheduleFit);
+        // ฟอนต์ Kanit/Geist โหลดเสร็จทีหลัง → ความสูง header ขยับ → คำนวณซ้ำ
+        window.addEventListener('load', scheduleFit);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleFit);
 
         function setDiscount(val) {
             selectedDiscount = val;
@@ -3663,6 +4230,269 @@
             }
         }
 
+
+        // ════════════════════════════════════════════════════════
+        // 🔌 CONNECTION MONITOR
+        // แหล่งสัญญาณ 2 ทาง: navigator.onLine (network stack)
+        // + สถานะ Supabase Realtime channel (ตรวจเน็ตที่ "ดูเหมือนต่อ" แต่ส่งข้อมูลไม่ได้)
+        // ปิดแบนเนอร์ได้ แต่ badge ข้าง Staff Panel ยังค้างไว้จนกว่าจะกลับมาออนไลน์
+        // ════════════════════════════════════════════════════════
+        const Conn = {
+            bannerDismissed: false,
+            offline: false,
+            channels: {},          // ชื่อ channel -> สถานะล่าสุด
+            _retryTimers: {},
+
+            isOffline() {
+                if (!navigator.onLine) return true;
+                return Object.values(this.channels).some(
+                    st => st === 'CHANNEL_ERROR' || st === 'TIMED_OUT'
+                );
+            },
+
+            render() {
+                const nowOffline = this.isOffline();
+                const badge = document.getElementById('connBadge');
+                const banner = document.getElementById('offlineBanner');
+                if (badge) badge.classList.toggle('is-hidden', !nowOffline);
+
+                if (banner) {
+                    const show = nowOffline && !this.bannerDismissed;
+                    banner.classList.toggle('is-open', show);
+                }
+
+                // ขอบเขตการเปลี่ยนสถานะ: offline -> online
+                if (this.offline && !nowOffline) {
+                    this.bannerDismissed = false;
+                    if (typeof Notify !== 'undefined') {
+                        Notify.toast('เชื่อมต่ออินเทอร์เน็ตอีกครั้งแล้ว กำลังโหลดข้อมูลล่าสุด');
+                    }
+                    this.resync();
+                }
+                this.offline = nowOffline;
+            },
+
+            resync() {
+                try {
+                    if (typeof fetchAndRenderMap === 'function') fetchAndRenderMap();
+                    if (typeof fetchTakehomeOrders === 'function') fetchTakehomeOrders();
+                    if (typeof fetchStaffOrders === 'function') fetchStaffOrders();
+                } catch (e) { console.warn('resync failed:', e); }
+            },
+
+            // ใช้เป็น callback ของ .subscribe() ทุก channel
+            channelStatus(name) {
+                return (status) => {
+                    // CLOSED เกิดตอน unsubscribe ปกติด้วย จึงไม่นับเป็นเน็ตหลุด
+                    if (status === 'CLOSED') return;
+                    this.channels[name] = status;
+                    this.render();
+
+                    // ลอง reconnect เองเมื่อ channel ล้ม (supabase-js retry ไม่ครอบทุกกรณี)
+                    if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && navigator.onLine) {
+                        if (this._retryTimers[name]) return;
+                        this._retryTimers[name] = setTimeout(() => {
+                            this._retryTimers[name] = null;
+                            try { supabaseClient.realtime.connect(); } catch (e) { }
+                        }, 4000);
+                    }
+                };
+            },
+
+            init() {
+                window.addEventListener('offline', () => {
+                    this.bannerDismissed = false;   // เน็ตหลุดรอบใหม่ = เตือนใหม่
+                    this.render();
+                });
+                window.addEventListener('online', () => {
+                    this.channels = {};             // ล้างสถานะเก่า ให้ channel รายงานใหม่
+                    this.render();
+                });
+                // กลับมาเปิดแท็บอีกครั้ง — เช็คสถานะซ้ำเสมอ
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) this.render();
+                });
+                this.render();
+            }
+        };
+
+        function dismissOfflineBanner() {
+            Conn.bannerDismissed = true;
+            Conn.render();
+        }
+
+        // ════════════════════════════════════════════════════════
+        // 🔗 LINK HUB — Discord / Waiter / Food order
+        // ════════════════════════════════════════════════════════
+        const LINK_HUB = {
+            discord: {
+                title: 'Discord',
+                url: 'https://discord.gg/UzdybfaSc'
+            },
+            waiter: {
+                title: 'Waiter',
+                url: 'https://vetrestaurant.vercel.app/customer.html?role=server123'
+            },
+            food: {
+                title: 'Food order',
+                url: 'https://vetrestaurant.vercel.app/customer.html?role=staff123'
+            }
+        };
+
+        let linkHubOpen = false;
+        let linkHubCloseTimer = null;
+        let currentLinkUrl = '';
+
+        function positionLinkHubMenu() {
+            const btn = document.getElementById('linkHubBtn');
+            const menu = document.getElementById('linkHubMenu');
+            if (!btn || !menu) return;
+
+            const r = btn.getBoundingClientRect();
+            const w = menu.offsetWidth || 244;
+            const margin = 10;
+
+            let left = r.right - w;                       // จัดชิดขวาให้ตรงกับปุ่ม
+            left = Math.max(margin, Math.min(left, window.innerWidth - w - margin));
+            menu.style.left = left + 'px';
+            menu.style.top = (r.bottom + 8) + 'px';
+        }
+
+        function openLinkHub() {
+            clearTimeout(linkHubCloseTimer);
+            const menu = document.getElementById('linkHubMenu');
+            const btn = document.getElementById('linkHubBtn');
+            if (!menu) return;
+            positionLinkHubMenu();
+            menu.classList.add('is-open');
+            if (btn) { btn.classList.add('is-active'); btn.setAttribute('aria-expanded', 'true'); }
+            linkHubOpen = true;
+        }
+
+        function closeLinkHub() {
+            const menu = document.getElementById('linkHubMenu');
+            const btn = document.getElementById('linkHubBtn');
+            if (menu) menu.classList.remove('is-open');
+            if (btn) { btn.classList.remove('is-active'); btn.setAttribute('aria-expanded', 'false'); }
+            linkHubOpen = false;
+        }
+
+        function toggleLinkHub() {
+            linkHubOpen ? closeLinkHub() : openLinkHub();
+        }
+
+        (function initLinkHub() {
+            const btn = document.getElementById('linkHubBtn');
+            const menu = document.getElementById('linkHubMenu');
+            if (!btn || !menu) return;
+
+            // แท็บเล็ต/มือถือ = กด, คอม = วางเมาส์ (แต่กดก็ยังได้)
+            const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+            btn.addEventListener('click', (e) => { e.stopPropagation(); toggleLinkHub(); });
+
+            if (canHover) {
+                const scheduleClose = () => {
+                    clearTimeout(linkHubCloseTimer);
+                    linkHubCloseTimer = setTimeout(closeLinkHub, 260);
+                };
+                btn.addEventListener('mouseenter', openLinkHub);
+                btn.addEventListener('mouseleave', scheduleClose);
+                menu.addEventListener('mouseenter', () => clearTimeout(linkHubCloseTimer));
+                menu.addEventListener('mouseleave', scheduleClose);
+            }
+
+            menu.querySelectorAll('[data-link-key]').forEach((item) => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openLinkQr(item.dataset.linkKey);
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!linkHubOpen) return;
+                if (menu.contains(e.target) || btn.contains(e.target)) return;
+                closeLinkHub();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && linkHubOpen) closeLinkHub();
+            });
+            window.addEventListener('resize', () => { if (linkHubOpen) positionLinkHubMenu(); });
+            window.addEventListener('scroll', () => { if (linkHubOpen) positionLinkHubMenu(); }, true);
+        })();
+
+        function openLinkQr(key) {
+            const cfg = LINK_HUB[key];
+            if (!cfg) return;
+            closeLinkHub();
+
+            currentLinkUrl = cfg.url;
+            document.getElementById('linkQrTitle').innerText = cfg.title;
+
+            const copyBtn = document.getElementById('linkQrCopyBtn');
+            copyBtn.classList.remove('is-done');
+            copyBtn.querySelector('span').innerText = 'คัดลอกลิงก์';
+
+            const box = document.getElementById('linkQrBox');
+            box.innerHTML = '';
+            if (typeof QRCode === 'function') {
+                try {
+                    new QRCode(box, {
+                        text: cfg.url,
+                        width: 400,
+                        height: 400,
+                        colorDark: '#000000',
+                        colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (e) {
+                    console.error('QR render failed:', e);
+                    box.innerHTML = '<div class="qr-fallback">สร้าง QR ไม่สำเร็จ<br>ใช้ปุ่มคัดลอกลิงก์ด้านล่างแทนได้</div>';
+                }
+            } else {
+                // เน็ตหลุดตอนโหลดหน้า → ไลบรารี QR โหลดไม่ทัน
+                box.innerHTML = '<div class="qr-fallback">ยังโหลด QR ไม่ได้ (ไม่มีอินเทอร์เน็ต)<br>ใช้ปุ่มคัดลอกลิงก์ด้านล่างแทนได้</div>';
+            }
+
+            document.getElementById('linkQrModal').classList.remove('hidden');
+        }
+
+        function copyLinkHubUrl() {
+            const btn = document.getElementById('linkQrCopyBtn');
+            const done = () => {
+                btn.classList.add('is-done');
+                btn.querySelector('span').innerText = 'คัดลอกแล้ว';
+                setTimeout(() => {
+                    btn.classList.remove('is-done');
+                    btn.querySelector('span').innerText = 'คัดลอกลิงก์';
+                }, 1800);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(currentLinkUrl).then(done).catch(() => legacyCopy());
+            } else {
+                legacyCopy();
+            }
+
+            function legacyCopy() {
+                // Safari บน iPad ที่ไม่ใช่ HTTPS จะไม่มี clipboard API
+                const ta = document.createElement('textarea');
+                ta.value = currentLinkUrl;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                ta.setSelectionRange(0, currentLinkUrl.length);
+                try {
+                    document.execCommand('copy');
+                    done();
+                } catch (e) {
+                    Notify.toast('คัดลอกไม่สำเร็จ กรุณาคัดลอกลิงก์ด้วยตัวเอง', 'error');
+                }
+                document.body.removeChild(ta);
+            }
+        }
+
         function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
         function closeOrderModalAndRefresh() { closeModal('orderDetailModal'); fetchAndRenderMap(); }
 
@@ -3683,6 +4513,7 @@
 
         function switchChannel(channel) {
             currentChannel = channel;
+            if (channel === 'tables') setTimeout(fitFloorPlan, 0);
 
             // 1. จัดการ Class Active บน Navbar (เปลี่ยนคลาสสีขาว)
             document.querySelectorAll('.floating-nav .nav-item').forEach(item => {
@@ -4313,7 +5144,7 @@
                 }
                 if (currentChannel === 'takehome') fetchTakehomeOrders();
                 if (currentChannel === 'staff') fetchStaffOrders();
-            }).subscribe();
+            }).subscribe(Conn.channelStatus('staff_new_orders'));
 
         // Real-time: order_items — INSERT (เพิ่มเมนูในออเดอร์เดิม)
         supabaseClient.channel('staff_item_inserts')
@@ -4328,7 +5159,7 @@
                 }
                 if (currentChannel === 'takehome') fetchTakehomeOrders();
                 if (currentChannel === 'staff') fetchStaffOrders();
-            }).subscribe();
+            }).subscribe(Conn.channelStatus('staff_item_inserts'));
 
         // Real-time: อัปเดต item (silent — เช่น KDS เสิร์ฟ/ยกเลิก)
         supabaseClient.channel('staff_item_updates')
@@ -4342,9 +5173,9 @@
                 }
                 if (currentChannel === 'takehome') fetchTakehomeOrders();
                 if (currentChannel === 'staff') fetchStaffOrders();
-            }).subscribe();
+            }).subscribe(Conn.channelStatus('staff_item_updates'));
 
-        
+
 
         // 🔔 Real-time: สำหรับเมนูหลัก (menus)
         supabaseClient.channel('menu_realtime_staff')
@@ -4365,7 +5196,7 @@
                     if (modal && !modal.classList.contains('hidden')) openNotifModal();
                 }
             })
-            .subscribe();
+            .subscribe(Conn.channelStatus('menu_realtime_staff'));
 
         // 🔔 Real-time: สำหรับตัวเลือก (option_items)
         supabaseClient.channel('option_items_realtime_staff')
@@ -4384,11 +5215,10 @@
                     if (modal && !modal.classList.contains('hidden')) openNotifModal();
                 }
             })
-            .subscribe();
+            .subscribe(Conn.channelStatus('option_items_realtime_staff'));
 
 
-
-
+        Conn.init();
         fetchAndRenderMap();
         fetchTakehomeOrders();
         fetchStaffOrders();
