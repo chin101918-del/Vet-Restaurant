@@ -298,9 +298,9 @@
                 </button>
                 <div id="langDropdown" class="absolute right-0 top-full mt-2 w-32 bg-white rounded-xl shadow-xl border border-gray-100 hidden z-50">
                   <div class="flex flex-col p-1" id="langSwitcher">
-                    <button data-lang="th" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600">🇹🇭 Thai</button>
-                    <button data-lang="en" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600">🇬🇧 English</button>
-                    <button data-lang="cn" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600">🇨🇳 Chinese</button>
+                    <button data-lang="th" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4 flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c1.657 0 3-4.03 3-9s-1.343-9-3-9-3 4.03-3 9 1.343 9 3 9Zm-9-9h18" /></svg>Thai</button>
+                    <button data-lang="en" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4 flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c1.657 0 3-4.03 3-9s-1.343-9-3-9-3 4.03-3 9 1.343 9 3 9Zm-9-9h18" /></svg>English</button>
+                    <button data-lang="cn" class="lang-btn w-full text-left px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600 rounded-lg font-medium text-gray-600 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-4 h-4 flex-shrink-0"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c1.657 0 3-4.03 3-9s-1.343-9-3-9-3 4.03-3 9 1.343 9 3 9Zm-9-9h18" /></svg>Chinese</button>
                   </div>
                 </div>
             </div>
@@ -424,7 +424,7 @@
 
         <div id="bs-scroll-container" class="overflow-y-auto flex-1 pb-4 no-scrollbar relative"> 
             <div class="relative w-full h-64 sm:h-72">
-                <img id="bs-image" src="" class="w-full h-full object-cover rounded-t-3xl" alt="Menu Image">
+                <img id="bs-image" src="" loading="lazy" decode="async" class="w-full h-full object-cover rounded-t-3xl" alt="Menu Image">
             </div>
             <div class="px-5 pt-5">
                 <h3 id="bs-title" class="text-2xl font-bold text-gray-900 mb-1"></h3>
@@ -463,7 +463,10 @@
 
 <div id="customModal" class="fixed inset-0 z-[300] hidden bg-black bg-opacity-50 flex items-center justify-center">
     <div id="modalContent" class="bg-white p-6 rounded-lg shadow-2xl w-full max-w-sm transform scale-90 transition-transform duration-300">
-        <h3 id="modalTitle" class="text-xl font-bold text-red-600 mb-3"></h3>
+        <div class="flex items-center justify-center mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-9 h-9 text-red-600"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+        </div>
+        <h3 id="modalTitle" class="text-xl font-bold text-red-600 mb-3 text-center"></h3>
         <p id="modalMessage" class="text-gray-700 mb-4"></p>
         <button id="closeModalBtn" class="w-full bg-orange-500 text-white py-2 rounded-lg font-semibold">ปิด</button>
     </div>
@@ -471,7 +474,10 @@
 
 <div id="staffModal" class="fixed inset-0 z-[200] hidden bg-black bg-opacity-90 flex items-center justify-center backdrop-blur-sm">
     <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md transform transition-all scale-100 mx-4">
-        <h2 id="staffModalTitle" class="text-2xl font-bold text-gray-800 mb-4 text-center">Staff Login</h2>
+        <div class="flex items-center justify-center gap-2 mb-4">
+            <span id="staffModalIcon" class="text-orange-500"></span>
+            <h2 id="staffModalTitle" class="text-2xl font-bold text-gray-800 text-center">Staff Login</h2>
+        </div>
         <div id="staffFormContainer" class="flex flex-col gap-4">
             <div>
                 <label id="staffInputLabel1" class="block text-gray-700 font-semibold mb-1">ระบุข้อมูล</label>
@@ -480,6 +486,14 @@
             <div id="staffInputGroup2" class="hidden">
                 <label id="staffInputLabel2" class="block text-gray-700 font-semibold mb-1">ข้อมูลเพิ่มเติม</label>
                 <input id="staffInput2" type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-xl focus:border-orange-500 focus:outline-none">
+            </div>
+            <div id="staffInputGroup3" class="hidden">
+                <label id="staffInputLabel3" class="block text-gray-700 font-semibold mb-1">ชื่อลูกค้า</label>
+                <input id="staffInput3" type="text" class="w-full border-2 border-gray-300 rounded-lg p-3 text-xl focus:border-orange-500 focus:outline-none" placeholder="ชื่อลูกค้า">
+            </div>
+            <div id="staffInputGroup4" class="hidden">
+                <label id="staffInputLabel4" class="block text-gray-700 font-semibold mb-1">เบอร์โทร</label>
+                <input id="staffInput4" type="tel" inputmode="numeric" pattern="[0-9]*" maxlength="10" class="w-full border-2 border-gray-300 rounded-lg p-3 text-xl focus:border-orange-500 focus:outline-none" placeholder="0812345678">
             </div>
             <div id="staffDiscountGroup" class="hidden">
                 <label class="block text-gray-700 font-semibold mb-2">ส่วนลด</label>
@@ -512,6 +526,7 @@ let activeMenuItem = null;
 let globalCartTotalQty = 0;
 let globalCartTotalPrice = 0;
 let hasOrderedStarter = false;
+let isSubmittingOrder = false; // กันกดยืนยันซ้ำ/ดับเบิลแท็บ ทำให้ออเดอร์ซ้ำ
 
 // SERVER_DATA from URL Params / LocalStorage
 const urlParams = new URLSearchParams(window.location.search);
@@ -533,14 +548,14 @@ const RECOMMEND_CONFIG = [
     { keyword: 'โอ้เอ๋ว', label: { th: 'รับของหวาน?', en: 'Dessert?', cn: '来点甜品？' }, btnText: { th: 'ดูโอ้เอ๋ว', en: 'See Dessert', cn: '看甜品' }, imageUrl: 'https://res.cloudinary.com/dsrxsg4ou/image/upload/v1765286217/LINE_ALBUM_Gas_V.2_251209_50_axlevl.jpg', targetId: 'category-โอ้เอ๋ว' }
 ];
 
-const placeholderImage = 'https://via.placeholder.com/400x300?text=No+Image';
+// placeholder แบบ SVG inline (data URI) แทนการยิง network ไปที่ via.placeholder.com ที่ทำให้โหลดช้า/ไม่เสถียร
+const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 400 300%22%3E%3Crect width=%22400%22 height=%22300%22 fill=%22%23f3f4f6%22/%3E%3Cpath d=%22M160 120h80v70h-80z%22 fill=%22none%22 stroke=%22%23d1d5db%22 stroke-width=%228%22/%3E%3Ccircle cx=%22180%22 cy=%22140%22 r=%228%22 fill=%22%23d1d5db%22/%3E%3Cpath d=%22M170 175l25-25 15 15 20-20 10 10v25z%22 fill=%22%23d1d5db%22/%3E%3C/svg%3E';
 
 const translations = { 
     'table_label': { th: 'โต๊ะ', en: 'Table', cn: '桌号' },
     'search_placeholder': { th: 'ค้นหาเมนู...', en: 'Search menu...', cn: '搜索菜单...' }, 
     'your_order': { th: 'รายการของคุณ', en: 'Your Order', cn: '您的订单' }, 
     'total': { th: 'ทั้งหมด', en: 'Total', cn: '总计' }, 
-    'confirm_order': { th: '✅ ยืนยันออเดอร์', en: '✅ Confirm Order', cn: '✅ 确认订单' }, 
     'submitting': { th: 'กำลังส่ง...', en: 'Submitting...', cn: '提交中...' }, 
     'options': { th: 'ตัวเลือก', en: 'Options', cn: '选项' }, 
     'special_instructions': { th: 'คำแนะนำพิเศษ:', en: 'Special Instructions:', cn: '特殊说明:' }, 
@@ -589,20 +604,20 @@ const STATUS_MAP = {
     "ไม่พร้อม": { badgeClass: "bg-red-500 text-white", text: { th: "ไม่พร้อมชั่วคราว", en: "Unavailable", cn: "暂停供应" }, isOrderable: false },
     "15m": { badgeClass: "hidden", text: { th: "รอ > 15 นาที", en: "Wait > 15m", cn: "需等 > 15分" }, isOrderable: true },
     "30m": { badgeClass: "hidden", text: { th: "รอ > 30 นาที", en: "Wait > 30m", cn: "需等 > 30分" }, isOrderable: true },
-    "ขายดี": { badgeClass: "bg-pink-500 text-white", text: { th: "🔥 ขายดี", en: "🔥 Best Seller", cn: "🔥 热销" }, isOrderable: true },
-    "ต้องลอง": { badgeClass: "bg-blue-500 text-white", text: { th: "✨ ต้องลอง", en: "✨ Must Try", cn: "✨ 必尝" }, isOrderable: true },
+    "ขายดี": { badgeClass: "bg-pink-500 text-white", text: { th: "ขายดี", en: "Best Seller", cn: "热销" }, isOrderable: true },
+    "ต้องลอง": { badgeClass: "bg-blue-500 text-white", text: { th: "ต้องลอง", en: "Must Try", cn: "必尝" }, isOrderable: true },
     "TH_Only": { badgeClass: "bg-purple-600 text-white", text: { th: "เฉพาะกลับบ้าน", en: "Takehome Only", cn: "仅限外带" }, isOrderable: true },
     "ปกติ": { badgeClass: "hidden", text: { th: "", en: "", cn: "" }, isOrderable: true }
 };
 
 const STAFF_CONFIG = {
-    'server123': { title: '👨‍🍳 บริกรรับออเดอร์', label: 'เลขโต๊ะ', label2: 'ชื่อบริกร', prefix: 'SERVER', showDiscount: false, showStation: true, inputType: 'text' },
-    'takehome123': { title: '🏠 สั่งกลับบ้าน', label: 'คิวที่', prefix: 'TAKEHOME', showDiscount: true, showStation: false, inputType: 'text' },
-    'staff123': { title: '🫂 Staff', label: 'ชื่อ', prefix: 'STAFF', showDiscount: false, showStation: true, fixedDiscount: 0.10 }
+    'server123': { title: 'บริกรรับออเดอร์', label: 'เลขโต๊ะ', label2: 'ชื่อบริกร', prefix: 'SERVER', showDiscount: false, showStation: true, inputType: 'text', showCustomerName: false, showCustomerPhone: false, icon: 'server' },
+    'takehome123': { title: 'สั่งกลับบ้าน', label: 'คิวที่', prefix: 'TAKEHOME', showDiscount: true, showStation: false, inputType: 'text', showCustomerName: true, showCustomerPhone: true, icon: 'takehome' },
+    'staff123': { title: 'Staff', label: 'ชื่อ', prefix: 'STAFF', showDiscount: false, showStation: true, fixedDiscount: 0.10, showCustomerName: false, showCustomerPhone: true, icon: 'staff' }
 };
 
 // ==========================================
-// 🔐 QR-BASED SESSION TOKEN AUTHENTICATION
+// QR-BASED SESSION TOKEN AUTHENTICATION
 // ==========================================
 
 const QR_ID_PARAM  = urlParams.get('qr_id')  || '';
@@ -610,6 +625,11 @@ const TOKEN_PARAM  = urlParams.get('token')   || '';
 const TABLE_PARAM  = urlParams.get('table')   || '';
 
 function redirectToExpired() {
+    // เมื่อเปิดโหมด server123 ห้ามพาไปหน้า expired.html เด็ดขาด — ถ้า session หมดอายุให้ refresh หน้าอัตโนมัติแทน
+    if (STAFF_ROLE === 'server123') {
+        window.location.reload();
+        return;
+    }
     window.location.replace('expired.html');
 }
 
@@ -741,7 +761,7 @@ async function authenticateViaQR(tableId, qrId) {
             .maybeSingle();
 
         if (sErr || !sessionData) {
-            // ✅ QR ถูก โต๊ะถูก แต่ยังไม่เปิดบิล -> โชว์หน้าจอรอ
+ // QR ถูก โต๊ะถูก แต่ยังไม่เปิดบิล -> โชว์หน้าจอรอ
             showWaitingScreen(tableId);
             return;
         }
@@ -784,7 +804,7 @@ async function checkTableStatusSilently() {
         .maybeSingle();
 
     if (data && data.token) {
-        // ✅ เจอแล้ว! พนักงานเปิดบิลให้แล้ว
+ // เจอแล้ว! พนักงานเปิดบิลให้แล้ว
         if (waitingInterval) clearInterval(waitingInterval);
         
         const waitScreen = document.getElementById('waitingStaffScreen');
@@ -841,7 +861,7 @@ async function authenticateViaToken(tableIdHint, token) {
         startApp(SERVER_DATA.tableNumber);
         updateHistoryBadge();
 
-        // 🔌 เปิดระบบ Realtime ดักจับเวลามีของหมด หรือพนักงานปิดโต๊ะ
+ // เปิดระบบ Realtime ดักจับเวลามีของหมด หรือพนักงานปิดโต๊ะ
         subscribeToSessionExpiration();
         subscribeToMenuStatusUpdates();
         subscribeToOptionItemUpdates();
@@ -866,7 +886,7 @@ function parseDiscount(raw) {
         DISCOUNT_PERCENT = val / 100 || 0;
         DISCOUNT_DISPLAY = raw;
     } else if (val >= 1) { 
-        // ✅ กรณีใน DB เก็บเป็นเลข 10, 5 ให้ถือว่าเป็น %
+ // กรณีใน DB เก็บเป็นเลข 10, 5 ให้ถือว่าเป็น %
         DISCOUNT_PERCENT = val / 100;
         DISCOUNT_DISPLAY = val + '%';
     } else if (val > 0 && val < 1) { 
@@ -924,6 +944,15 @@ function setupStaffModal() {
     modal.style.display = "flex"; 
 
     document.getElementById('staffModalTitle').textContent = config.title;
+
+    const ICONS = {
+        server: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -2.89 122.88 122.88" fill="currentColor" class="w-7 h-7"><path fill-rule="evenodd" clip-rule="evenodd" d="M36.82,107.86L35.65,78.4l13.25-0.53c5.66,0.78,11.39,3.61,17.15,6.92l10.29-0.41c4.67,0.1,7.3,4.72,2.89,8 c-3.5,2.79-8.27,2.83-13.17,2.58c-3.37-0.03-3.34,4.5,0.17,4.37c1.22,0.05,2.54-0.29,3.69-0.34c6.09-0.25,11.06-1.61,13.94-6.55 l1.4-3.66l15.01-8.2c7.56-2.83,12.65,4.3,7.23,10.1c-10.77,8.51-21.2,16.27-32.62,22.09c-8.24,5.47-16.7,5.64-25.34,1.01 L36.82,107.86L36.82,107.86z M29.74,62.97h91.9c0.68,0,1.24,0.57,1.24,1.24v5.41c0,0.67-0.56,1.24-1.24,1.24h-91.9 c-0.68,0-1.24-0.56-1.24-1.24v-5.41C28.5,63.53,29.06,62.97,29.74,62.97L29.74,62.97z M79.26,11.23 c25.16,2.01,46.35,23.16,43.22,48.06l-93.57,0C25.82,34.23,47.09,13.05,72.43,11.2V7.14l-4,0c-0.7,0-1.28-0.58-1.28-1.28V1.28 c0-0.7,0.57-1.28,1.28-1.28h14.72c0.7,0,1.28,0.58,1.28,1.28v4.58c0,0.7-0.58,1.28-1.28,1.28h-3.89L79.26,11.23L79.26,11.23 L79.26,11.23z M0,77.39l31.55-1.66l1.4,35.25L1.4,112.63L0,77.39L0,77.39z"/></svg>',
+        takehome: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" /></svg>',
+        staff: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="w-7 h-7"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>'
+    };
+    const iconEl = document.getElementById('staffModalIcon');
+    if (iconEl) iconEl.innerHTML = ICONS[config.icon] || '';
+
     document.getElementById('staffInputLabel1').textContent = config.label;
     
     const input1 = document.getElementById('staffInput1');
@@ -941,6 +970,16 @@ function setupStaffModal() {
     } else {
         group2.classList.add('hidden');
     }
+
+    const group3 = document.getElementById('staffInputGroup3');
+    const input3 = document.getElementById('staffInput3');
+    input3.value = '';
+    toggleEl('staffInputGroup3', !!config.showCustomerName);
+
+    const group4 = document.getElementById('staffInputGroup4');
+    const input4 = document.getElementById('staffInput4');
+    input4.value = '';
+    toggleEl('staffInputGroup4', !!config.showCustomerPhone);
 
     toggleEl('staffDiscountGroup', config.showDiscount);
     selectedStaffDiscount = config.fixedDiscount || 0;
@@ -960,8 +999,16 @@ async function handleStaffSubmit(config) {
     }
     const val1 = rawVal1; // สำหรับพนักงาน(Staff) คือ "ชื่อคน" / สำหรับบริกรคือ "เลขโต๊ะ"
     const val2 = document.getElementById('staffInput2').value.trim(); // สำหรับพนักงานคือ "ซุ้ม" / สำหรับบริกรคือ "ชื่อคน"
+    const val3 = document.getElementById('staffInput3').value.trim(); // ชื่อลูกค้า (เฉพาะ takehome123)
+    const val4 = document.getElementById('staffInput4').value.trim(); // เบอร์โทรลูกค้า (takehome123 / staff123)
 
     if (!val1) return alert('กรุณากรอกข้อมูลให้ครบถ้วน');
+
+    if (config.showCustomerName && !val3) return alert('กรุณากรอกชื่อลูกค้า');
+    if (config.showCustomerPhone) {
+        const phoneDigits = val4.replace(/\D/g, '');
+        if (phoneDigits.length < 9 || phoneDigits.length > 10) return alert('กรุณากรอกเบอร์โทรให้ถูกต้อง (9-10 หลัก)');
+    }
 
     // 2. แยก Logic การบันทึกตัวแปรตามบทบาท (Role)
     if (STAFF_ROLE === 'server123') {
@@ -969,7 +1016,7 @@ async function handleStaffSubmit(config) {
         SERVER_DATA.tableNumber = val1; // ช่อง 1 คือ เลขโต๊ะ
         SERVER_DATA.staffName = val2;   // ช่อง 2 คือ ชื่อบริกร
         
-        console.log("🔍 [DEBUG] โหมดบริกร - กำลังค้นหาบิลของโต๊ะ:", val1);
+        console.log("[DEBUG] โหมดบริกร - กำลังค้นหาบิลของโต๊ะ:", val1);
         
         const { data: tableData, error: tErr } = await supabaseClient
             .from('tables')
@@ -977,7 +1024,7 @@ async function handleStaffSubmit(config) {
             .eq('id', val1)
             .maybeSingle();
 
-        if (tErr) console.error("❌ [DEBUG] Query Error:", tErr);
+        if (tErr) console.error("[DEBUG] Query Error:", tErr);
 
         let activeSess = null;
         if (tableData && tableData.sessions && tableData.sessions.length > 0) {
@@ -998,7 +1045,7 @@ async function handleStaffSubmit(config) {
             DISCOUNT_DISPLAY = discValue > 0 ? `${discValue}%` : 'None';
             SERVER_DATA.discount = DISCOUNT_DISPLAY;
         } else {
-            console.warn(`⚠️ ไม่พบบิลที่เปิดอยู่ของโต๊ะ ${val1}`);
+            console.warn(`ไม่พบบิลที่เปิดอยู่ของโต๊ะ ${val1}`);
             SERVER_DATA.sessionId = null;
             SERVER_DATA.token = null;
             SERVER_DATA.pax = 1;
@@ -1009,24 +1056,34 @@ async function handleStaffSubmit(config) {
     } 
     else if (STAFF_ROLE === 'staff123') {
         // --- โหมดพนักงาน (Staff) ---
-        // ✅ แก้ไข: ช่องแรกคือชื่อคน (val1) และช่องสองคือชื่อซุ้ม (val2)
+        // แก้ไข: ช่องแรกคือชื่อคน (val1) และช่องสองคือชื่อซุ้ม (val2)
         SERVER_DATA.staffName = val1;    // บันทึกชื่อคนลงในฟิลด์ชื่อ
         SERVER_DATA.staffStation = val2; // บันทึกชื่อซุ้มลงในฟิลด์ซุ้ม
+        SERVER_DATA.customerPhone = val4.replace(/\D/g, ''); // เบอร์โทรของพนักงานที่สั่ง
         SERVER_DATA.tableNumber = 'STAFF';
         SERVER_DATA.token = `${config.prefix}-${val1}-${val2}-${Date.now()}`;
+
+        // โหมด staff123 ต้องได้ส่วนลด 10% เสมอ (เดิมไม่เคยตั้งค่า DISCOUNT_PERCENT เลย ราคาที่แสดงจึงไม่ลด)
+        DISCOUNT_PERCENT = config.fixedDiscount || 0.10;
+        DISCOUNT_DISPLAY = `${Math.floor(DISCOUNT_PERCENT * 100 + 1e-9)}%`;
+        SERVER_DATA.discount = DISCOUNT_DISPLAY;
         
-        console.log("✅ [DEBUG] โหมดพนักงาน - บันทึกชื่อ:", val1, "ซุ้ม:", val2);
+        console.log("[DEBUG] โหมดพนักงาน - บันทึกชื่อ:", val1, "ซุ้ม:", val2);
     }
     else if (STAFF_ROLE === 'takehome123') {
         // --- โหมดสั่งกลับบ้าน ---
         SERVER_DATA.tableNumber = 'TH';
         SERVER_DATA.thCode = val1;
         SERVER_DATA.staffName = 'Order Takehome'; 
+        SERVER_DATA.customerName = val3;
+        SERVER_DATA.customerPhone = val4.replace(/\D/g, '');
         SERVER_DATA.token = `${config.prefix}-${val1}-${Date.now()}`;
         
         const discValue = parseFloat(selectedStaffDiscount) || 0;
         DISCOUNT_PERCENT = discValue;
-        DISCOUNT_DISPLAY = discValue > 0 ? `${Math.round(discValue * 100)}%` : 'None';
+        // ปัดลงเสมอ (floor) กันปัญหาทศนิยมเพี้ยนจาก float ก่อนแปลงเป็น %
+        const discPctFloor = Math.floor(discValue * 100 + 1e-9);
+        DISCOUNT_DISPLAY = discPctFloor > 0 ? `${discPctFloor}%` : 'None';
         SERVER_DATA.discount = DISCOUNT_DISPLAY;
     }
 
@@ -1064,7 +1121,7 @@ async function loadBannersFromServer() {
     }
 }
 
-// 🎯 ฟังก์ชันแยกตัวเลือก
+// ฟังก์ชันแยกตัวเลือก
 function buildOptionGroups(optionsConfig, itemsMap) {
     return (optionsConfig || []).map(group => ({
         label_th: group.label_th,
@@ -1102,7 +1159,7 @@ async function loadMenusFromServer() {
     ]);
 
     if (menuRes.error) {
-        showToast('❌ ไม่สามารถโหลดเมนูได้', 'error');
+        showToast('ไม่สามารถโหลดเมนูได้', 'error');
         showLoader(false);
         return;
     }
@@ -1117,7 +1174,7 @@ async function loadMenusFromServer() {
     stationsData.forEach(st => {
         grouped[st.station_th] = {
             name: { th: st.station_th, en: st.station_en || st.station_th, cn: st.station_cn || st.station_th },
-            image: st.cat_image || 'https://via.placeholder.com/150',
+            image: st.cat_image || placeholderImage,
             items: []
         };
     });
@@ -1127,7 +1184,7 @@ async function loadMenusFromServer() {
         if (!grouped[catName]) {
             grouped[catName] = {
                 name: { th: item.station_th, en: item.station_en || item.station_th, cn: item.station_cn || item.station_th },
-                image: item.cat_image || 'https://via.placeholder.com/150',
+                image: item.cat_image || placeholderImage,
                 items: []
             };
         }
@@ -1355,6 +1412,7 @@ function renderCategoryNavbar() {
 
         navItem.innerHTML = `
     <img src="${imgSrc}" 
+         loading="lazy" decode="async"
          onerror="this.src='${placeholderImage}'"
          style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;">
     <div style="position:absolute;inset:0;background:rgba(0,0,0,0.52);z-index:1;border-radius:9999px;"></div>
@@ -1458,7 +1516,7 @@ function highlightNavButton(rawId) {
     }
 }
 
-// ✅ ฟังก์ชันตรวจสอบและแสดงจุดแจ้งเตือนสีแดง
+// ฟังก์ชันตรวจสอบและแสดงจุดแจ้งเตือนสีแดง
 async function updateHistoryBadge() {
     if (!SERVER_DATA.sessionId) return;
     
@@ -1520,7 +1578,7 @@ function getBadgeHTML(status) {
     if (cleanStatus === '15m' || cleanStatus === '30m') {
         const is15m = cleanStatus === '15m';
         
-        // ✅ ย้อมสีกระจกฝ้าให้แตกต่างกันชัดเจน
+ // ย้อมสีกระจกฝ้าให้แตกต่างกันชัดเจน
         const bgClass = is15m ? 'bg-yellow-50/95 border-yellow-200' : 'bg-red-50/95 border-red-200';
         const textColor = is15m ? 'text-yellow-700' : 'text-red-600';
         
@@ -1676,7 +1734,7 @@ function createMenuItemCard(item, categoryName) {
         card.classList.add('cursor-pointer');
     }
 
-    const imageSrc = item.imageURL || 'https://via.placeholder.com/300x300?text=No+Image';
+    const imageSrc = item.imageURL || placeholderImage;
     
     let badgesHTML = '';
     if (itemStatus === 'TH_Only' && isOrderable) {
@@ -1733,7 +1791,7 @@ function createMenuItemCard(item, categoryName) {
 
     card.innerHTML = `
         <div class="relative w-full pt-[100%] rounded-3xl overflow-hidden bg-gray-100 shadow-sm">
-            <img src="${imageSrc}" loading="lazy" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${itemName}">
+            <img src="${imageSrc}" loading="lazy" decode="async" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="${itemName}">
             ${(isOrderable && !starterLocked) ? '<div class="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>' : ''}
             ${badgesHTML}
             ${buttonHTML}
@@ -1870,7 +1928,7 @@ function openProductModal(item, mode = 'ADD', index = null) {
         document.getElementById('bs-note').value = '';
     }
 
-    // ✅ ปลดล็อก Tailwind: เอา hidden ออกก่อน
+ // ปลดล็อก Tailwind: เอา hidden ออกก่อน
     const sheet = document.getElementById('bottomSheet');
     const scrollContainer = document.getElementById('bs-scroll-container');
     const content = document.getElementById('bottomSheetContent');
@@ -1883,7 +1941,7 @@ function openProductModal(item, mode = 'ADD', index = null) {
     if (scrollContainer) scrollContainer.scrollTop = 0;
     document.body.classList.add('overflow-hidden');
 
-    // ✅ ปลดล็อก Tailwind: เอา translate-y-full ที่กดมันไว้ออก
+ // ปลดล็อก Tailwind: เอา translate-y-full ที่กดมันไว้ออก
     requestAnimationFrame(() => {
         if (content) {
             content.classList.remove('translate-y-full');
@@ -1898,7 +1956,7 @@ function closeBottomSheet() {
     const content = document.getElementById('bottomSheetContent');
     const sheet = document.getElementById('bottomSheet');
     
-    // ✅ สั่งให้มุดลงไปก่อน
+ // สั่งให้มุดลงไปก่อน
     if (content) {
         content.style.transform = '';
         content.classList.add('translate-y-full');
@@ -1907,7 +1965,7 @@ function closeBottomSheet() {
     document.body.classList.remove('overflow-hidden'); 
 
     setTimeout(() => {
-        // ✅ ปิดซ่อนหลัง Animation จบ
+ // ปิดซ่อนหลัง Animation จบ
         if (sheet) {
             sheet.style.display = '';
             sheet.classList.add('hidden');
@@ -2117,7 +2175,7 @@ function renderCart() {
             
             var unitPrice = cartItem.itemFullPrice || menuItem.originalPrice || 0;
             var itemName = menuItem.item[currentLang] || menuItem.item.th; 
-            var imgSrc = menuItem.imageURL || 'https://via.placeholder.com/150?text=No+Image';
+            var imgSrc = menuItem.imageURL || placeholderImage;
             
             var isNoDiscount = menuItem.kds_station === 'น้ำ' || menuItem.station === 'น้ำ';
             if (isNoDiscount) { hasExcludedItemInCart = true; }
@@ -2146,7 +2204,7 @@ function renderCart() {
 
             itemsHTML += '<div class="flex items-start py-4 border-b border-gray-100 last:border-0 group relative">';
             itemsHTML += '<div class="flex-grow flex cursor-pointer active:opacity-70 transition-opacity min-w-[0]" onclick="editCartItem(' + index + ')">';
-            itemsHTML += '<div class="flex-shrink-0 mr-4"><img src="' + imgSrc + '" class="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm"></div>';
+            itemsHTML += '<div class="flex-shrink-0 mr-4"><img src="' + imgSrc + '" loading="lazy" decode="async" width="64" height="64" class="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm"></div>';
             itemsHTML += '<div class="flex-shrink flex-grow-0 min-w-0 pr-2 flex flex-col justify-center">';
             itemsHTML += '<div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-gray-800 text-base leading-tight truncate max-w-full whitespace-nowrap">' + itemName + '</h4><div class="flex-shrink-0 text-orange-500 bg-orange-50 p-1 rounded-md">' + editIcon + '</div></div>';
             itemsHTML += optionsHTML + noteHTML;
@@ -2195,7 +2253,7 @@ function renderCart() {
                 var labelDisplay = s.label[currentLang] || s.label.th;
                 var btnDisplay = s.btnText[currentLang] || s.btnText.th;
                 recHTML += '<div onclick="jumpToCategory(\'' + s.targetId + '\')" class="snap-start flex-shrink-0 w-32 h-12 bg-white border border-gray-200 rounded-lg shadow-sm active:scale-95 transition-transform cursor-pointer flex overflow-hidden group hover:border-orange-300 relative">';
-                recHTML += '  <div class="w-12 h-full relative flex-shrink-0"><img src="' + s.imageUrl + '" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="' + labelDisplay + '"></div>';
+                recHTML += '  <div class="w-12 h-full relative flex-shrink-0"><img src="' + s.imageUrl + '" loading="lazy" decode="async" class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="' + labelDisplay + '"></div>';
                 recHTML += '  <div class="flex-1 flex flex-col justify-center px-1.5 min-w-0 bg-white">';
                 recHTML += '    <span class="text-[10px] font-bold text-gray-900 leading-tight whitespace-nowrap overflow-hidden">' + labelDisplay + '</span>';
                 recHTML += '    <div class="flex items-center gap-0.5 mt-0.5"><span class="text-[9px] font-medium text-orange-600 whitespace-nowrap">' + btnDisplay + '</span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-2.5 h-2.5 text-orange-400 -mb-px"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg></div>';
@@ -2208,7 +2266,9 @@ function renderCart() {
         if (grandTotalOriginal > grandTotalNet) {
             var discountAmount = grandTotalOriginal - grandTotalNet;
             summaryHTML += `<div class="flex justify-between items-center text-gray-500 text-sm"><span>${t('subtotal')}</span><span>฿${grandTotalOriginal.toLocaleString()}</span></div>`;
-            summaryHTML += `<div class="flex justify-between items-center text-red-500 text-sm"><span>${t('discount_label')}</span><span>-฿${discountAmount.toLocaleString()}</span></div>`;
+            var discountPctForLabel = Math.round(DISCOUNT_PERCENT * 100);
+            var discountLabelText = t('discount_label') + (discountPctForLabel > 0 ? ` (${discountPctForLabel}%)` : '');
+            summaryHTML += `<div class="flex justify-between items-center text-red-500 text-sm"><span>${discountLabelText}</span><span>-฿${discountAmount.toLocaleString()}</span></div>`;
             if (hasExcludedItemInCart) {
                 summaryHTML += `<div class="text-[10px] text-gray-400 text-right mt-0.5">${t('discount_exclusion_notice')}</div>`;
             }
@@ -2322,16 +2382,22 @@ function closeConfirmModal() {
 }
 
 async function processSubmission() {
+    // กันกดยืนยันซ้ำ/ดับเบิลแท็บบนมือถือ ทำให้เกิดออเดอร์ซ้ำ
+    if (isSubmittingOrder) return;
+    isSubmittingOrder = true;
+
     closeConfirmModal();
     const btn = document.getElementById('submitBtn'); 
     
-    // ✅ เปลี่ยนสถานะปุ่มเป็น Loading หมุนๆ และกดซ้ำไม่ได้
+    // เปลี่ยนสถานะปุ่มเป็น Loading หมุนๆ และกดซ้ำไม่ได้
     if (btn) {
         btn.disabled = true;
         btn.classList.remove('bg-orange-500');
         btn.classList.add('bg-orange-400', 'cursor-not-allowed');
         btn.innerHTML = `<svg class="animate-spin h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>${t('submitting')}</span>`;
     }
+
+    let newOrderId = null; // เก็บไว้เผื่อต้อง rollback ถ้า insert รายการอาหารพลาด
 
     try {
         if (typeof preflightValidateOrder === 'function') {
@@ -2377,7 +2443,8 @@ async function processSubmission() {
             currentToken = thSession[0].token;
             currentTableId = 'TH';
             orderType = 'takehome';
-            const thDiscountPct = (typeof selectedStaffDiscount !== 'undefined' && selectedStaffDiscount > 0) ? Math.round(selectedStaffDiscount * 100) : 0;
+            // ปัดลงเสมอ (floor) ตอนแปลงเป็น % ก่อนส่งเข้า DB กันปัญหาทศนิยมเพี้ยนจาก float
+            const thDiscountPct = (typeof selectedStaffDiscount !== 'undefined' && selectedStaffDiscount > 0) ? Math.floor(selectedStaffDiscount * 100 + 1e-9) : 0;
             staffName = thDiscountPct > 0 ? `TH_DISC|${thDiscountPct}` : null;
         } else if (STAFF_ROLE === 'staff123') {
             const { data: staffSession, error: stErr } = await supabaseClient.rpc('get_or_create_staff_session');
@@ -2401,7 +2468,9 @@ async function processSubmission() {
             } else { throw new Error("ยังไม่ได้เปิดโต๊ะ กรุณาให้พนักงานเปิดโต๊ะก่อนสั่งอาหารครับ"); }
         }
 
-        const orderKey = `ORD-${currentToken}-${Date.now()}`;
+        // เติมส่วนสุ่มต่อท้าย order_key กันชนกันกรณี retry เร็วมากจน Date.now() ซ้ำ
+        const randomSuffix = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10);
+        const orderKey = `ORD-${currentToken}-${Date.now()}-${randomSuffix}`;
         const { data: orderData, error: orderErr } = await supabaseClient.rpc('create_order_safe', {
             p_order_key: orderKey, p_session_id: currentSessionId, p_table_id: currentTableId,
             p_order_type: orderType, p_note: orderType === 'staff' ? staffName : (orderType === 'takehome' && staffName ? staffName : null),
@@ -2409,7 +2478,7 @@ async function processSubmission() {
             p_staff_name: SERVER_DATA.staffName || null
         });
         if (orderErr) throw orderErr;
-        const newOrderId = orderData[0].order_id;
+        newOrderId = orderData[0].order_id;
 
         const itemsToInsert = cart.flatMap(cartItem => {
             const menuItem = flatMenu[cartItem.itemKey];
@@ -2423,10 +2492,41 @@ async function processSubmission() {
         });
 
         const { error: itemsErr } = await supabaseClient.from('order_items').insert(itemsToInsert);
-        if (itemsErr) throw itemsErr;
+        if (itemsErr) {
+            // rollback: ลบออเดอร์ที่เพิ่งสร้าง (ไม่มีรายการอาหารติดอยู่) กันไม่ให้ค้างเป็นบิลเปล่าในระบบ
+            try { await supabaseClient.from('orders').delete().eq('id', newOrderId); } catch (rollbackErr) { console.error("Rollback order failed:", rollbackErr); }
+            newOrderId = null;
+            throw itemsErr;
+        }
+
+        // บันทึกชื่อ/เบอร์โทรลูกค้า (takehome/staff) ลงออเดอร์ — ไม่บล็อกการสั่งอาหารถ้าอัปเดตพลาด
+        if (orderType === 'takehome' || orderType === 'staff') {
+            const customerInfo = {};
+            if (SERVER_DATA.customerName) customerInfo.customer_name = SERVER_DATA.customerName;
+            if (SERVER_DATA.customerPhone) customerInfo.customer_phone = SERVER_DATA.customerPhone;
+            if (Object.keys(customerInfo).length > 0) {
+                const { error: custErr } = await supabaseClient.from('orders').update(customerInfo).eq('id', newOrderId);
+                if (custErr) console.error("บันทึกชื่อ/เบอร์โทรลูกค้าไม่สำเร็จ:", custErr);
+            }
+        }
+
+        // --- เพิ่มโค้ดส่วนนี้เพื่อยิงข้อความไปที่ Discord ---
+        try {
+            console.log("กำลังส่งออเดอร์ไป Discord...");
+            supabaseClient.functions.invoke('notify-order', {
+                body: { order_id: newOrderId }
+            }).then(({ data, error }) => {
+                if (error) console.error("ส่งแจ้งเตือน Discord ไม่สำเร็จ:", error);
+                else console.log("ส่งเข้า Discord สำเร็จ!", data);
+            });
+        } catch (discordErr) {
+            console.error("เกิดข้อผิดพลาดตอนเรียกเรียก Edge Function:", discordErr);
+        }
+        // ------------------------------------------
 
         showToast(typeof t === 'function' ? t('toast_success') : 'สั่งอาหารสำเร็จ!', 'success');
         if (typeof saveOrderToHistory === 'function') saveOrderToHistory(cart);
+
         cart = []; renderCart();
         if (typeof closeCartSheet === 'function') closeCartSheet();
 
@@ -2436,9 +2536,10 @@ async function processSubmission() {
 
     } catch (err) {
         console.error("Submission Error:", err);
-        showModal('⚠️ เกิดข้อผิดพลาด', err.message);
+        showModal('เกิดข้อผิดพลาด', err.message);
     } finally {
-        // ✅ คืนค่าปุ่มกลับเป็นปกติเมื่อส่งเสร็จ (หรือเกิด Error)
+        isSubmittingOrder = false;
+        // คืนค่าปุ่มกลับเป็นปกติเมื่อส่งเสร็จ (หรือเกิด Error)
         if (btn) {
             btn.disabled = false;
             btn.classList.remove('bg-orange-400', 'cursor-not-allowed');
@@ -2449,7 +2550,7 @@ async function processSubmission() {
 }
 
 // ==========================================
-// 🔌 REALTIME — Session expiration watcher
+// REALTIME — Session expiration watcher
 // ==========================================
 let _sessionChannel = null;
 
@@ -2477,7 +2578,7 @@ function subscribeToSessionExpiration() {
                     redirectToExpired();
                 }
 
-                // ✅ ตรวจสอบการอัปเดตส่วนลดแบบ Real-time
+ // ตรวจสอบการอัปเดตส่วนลดแบบ Real-time
                 if (newRow.discount !== undefined) {
                     SERVER_DATA.discount = String(newRow.discount);
                     parseDiscount(SERVER_DATA.discount);
@@ -2493,7 +2594,7 @@ function subscribeToSessionExpiration() {
 }
 
 // ==========================================
-// 🔌 REALTIME — Menu status watcher (Sync with KDS)
+// REALTIME — Menu status watcher (Sync with KDS)
 // ==========================================
 let _menuChannel = null;
 
@@ -2587,7 +2688,7 @@ function subscribeToMenuStatusUpdates() {
 }
 
 // ==========================================
-// 🔌 REALTIME — Option item status watcher
+// REALTIME — Option item status watcher
 // ==========================================
 function subscribeToOptionItemUpdates() {
     supabaseClient
@@ -2643,7 +2744,7 @@ function subscribeToOptionItemUpdates() {
 }
 
 // ==========================================
-// 🛡️ PRE-FLIGHT — Validate before insert
+// ️ PRE-FLIGHT — Validate before insert
 // ==========================================
 async function preflightValidateOrder() {
     const isStaffRole = STAFF_ROLE === 'server123' || STAFF_ROLE === 'takehome123' || STAFF_ROLE === 'staff123';
@@ -2743,7 +2844,7 @@ function saveOrderToHistory(cartData) {
     }
 }
 
-// ✅ 1. ฟังก์ชันดึงประวัติจาก Database ตาม Session ปัจจุบัน
+// 1. ฟังก์ชันดึงประวัติจาก Database ตาม Session ปัจจุบัน
 async function renderHistory() {
     const container = document.getElementById('historyList');
 
@@ -2876,7 +2977,7 @@ async function openHistorySheet() {
     backdrop.classList.remove('pointer-events-none', 'opacity-0');
     backdrop.classList.add('pointer-events-auto', 'opacity-100');
     
-    // ✅ ปลดล็อก Tailwind หน้าประวัติ
+ // ปลดล็อก Tailwind หน้าประวัติ
     requestAnimationFrame(() => {
         if (sheet) {
             sheet.classList.remove('translate-y-full');
@@ -2892,7 +2993,7 @@ function closeHistorySheet() {
 
     document.body.classList.remove('overflow-hidden');
     
-    // ✅ คืนค่าคลาสให้ประวัติมุดลง
+ // คืนค่าคลาสให้ประวัติมุดลง
     if (sheet) {
         sheet.style.transform = '';
         sheet.classList.add('translate-y-full');
@@ -3013,7 +3114,7 @@ function openCartSheet() {
             backdrop.classList.remove('opacity-0');
             backdrop.classList.add('opacity-100');
             
-            // ✅ ปลดล็อก Tailwind ตะกร้า
+ // ปลดล็อก Tailwind ตะกร้า
             if (sheet) {
                 sheet.classList.remove('translate-y-full');
                 sheet.style.transform = 'translateY(0)';
@@ -3029,7 +3130,7 @@ function closeCartSheet() {
     const backdrop = document.getElementById('cartBackdrop');
     const sheet = document.getElementById('cartSheetContent');
 
-    // ✅ คืนค่าคลาสให้ตะกร้ามุดลง
+ // คืนค่าคลาสให้ตะกร้ามุดลง
     if (sheet) {
         sheet.style.transform = '';
         sheet.classList.add('translate-y-full');
