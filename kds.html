@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VETRES | ครัว</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%237C8FE3'/%3E%3Cstop offset='100%25' stop-color='%236B7FD7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='24' height='24' rx='5.3' fill='url(%23g)'/%3E%3Cpath fill='none' stroke='white' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round' d='M15.362 5.214A8.252 8.252 0 0 1 12 21 8.25 8.25 0 0 1 6.038 7.048 8.287 8.287 0 0 0 9 9.6a8.983 8.983 0 0 1 3.361-6.867 8.21 8.21 0 0 0 3 2.48Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round' d='M12 18a3.75 3.75 0 0 0 .495-7.468 5.99 5.99 0 0 0-1.925 3.546 5.974 5.974 0 0 1-2.133-1.001A3.75 3.75 0 0 0 12 18Z'/%3E%3C/svg%3E">
     <link href="./dist/output.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- QR code generator (ใช้กับ modal ลิงก์) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300..800&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ────────────────────────────────────────
@@ -110,6 +113,7 @@
             background: var(--surface-2);
             display: flex;
             align-items: center;
+            gap: 16px;
             padding: 16px 12px 16px 20px;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             border-radius: inherit;
@@ -162,7 +166,7 @@
             box-shadow: 0 4px 12px rgba(241, 102, 106, 0.25);
         }
 
-        .item-info { flex: 1; }
+        .item-info { flex: 1; min-width: 0; }
 
         /* เอฟเฟกต์สำหรับคอมพิวเตอร์ (Hover & Reveal) */
         @media (hover: hover) {
@@ -185,15 +189,15 @@
         }
 
         /* --- Note Box: กรอบหมายเหตุแบบพรีเมียม --- */
+        /* --- Note: ข้อความ caption กลืนกับการ์ด ไม่ใช่กล่องเด่นแยกออกมา --- */
         .note-container {
-            background: rgba(217, 164, 65, 0.1);
-            border: 1.5px solid rgba(217, 164, 65, 0.3);
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-top: 10px;
             display: flex;
             align-items: flex-start;
-            gap: 10px;
+            gap: 6px;
+            margin-top: 6px;
+            width: fit-content;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .item-row { border-bottom: 1px dashed var(--border-strong); }
@@ -293,6 +297,124 @@
         .icon-btn { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; cursor: pointer; }
         .icon-btn:hover { transform: translateY(-1px); }
 
+
+        /* ════════════════════════════════════════
+           🔌 CONNECTION STATUS
+           ════════════════════════════════════════ */
+        .conn-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 12px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-family: 'Geist', 'IBM Plex Sans Thai', sans-serif;
+            font-size: 10.5px;
+            font-weight: 600;
+            line-height: 1;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #fca5a5;
+            background: rgba(241, 102, 106, 0.12);
+            border: 1px solid rgba(241, 102, 106, 0.32);
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .conn-badge.is-hidden { display: none; }
+        .conn-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--danger);
+            animation: conn-pulse 1.9s var(--ease-premium) infinite;
+        }
+        @keyframes conn-pulse {
+            0%   { box-shadow: 0 0 0 0 rgba(241, 102, 106, 0.55); }
+            70%  { box-shadow: 0 0 0 7px rgba(241, 102, 106, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(241, 102, 106, 0); }
+        }
+
+        .offline-banner {
+            position: fixed;
+            top: 14px; left: 50%;
+            transform: translateX(-50%) translateY(-14px);
+            z-index: 300;
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            width: min(calc(100vw - 24px), 460px);
+            box-sizing: border-box;
+            padding: 14px 14px 14px 16px;
+            border-radius: 16px;
+            background: #1a1113;
+            border: 1px solid rgba(241, 102, 106, 0.34);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.55);
+            opacity: 0; visibility: hidden; pointer-events: none;
+            transition: opacity 240ms var(--ease-premium), transform 240ms var(--ease-premium), visibility 240ms;
+        }
+        .offline-banner.is-open {
+            opacity: 1; visibility: visible; pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
+        }
+        .offline-banner-icon {
+            width: 34px; height: 34px; flex: 0 0 auto;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(241, 102, 106, 0.14);
+            color: var(--danger);
+        }
+        .offline-banner-text { min-width: 0; flex: 1 1 auto; }
+        .offline-banner-text strong {
+            display: block; font-size: 14px; font-weight: 700;
+            color: var(--text); margin-bottom: 3px;
+        }
+        .offline-banner-text span {
+            display: block; font-size: 12.5px; line-height: 1.5; color: var(--text-dim);
+        }
+        .offline-banner-close {
+            width: 30px; height: 30px; flex: 0 0 auto;
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-faint);
+            background: rgba(255, 255, 255, 0.05);
+            border: none; cursor: pointer;
+            transition: all 160ms var(--ease-premium);
+        }
+        .offline-banner-close:hover { color: var(--text); background: rgba(255, 255, 255, 0.11); }
+
+        /* ════════════════════════════════════════
+           🔗 LINK HUB — QR modal (มินิมอล: QR + ปุ่มคัดลอก)
+           ════════════════════════════════════════ */
+        .qr-box {
+            width: 232px; height: 232px;
+            margin: 0 auto;
+            padding: 14px;
+            box-sizing: border-box;
+            border-radius: 18px;
+            background: #ffffff;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .qr-box img, .qr-box canvas { width: 100% !important; height: 100% !important; display: block; }
+        .qr-box .qr-fallback {
+            font-size: 12px; line-height: 1.55; color: #52525b; text-align: center; padding: 0 8px;
+        }
+        .qr-copy-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            margin-top: 18px;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 12.5px; font-weight: 600;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-strong);
+            cursor: pointer;
+            transition: all 170ms var(--ease-premium);
+        }
+        .qr-copy-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.11); }
+        .qr-copy-btn.is-done {
+            color: var(--success);
+            background: rgba(79, 183, 131, 0.13);
+            border-color: rgba(79, 183, 131, 0.32);
+        }
+
         /* Modal backdrop — ความมืด/เบลอเท่ากับ admin.html / staff.html */
         .modal-backdrop-soft { background: rgba(4, 5, 9, 0.46); backdrop-filter: blur(4px) saturate(115%); -webkit-backdrop-filter: blur(4px) saturate(115%); }
     </style>
@@ -322,6 +444,10 @@
                 </div>
                 <h1 class="text-2xl font-medium tracking-wide uppercase" style="color: var(--text);">
                     <span id="stationName" class="leading-none">กำลังโหลด...</span>
+                    <span id="connBadge" class="conn-badge is-hidden" role="status" aria-live="polite"
+                        title="ไม่มีการเชื่อมต่ออินเทอร์เน็ต">
+                        <span class="conn-dot" aria-hidden="true"></span>Offline
+                    </span>
 
                 </h1>
             </div>
@@ -414,6 +540,46 @@
                             </div>
                             <div class="nav-text">
                                 <div class="nav-title">จัดการเมนู</div>
+                            </div>
+                            <svg class="hi nav-arrow" style="width:16px;height:16px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                        </div>
+
+                        <div class="nav-row" onclick="navigateTo('links')">
+                            <div class="nav-icon icon-mark" style="background: linear-gradient(135deg, #f0a6a9, var(--danger));">
+                                <svg class="hi" style="width:22px;height:22px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" /></svg>
+                            </div>
+                            <div class="nav-text">
+                                <div class="nav-title">ลิงก์</div>
+                            </div>
+                            <svg class="hi nav-arrow" style="width:16px;height:16px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="panel-links" class="panel slide-out-right">
+                    <div class="sidebar-header">
+                        <div class="back-btn" onclick="navigateBack()">
+                            <svg class="hi" style="width:16px;height:16px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+                        </div>
+                        <div class="sidebar-title" style="color: var(--danger);">ลิงก์</div>
+                    </div>
+                    <div class="flex-1 overflow-y-auto no-scrollbar">
+                        <div class="nav-row" onclick="openLinkQr('discord')">
+                            <div class="nav-icon icon-mark" style="background: linear-gradient(135deg, #7C8FE3, #5865F2);">
+                                <svg style="width:20px;height:20px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.369a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.006.127c-.598.35-1.22.645-1.873.891a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.056c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028ZM8.02 15.331c-1.182 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418Zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418Z" /></svg>
+                            </div>
+                            <div class="nav-text">
+                                <div class="nav-title">Discord</div>
+                            </div>
+                            <svg class="hi nav-arrow" style="width:16px;height:16px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                        </div>
+
+                        <div class="nav-row" onclick="openLinkQr('food')">
+                            <div class="nav-icon icon-mark" style="background: linear-gradient(135deg, #e8c46a, var(--warning));">
+                                <svg class="hi" style="width:22px;height:22px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="currentColor"><path d="M256 410.304V96a32 32 0 0 1 64 0v314.304a96 96 0 0 0 64-90.56V96a32 32 0 0 1 64 0v223.744a160 160 0 0 1-128 156.8V928a32 32 0 1 1-64 0V476.544a160 160 0 0 1-128-156.8V96a32 32 0 0 1 64 0v223.744a96 96 0 0 0 64 90.56zM672 572.48C581.184 552.128 512 446.848 512 320c0-141.44 85.952-256 192-256s192 114.56 192 256c0 126.848-69.184 232.128-160 252.48V928a32 32 0 1 1-64 0V572.48zM704 512c66.048 0 128-82.56 128-192s-61.952-192-128-192-128 82.56-128 192 61.952 192 128 192z"/></svg>
+                            </div>
+                            <div class="nav-text">
+                                <div class="nav-title">สั่งอาหาร Staff</div>
                             </div>
                             <svg class="hi nav-arrow" style="width:16px;height:16px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
                         </div>
@@ -629,6 +795,17 @@
             document.getElementById('activeCount').innerText = total;
         }
 
+        // คำนวณขนาดตัวหนังสือหัวข้อการ์ด (ชื่อโต๊ะ/รหัส) ตามความยาว เพื่อบังคับให้อยู่บรรทัดเดียวเสมอ
+        // ยิ่งข้อความยาว ยิ่งลดขนาดฟอนต์ลง แทนที่จะปล่อยให้ตัดขึ้นบรรทัดใหม่
+        function getTitleSizeClass(text) {
+            const len = (text || '').length;
+            if (len <= 7) return 'text-3xl';
+            if (len <= 10) return 'text-2xl';
+            if (len <= 14) return 'text-xl';
+            if (len <= 18) return 'text-lg';
+            return 'text-base';
+        }
+
         function renderBoard() {
             const container = document.getElementById('boardContainer');
             const emptyState = document.getElementById('emptyState');
@@ -645,6 +822,10 @@
             orderKeys.forEach(orderId => {
                 const order = ordersData[orderId];
                 const elapsedMin = Math.floor((new Date() - new Date(order.created_at)) / 60000);
+                // เวลาที่สั่งออเดอร์เข้ามา (แสดงแทนคำว่า WAITING)
+                const orderTimeStr = order.created_at
+                    ? new Date(order.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })
+                    : '--:--';
                 
                 // 1. กำหนดเฉดสีแจ้งเตือนเวลาแบบ Premium (< 15 = ฟ้า, >= 15 = เหลือง, >= 20 = แดง)
                 let auraClass = 'aura-normal';
@@ -675,6 +856,12 @@
                 let subHeaderInfo = '';
                 let discountPercent = parseFloat(order.discount) || 0;
 
+                // สร้างป้ายส่วนลด (ใช้ร่วมกันทุกประเภทออเดอร์) — แสดงเฉพาะเมื่อมีส่วนลด > 0%
+                const buildDiscountBadge = (pct) => pct > 0 ? `
+                        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(241,102,106,0.18);color:#ffb4b6;font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
+                            ส่วนลด ${pct}%
+                        </span>` : '';
+
                 if (order.order_type === 'takehome') {
                     headerBg = 'linear-gradient(160deg, rgba(45,28,74,0.9), var(--bg) 130%)'; // Dark Purple (Takehome)
                     cardBorderColor = 'rgba(167,139,214,0.35)';
@@ -684,6 +871,12 @@
                     headerTitleText = digits ? `TH${digits.padStart(2, '0')}` : 'TH??';
                     if (order.note && String(order.note).startsWith('TH_DISC|')) {
                         discountPercent = parseFloat(order.note.split('|')[1]) || 0;
+                    }
+                    if (discountPercent > 0) {
+                        subHeaderInfo = `
+                            <div style="margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+                                ${buildDiscountBadge(discountPercent)}
+                            </div>`;
                     }
                 } else if (order.order_type === 'staff') {
                     headerBg = 'linear-gradient(160deg, rgba(20,53,45,0.9), var(--bg) 130%)'; // Dark Green (Staff)
@@ -698,15 +891,17 @@
                         sStation = (parts[2] || '').trim();
                     }
                     headerTitleText = sName;
-                    if (sStation) {
-                        subHeaderInfo = `
-                            <div style="margin-top:8px;">
-                                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
-                                    ${ICON_STORE_SM} ${sStation}
-                                </span>
-                            </div>`;
-                    }
-                    discountPercent = 10;} else {
+                    discountPercent = 10;
+                    const sStationBadge = sStation ? `
+                        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
+                            ${ICON_STORE_SM} ${sStation}
+                        </span>` : '';
+                    subHeaderInfo = `
+                        <div style="margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+                            ${sStationBadge}
+                            ${buildDiscountBadge(discountPercent)}
+                        </div>`;
+                } else {
                     // --- โหมด Dine-in (สั่งที่โต๊ะ) ---
                     headerBg = 'linear-gradient(160deg, rgba(30,41,82,0.9), var(--bg) 130%)'; // Dark Blue (Dine-in)
                     cardBorderColor = 'rgba(107,127,215,0.35)';
@@ -716,26 +911,27 @@
 
                     // 1. สร้าง Pax Badge (แสดงจำนวนคน) — inline style ล้วน กันเคส Tailwind ไม่ compile
                     let paxBadge = order.pax > 0 ? `
-                        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
+                        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
                             ${ICON_USER_SM}
                             ${order.pax} ท่าน
                         </span>` : '';
 
                     // 2. สร้าง Staff Badge (ชื่อบริกร) — inline style ล้วน กันเคส Tailwind ไม่ compile
                     let staffBadge = order.staff_name ? `
-                        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
+                        <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.9);font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
                             
                             บริกร: ${order.staff_name}
                         </span>` : '';
 
+                    discountPercent = parseFloat(order.discount) || 0;
+
                     // 3. นำ Badge มาแสดงผลรวมกัน — บังคับเรียงแนวนอนบรรทัดเดียวกันด้วย inline flexbox
                     subHeaderInfo = `
-                        <div style="margin-top:8px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+                        <div style="margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
                             ${paxBadge}
                             ${staffBadge}
+                            ${buildDiscountBadge(discountPercent)}
                         </div>`;
-                        
-                    discountPercent = parseFloat(order.discount) || 0;
                 }
                 
 
@@ -749,18 +945,18 @@
                 card.innerHTML = `
                     <div class="p-6 relative" style="background:${headerBg};border-bottom:1px solid rgba(255,255,255,0.08);">
                         <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-3">
-                                    <div class="icon-mark" style="width:48px;height:48px;background:${iconGradient};color:white;">${headerIcon}</div>
-                                    <span class="text-3xl font-black text-white">${headerTitleText}</span>
+                            <div class="flex-1" style="min-width:0;">
+                                <div class="flex items-center gap-3" style="min-width:0;">
+                                    <div class="icon-mark" style="width:48px;height:48px;background:${iconGradient};color:white;flex-shrink:0;">${headerIcon}</div>
+                                    <span class="${getTitleSizeClass(headerTitleText)} font-black text-white" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;">${headerTitleText}</span>
                                 </div>
-                                ${subHeaderInfo}
                             </div>
                             <div class="text-right ml-4">
-                                <p class="text-[10px] font-medium uppercase tracking-widest text-white/40 mb-1">WAITING</p>
+                                <p class="text-[10px] font-medium uppercase tracking-widest text-white/40 mb-1">${orderTimeStr}</p>
                                 <p class="text-3xl font-bold leading-none tracking-wide" style="color:${timeTextColor};">${elapsedMin}<span class="text-sm ml-1 font-medium">m</span></p>
                             </div>
                         </div>
+                        ${subHeaderInfo}
                     </div>
 
                     <div class="p-4 flex-1 flex flex-col gap-3" style="background: var(--bg);">
@@ -778,9 +974,9 @@
                                         <p class="text-xl font-bold leading-tight" style="color: var(--text);">${item.item_name_th}</p>
                                         <div class="mt-1 flex flex-wrap gap-1">${formatOptionChips(item.option)}</div>
                                         ${item.note ? `
-                                            <div class="note-container" style="width: fit-content; max-width: 100%;">
-                                                <svg class="hi" style="width:16px;height:16px;color:var(--warning);margin-top:2px;flex-shrink:0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
-                                                <p class="text-sm leading-snug font-medium" style="color:#f0dcae; white-space: nowrap;">${item.note}</p>
+                                            <div class="note-container">
+                                                <svg class="hi" style="width:13px;height:13px;color:rgba(217,164,65,0.55);margin-top:2px;flex-shrink:0;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                                                <p class="text-xs leading-snug" style="color:rgba(217,164,65,0.75); font-style:italic; min-width:0; overflow-wrap:break-word; word-break:break-word;">${item.note}</p>
                                             </div>
                                         ` : ''}
                                     </div>
@@ -958,6 +1154,7 @@
             if (panel === 'sales') loadSalesData();
             if (panel === 'history') loadHistoryData();
             if (panel === 'menus') loadMenusData();
+            // panel 'links' เป็น static ไม่ต้องโหลดข้อมูล
         }
 
         function navigateBack() {
@@ -1069,6 +1266,10 @@
                 const actionTime = isServed ? item.served_at : item.cancelled_at;
                 const timeDiff = actionTime ? Math.floor((new Date() - new Date(actionTime)) / 60000) : 0;
                 const timeText = timeDiff === 0 ? 'เพิ่งดำเนินการ' : (timeDiff < 60 ? `${timeDiff} นาทีที่แล้ว` : `${Math.floor(timeDiff/60)} ชั่วโมงก่อน`);
+                // วันที่-เวลาปิด (เสิร์ฟ/ยกเลิก) แบบเต็ม
+                const actionDateTimeText = actionTime
+                    ? new Date(actionTime).toLocaleString('th-TH', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
+                    : '';
 
                 return `
                     <div class="history-row">
@@ -1079,7 +1280,7 @@
                                     ${statusBadge}
                                 </div>
                                 <p class="text-sm font-semibold truncate" style="color:var(--text);">${item.item_name_th} <span class="font-normal" style="color:var(--text-faint);">x${item.quantity}</span></p>
-                                <p class="text-[0.65rem] mt-0.5 inline-flex items-center gap-1" style="color:var(--text-faint);">${SVG_CLOCK_SM} ${timeText}</p>
+                                <p class="text-[0.65rem] mt-0.5 inline-flex items-center gap-1" style="color:var(--text-faint);">${SVG_CLOCK_SM} ${timeText}${actionDateTimeText ? ` • ${actionDateTimeText}` : ''}</p>
                             </div>
                             <button onclick="reopenTicket('${item.id}', this)" class="hover:text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 text-xs font-medium transition-all flex-shrink-0" style="background:var(--accent-soft);color:var(--accent-active);border:none;">
                                 ${SVG_UNDO_SM} ดึงกลับ
@@ -1350,6 +1551,165 @@
         // call once on load
         updateAudioBtn();
 
+
+        // ════════════════════════════════════════════════════════
+        // 🔗 LINK HUB — QR + คัดลอกลิงก์
+        // ════════════════════════════════════════════════════════
+        const LINK_HUB = {
+            discord: { title: 'Discord',        url: 'https://discord.gg/UzdybfaSc' },
+            food:    { title: 'สั่งอาหาร Staff', url: 'https://vetrestaurant.vercel.app/customer.html?role=staff123' }
+        };
+
+        let currentLinkUrl = '';
+
+        function openLinkQr(key) {
+            const cfg = LINK_HUB[key];
+            if (!cfg) return;
+
+            currentLinkUrl = cfg.url;
+            document.getElementById('linkQrTitle').innerText = cfg.title;
+
+            const copyBtn = document.getElementById('linkQrCopyBtn');
+            copyBtn.classList.remove('is-done');
+            copyBtn.querySelector('span').innerText = 'คัดลอกลิงก์';
+
+            const box = document.getElementById('linkQrBox');
+            box.innerHTML = '';
+            if (typeof QRCode === 'function') {
+                try {
+                    new QRCode(box, {
+                        text: cfg.url,
+                        width: 400, height: 400,
+                        colorDark: '#000000', colorLight: '#ffffff',
+                        correctLevel: QRCode.CorrectLevel.M
+                    });
+                } catch (e) {
+                    console.error('QR render failed:', e);
+                    box.innerHTML = '<div class="qr-fallback">สร้าง QR ไม่สำเร็จ<br>ใช้ปุ่มคัดลอกลิงก์ด้านล่างแทนได้</div>';
+                }
+            } else {
+                // ไลบรารี QR โหลดไม่ทัน (เน็ตหลุดตอนเปิดหน้า)
+                box.innerHTML = '<div class="qr-fallback">ยังโหลด QR ไม่ได้ (ไม่มีอินเทอร์เน็ต)<br>ใช้ปุ่มคัดลอกลิงก์ด้านล่างแทนได้</div>';
+            }
+
+            document.getElementById('linkQrModal').classList.remove('hidden');
+        }
+
+        function closeLinkQr() {
+            document.getElementById('linkQrModal').classList.add('hidden');
+        }
+
+        function copyLinkUrl() {
+            const btn = document.getElementById('linkQrCopyBtn');
+            const label = btn.querySelector('span');
+            const done = () => {
+                btn.classList.add('is-done');
+                label.innerText = 'คัดลอกแล้ว';
+                setTimeout(() => { btn.classList.remove('is-done'); label.innerText = 'คัดลอกลิงก์'; }, 1800);
+            };
+
+            const legacyCopy = () => {
+                // Safari บนแท็บเล็ตที่เข้าผ่าน HTTP จะไม่มี Clipboard API
+                const ta = document.createElement('textarea');
+                ta.value = currentLinkUrl;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                ta.setSelectionRange(0, currentLinkUrl.length);
+                try { document.execCommand('copy'); done(); }
+                catch (e) { label.innerText = 'คัดลอกไม่สำเร็จ'; }
+                document.body.removeChild(ta);
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(currentLinkUrl).then(done).catch(legacyCopy);
+            } else {
+                legacyCopy();
+            }
+        }
+
+        // ปิด modal ด้วย Esc
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const m = document.getElementById('linkQrModal');
+            if (m && !m.classList.contains('hidden')) closeLinkQr();
+        });
+
+        // ════════════════════════════════════════════════════════
+        // 🔌 CONNECTION MONITOR
+        // ตรวจ 2 ทาง: navigator.onLine (network stack)
+        // + สถานะ Supabase Realtime channel — จับกรณีเน็ต "ดูเหมือนต่อ"
+        //   แต่ WebSocket ตายเงียบ ซึ่งอันตรายมากกับ KDS เพราะครัวจะ
+        //   ไม่รู้เลยว่าออเดอร์ใหม่ไม่เข้า
+        // ════════════════════════════════════════════════════════
+        const Conn = {
+            bannerDismissed: false,
+            offline: false,
+            channels: {},
+            _retryTimers: {},
+
+            isOffline() {
+                if (!navigator.onLine) return true;
+                return Object.values(this.channels).some(
+                    st => st === 'CHANNEL_ERROR' || st === 'TIMED_OUT'
+                );
+            },
+
+            render() {
+                const nowOffline = this.isOffline();
+                const badge = document.getElementById('connBadge');
+                const banner = document.getElementById('offlineBanner');
+
+                if (badge) badge.classList.toggle('is-hidden', !nowOffline);
+                if (banner) banner.classList.toggle('is-open', nowOffline && !this.bannerDismissed);
+
+                // offline → online: ดึงออเดอร์ที่ตกหล่นระหว่างเน็ตหลุดกลับมา
+                if (this.offline && !nowOffline) {
+                    this.bannerDismissed = false;
+                    try { if (typeof initKDS === 'function') initKDS(); }
+                    catch (e) { console.warn('resync failed:', e); }
+                }
+                this.offline = nowOffline;
+            },
+
+            channelStatus(name) {
+                return (status) => {
+                    if (status === 'CLOSED') return;   // เกิดตอน unsubscribe ปกติด้วย
+                    this.channels[name] = status;
+                    this.render();
+
+                    if ((status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') && navigator.onLine) {
+                        if (this._retryTimers[name]) return;
+                        this._retryTimers[name] = setTimeout(() => {
+                            this._retryTimers[name] = null;
+                            try { supabaseClient.realtime.connect(); } catch (e) { }
+                        }, 4000);
+                    }
+                };
+            },
+
+            init() {
+                window.addEventListener('offline', () => {
+                    this.bannerDismissed = false;   // เน็ตหลุดรอบใหม่ = เตือนใหม่
+                    this.render();
+                });
+                window.addEventListener('online', () => {
+                    this.channels = {};             // ล้างสถานะเก่า ให้ channel รายงานใหม่
+                    this.render();
+                });
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden) this.render();
+                });
+                this.render();
+            }
+        };
+
+        function dismissOfflineBanner() {
+            Conn.bannerDismissed = true;
+            Conn.render();
+        }
+
         // Real-time: New order_items in this station
         supabaseClient.channel('kds_orders')
             .on('postgres_changes', { 
@@ -1364,13 +1724,19 @@
                     sound.play().catch(() => {});
                 }
                 initKDS();
-            }).subscribe();
+            }).subscribe(Conn.channelStatus('kds_orders'));
 
         // Real-time: order updates (move table)
         supabaseClient.channel('kds_table_move')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => {
                 initKDS();
-            }).subscribe();
+            }).subscribe(Conn.channelStatus('kds_table_move'));
+
+        // Real-time: sessions changes (เช่น เปลี่ยนส่วนลดทีหลังผ่าน staff.html) — sync ส่วนลด/จำนวนคนให้ทันที
+        supabaseClient.channel('kds_sessions')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'sessions' }, () => {
+                initKDS();
+            }).subscribe(Conn.channelStatus('kds_sessions'));
 
         // Real-time: option_items status changes (syncs with Admin toggles)
         supabaseClient.channel('kds_option_items')
@@ -1385,7 +1751,9 @@
                     Object.assign(optionsMasterMap[updated.id], updated);
                     if (currentPanel === 'menus') renderMenuList();
                 }
-            }).subscribe();
+            }).subscribe(Conn.channelStatus('kds_option_items'));
+
+        Conn.init();
 
         // ════════════════════════════════════════════════════════
         // 7. TIMERS
@@ -1433,6 +1801,47 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- 🔳 LINK QR MODAL -->
+<div id="linkQrModal" class="hidden flex items-center justify-center"
+     style="position:fixed; inset:0; z-index:220; padding:16px;">
+    <div class="absolute inset-0 modal-backdrop-soft" onclick="closeLinkQr()"></div>
+
+    <div class="relative shadow-2xl"
+         style="width:100%; max-width:320px; padding:28px; background:var(--surface); border:1px solid var(--border-strong); border-radius:20px;">
+        <div class="flex items-center justify-between mb-6">
+            <h3 id="linkQrTitle" class="text-lg font-semibold" style="color:var(--text);"></h3>
+            <button onclick="closeLinkQr()" class="flex items-center justify-center transition-all"
+                    style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,0.05);color:var(--text-faint);border:none;">
+                <svg class="hi" style="width:16px;height:16px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <div id="linkQrBox" class="qr-box"></div>
+
+        <div class="text-center">
+            <button type="button" id="linkQrCopyBtn" class="qr-copy-btn" onclick="copyLinkUrl()">
+                <svg class="hi" style="width:14px;height:14px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" /></svg>
+                <span>คัดลอกลิงก์</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 📶 แจ้งเตือนเน็ตหลุด (ปิดได้ ดูออเดอร์ต่อได้ตามปกติ) -->
+<div id="offlineBanner" class="offline-banner" role="alert" aria-live="assertive">
+    <div class="offline-banner-icon" aria-hidden="true">
+        <svg class="hi" style="width:18px;height:18px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 20.25h.008v.008H12v-.008ZM3 8.688a15.66 15.66 0 0 1 18 0M6.75 12.313a10.5 10.5 0 0 1 10.5 0M9.75 15.938a5.25 5.25 0 0 1 4.5 0M3 3l18 18" /></svg>
+    </div>
+    <div class="offline-banner-text">
+        <strong>ไม่มีการเชื่อมต่ออินเทอร์เน็ต</strong>
+        <span>ออเดอร์ใหม่จะยังไม่เข้าจนกว่าจะกลับมาออนไลน์</span>
+    </div>
+    <button type="button" class="offline-banner-close" onclick="dismissOfflineBanner()"
+            aria-label="ปิดแจ้งเตือน" title="ปิดแจ้งเตือน">
+        <svg class="hi" style="width:14px;height:14px;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+    </button>
 </div>
 </body>
 </html>
