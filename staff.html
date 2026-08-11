@@ -4667,7 +4667,7 @@
             const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select(`
-                    id, th_code, table_id, created_at, status, staff_name, note,
+                    id, th_code, table_id, created_at, status, staff_name, note, customer_name, customer_phone,
                     sessions(discount),
                     order_items(id, item_name_th, quantity, total_price, option, note, status, kds_station)
                 `)
@@ -4691,7 +4691,7 @@
             const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select(`
-                    id, table_id, created_at, status, staff_name, note,
+                    id, table_id, created_at, status, staff_name, note, customer_name, customer_phone,
                     order_items(id, item_name_th, quantity, total_price, option, note, status, kds_station)
                 `)
                 .eq('order_type', 'staff')
@@ -4785,6 +4785,16 @@
 
                 const headerIcon = channelType === 'takehome' ? 'fa-shopping-bag' : 'fa-user';
 
+                // แสดงชื่อ+เบอร์โทรลูกค้า (ถ้ามี) — ใช้ได้ทั้ง panel takehome และ staff
+                let customerInfoHtml = '';
+                if (order.customer_name || order.customer_phone) {
+                    customerInfoHtml = `
+                        <div class="text-[11px] text-slate-400 flex items-center flex-wrap gap-y-0.5 mt-1">
+                            ${order.customer_name ? `<span class="inline-flex items-center gap-1"><i class="fas fa-user text-[9px] opacity-60"></i>${order.customer_name}</span>` : ''}
+                            ${order.customer_phone ? `<span class="inline-flex items-center gap-1 ml-2"><i class="fas fa-phone text-[9px] opacity-60"></i>${order.customer_phone}</span>` : ''}
+                        </div>`;
+                }
+
                 // 1. ดึงรายการทั้งหมดมาแสดง (ทั้ง รอทำ, เสิร์ฟแล้ว, และ ยกเลิก)
                 const allOrderItems = order.order_items || [];
                 // 2. นับเฉพาะรายการที่ยัง 'รอทำ' เพื่อไปโชว์ตัวเลขบนการ์ด
@@ -4843,6 +4853,7 @@
                                     <i class="fas ${headerIcon}" style="font-size:0.9em;opacity:0.8;margin-right:6px;"></i>
                                     <span>${headerTitle}</span>${discountBadge}
                                 </div>
+                                ${customerInfoHtml}
                                 <div class="kds-card-subtitle">
                                     ${pendingCount === 0
                         ? '<span class="font-bold tracking-wider px-2 py-0.5 rounded-md border" style="background-color: rgba(16, 185, 129, 0.1); color: #34D399; border-color: rgba(16, 185, 129, 0.2);"><i class="fas fa-check-circle mr-1"></i>พร้อมส่งมอบ</span>'
@@ -5091,9 +5102,10 @@
 
                 document.getElementById('r-items-list').innerHTML = items.map(item => {
                     const optionText = item.option ? `<span class="r-item-option">${item.option.split('|').join(', ')}</span>` : '';
+                    const noteText = item.note ? `<span class="r-item-option" style="color: #444; font-style: italic;">*หมายเหตุ: ${item.note}</span>` : '';
                     return `
             <tr>
-                <td><span class="r-item-name">${item.item_name_th}</span>${optionText}</td>
+                <td><span class="r-item-name">${item.item_name_th}</span>${optionText}${noteText}</td>
                 <td style="text-align: center;">${item.quantity}</td>
                 <td style="text-align: right;">${parseFloat(item.total_price).toLocaleString()}</td>
             </tr>`;
