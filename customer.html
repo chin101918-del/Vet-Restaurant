@@ -2509,7 +2509,7 @@ async function processSubmission() {
                 if (custErr) console.error("บันทึกชื่อ/เบอร์โทรลูกค้าไม่สำเร็จ:", custErr);
             }
         }
-
+/*
         // --- เพิ่มโค้ดส่วนนี้เพื่อยิงข้อความไปที่ Discord ---
         try {
             console.log("กำลังส่งออเดอร์ไป Discord...");
@@ -2523,7 +2523,7 @@ async function processSubmission() {
             console.error("เกิดข้อผิดพลาดตอนเรียกเรียก Edge Function:", discordErr);
         }
         // ------------------------------------------
-
+*/
         showToast(typeof t === 'function' ? t('toast_success') : 'สั่งอาหารสำเร็จ!', 'success');
         if (typeof saveOrderToHistory === 'function') saveOrderToHistory(cart);
 
