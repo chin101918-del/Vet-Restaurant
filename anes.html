@@ -12,169 +12,555 @@
 <style>
 :root{
   --bg:#f4f5f7;--surface:#ffffff;--ink:#11181f;--muted:#6b7682;--line:#e3e7eb;
-  --accent:#0f766e;--accent-ink:#ffffff;
+  --accent:#0f766e;--accent-ink:#ffffff;--danger:#c0362c;--danger-ink:#ffffff;--scrim:rgba(10,14,18,.45);
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0e1216;--surface:#161c22;--ink:#e9eef2;--muted:#8a97a3;--line:#242d36;
-    --accent:#2dd4bf;--accent-ink:#04201c;
+    --accent:#2dd4bf;--accent-ink:#04201c;--danger:#f97066;--danger-ink:#2a0805;--scrim:rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
   --bg:#0e1216;--surface:#161c22;--ink:#e9eef2;--muted:#8a97a3;--line:#242d36;
-  --accent:#2dd4bf;--accent-ink:#04201c;
+  --accent:#2dd4bf;--accent-ink:#04201c;--danger:#f97066;--danger-ink:#2a0805;--scrim:rgba(0,0,0,.6);
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;width:100%;overflow-x:hidden}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
 body{
   background:var(--bg);color:var(--ink);
   font-family:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
-  font-size:16px;line-height:1.4;
-  -webkit-text-size-adjust:100%;
+  font-size:16px;line-height:1.4;-webkit-text-size-adjust:100%;
 }
-.app{width:100%;max-width:560px;margin:0 auto}
+button{font:inherit;color:inherit}
 .num{font-variant-numeric:tabular-nums}
+.app{height:100%;height:100dvh;display:flex;flex-direction:column;max-width:560px;margin:0 auto}
 
 /* top */
-.top{
-  position:sticky;top:0;z-index:5;
-  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
-  background:var(--bg);border-bottom:1px solid var(--line);
-}
-.weight{display:flex;gap:8px;width:100%}
-.step{
-  flex:0 0 48px;height:52px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
-  border-radius:12px;font:inherit;font-size:1.4rem;cursor:pointer;
-}
-.step:active{opacity:.6}
-.wfield{
-  flex:1 1 auto;min-width:0;height:52px;display:flex;align-items:center;
-  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 12px;
-}
-.wfield:focus-within{border-color:var(--accent)}
-.wfield input{
-  flex:1 1 auto;min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--ink);
-  font:inherit;font-size:1.6rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;
-}
-.wfield span{flex:0 0 auto;color:var(--muted);font-weight:500}
-.quick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:8px}
-.chip{
-  min-width:0;height:34px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
-  border-radius:9px;font:inherit;font-size:.85rem;cursor:pointer;padding:0;
-}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.top{flex:0 0 auto;padding:calc(env(safe-area-inset-top) + 10px) 16px 0;background:var(--bg);border-bottom:1px solid var(--line)}
+.who{width:100%;display:flex;align-items:center;gap:10px;height:48px;padding:0 14px;border:1px solid var(--line);background:var(--surface);border-radius:12px;cursor:pointer;text-align:left;min-width:0}
+.who .w{font-size:1.3rem;font-weight:700;flex:0 0 auto}
+.who .p{flex:1 1 auto;min-width:0;font-size:.85rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who .e{flex:0 0 auto;font-size:.8rem;color:var(--accent);font-weight:600}
+.tabs{display:flex;margin-top:6px}
+.tabs button{flex:1 1 0;height:40px;border:0;background:none;cursor:pointer;font-size:.88rem;font-weight:600;color:var(--muted);border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+.tabs button.er[aria-selected="true"]{color:var(--danger);border-bottom-color:var(--danger)}
 
-/* list */
-main{padding:4px 16px calc(env(safe-area-inset-bottom) + 24px)}
-h2{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 4px 6px}
+/* pager */
+.pager{flex:1 1 auto;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior-x:contain}
+.pager::-webkit-scrollbar{display:none}
+.page{flex:0 0 100%;width:100%;overflow-y:auto;scroll-snap-align:start;scroll-snap-stop:always;padding:4px 16px calc(env(safe-area-inset-bottom) + 24px);overscroll-behavior-y:contain}
+h2{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:16px 4px 6px}
+h2 i{font-style:normal;color:var(--accent);margin-right:6px}
+#er h2 i{color:var(--danger)}
 .list{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
-.row{display:flex;align-items:center;gap:12px;padding:12px 14px;min-width:0}
+.row{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;min-width:0;border:0;background:none;text-align:left;cursor:pointer}
 .row + .row{border-top:1px solid var(--line)}
+.row:active{background:var(--bg)}
 .info{flex:1 1 auto;min-width:0}
-.name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.name{font-weight:600;overflow-wrap:anywhere}
+.sub{font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
 .out{flex:0 0 auto;text-align:right;white-space:nowrap}
 .out b{font-size:1.35rem;font-weight:700;letter-spacing:-.01em}
 .out small{display:block;font-size:.72rem;color:var(--muted);margin-top:-2px}
+#er .out b{color:var(--danger)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:30;background:var(--bg);overflow-y:auto;display:none}
+.modal.open{display:block}
+.mbox{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 20px);display:flex;flex-direction:column;gap:18px;min-height:100%}
+.mbox h1{font-size:1.25rem;margin:0}
+.lab{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 2px 6px}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface)}
+.seg button{flex:1 1 0;min-width:0;height:48px;border:0;background:none;cursor:pointer;font-weight:600}
+.seg button + button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.weight{display:flex;gap:8px}
+.step{flex:0 0 52px;height:52px;border:1px solid var(--line);background:var(--surface);border-radius:12px;font-size:1.4rem;cursor:pointer}
+.wfield{flex:1 1 auto;min-width:0;height:52px;display:flex;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+.wfield:focus-within{border-color:var(--accent)}
+.wfield input{flex:1 1 auto;min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--ink);font:inherit;font-size:1.6rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.wfield span{color:var(--muted);font-weight:500}
+.protos{display:flex;flex-direction:column;gap:8px}
+.proto{display:block;width:100%;text-align:left;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:12px;cursor:pointer}
+.proto b{display:block;font-weight:600}
+.proto span{display:block;font-size:.8rem;color:var(--muted)}
+.proto[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.hint{font-size:.85rem;color:var(--muted);padding:0 2px}
+.go{margin-top:auto;height:54px;border:0;border-radius:14px;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:1.05rem;cursor:pointer}
+.go:disabled{opacity:.35;cursor:default}
+
+/* detail sheet */
+.scrim{position:fixed;inset:0;z-index:40;background:var(--scrim);display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;max-width:560px;margin:0 auto;max-height:82dvh;overflow-y:auto;background:var(--surface);border-radius:18px 18px 0 0;padding:8px 18px calc(env(safe-area-inset-bottom) + 20px);transform:translateY(105%);transition:transform .22s ease}
+.sheet.open{transform:none}
+.scrim.open{display:block}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 10px}
+.shead{display:flex;align-items:flex-start;gap:10px}
+.shead h3{flex:1 1 auto;margin:0;font-size:1.2rem;min-width:0;overflow-wrap:anywhere}
+.shead .cls{display:block;font-size:.8rem;font-weight:500;color:var(--muted)}
+.x{flex:0 0 36px;height:36px;border:0;border-radius:50%;background:var(--bg);cursor:pointer;font-size:1.1rem}
+.big{display:flex;align-items:baseline;gap:6px;margin:14px 0 4px}
+.big b{font-size:2rem;font-weight:700;letter-spacing:-.02em}
+.big span{color:var(--muted)}
+.facts{font-size:.85rem;color:var(--muted);display:flex;flex-direction:column;gap:2px}
+.facts b{color:var(--ink);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center}
+.chip{height:34px;min-width:52px;padding:0 10px;border:1px solid var(--line);background:var(--surface);border-radius:9px;cursor:pointer;font-size:.85rem;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.chip.in{width:84px;padding:0 8px;color:var(--ink);font:inherit;font-size:.85rem;text-align:center;outline:0}
+.chip.in:focus{border-color:var(--accent)}
+.chips .u{font-size:.75rem;color:var(--muted)}
+.sec{margin-top:16px}
+.sec h4{margin:0 0 4px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.sec p{margin:0;font-size:.92rem}
+.sec ul{margin:0;padding-left:18px;font-size:.92rem}
+.sec li + li{margin-top:2px}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="top">
-    <div class="weight">
-      <button class="step" type="button" data-step="-0.1" aria-label="ลด 0.1 kg">−</button>
-      <label class="wfield">
-        <input id="weight" type="text" inputmode="decimal" autocomplete="off" value="2" aria-label="น้ำหนัก kg">
-        <span>kg</span>
-      </label>
-      <button class="step" type="button" data-step="0.1" aria-label="เพิ่ม 0.1 kg">+</button>
+    <button class="who" id="who" type="button" aria-label="แก้ไขข้อมูลสัตว์และ protocol">
+      <span class="w num" id="whoW">—</span>
+      <span class="p" id="whoP"></span>
+      <span class="e">แก้ไข</span>
+    </button>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="t0" aria-selected="true">ยาตามแพลน</button>
+      <button type="button" role="tab" id="t1" class="er" aria-selected="false">ฉุกเฉิน</button>
     </div>
-    <div class="quick" id="quick"></div>
   </div>
-  <main id="groups"></main>
+  <div class="pager" id="pager">
+    <section class="page" id="rx" aria-labelledby="t0"></section>
+    <section class="page" id="er" aria-labelledby="t1"></section>
+  </div>
 </div>
 
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+  <div class="mbox">
+    <h1 id="mt">ข้อมูลสัตว์</h1>
+    <div>
+      <div class="lab">ชนิด</div>
+      <div class="seg" id="mSp">
+        <button type="button" data-v="dog">🐶 สุนัข</button>
+        <button type="button" data-v="cat">🐱 แมว</button>
+      </div>
+    </div>
+    <div>
+      <div class="lab">น้ำหนัก</div>
+      <div class="weight">
+        <button class="step" type="button" data-step="-0.1" aria-label="ลด 0.1 kg">−</button>
+        <label class="wfield"><input id="mW" type="text" inputmode="decimal" autocomplete="off" placeholder="0.0" aria-label="น้ำหนัก kg"><span>kg</span></label>
+        <button class="step" type="button" data-step="0.1" aria-label="เพิ่ม 0.1 kg">+</button>
+      </div>
+    </div>
+    <div>
+      <div class="lab">เพศ</div>
+      <div class="seg" id="mSex">
+        <button type="button" data-v="m">♂ ผู้</button>
+        <button type="button" data-v="f">♀ เมีย</button>
+      </div>
+    </div>
+    <div>
+      <div class="lab">Protocol</div>
+      <div class="protos" id="mPr"><div class="hint">เลือกชนิดสัตว์ก่อน</div></div>
+    </div>
+    <button class="go" id="mGo" type="button" disabled>ตกลง</button>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sT" aria-hidden="true"></div>
+
 <script>
-const GROUPS = [
-  {title:"Premedication", items:[
-    {name:"Dexmedetomidine", conc:500, amt:"mcg", low:10, high:20, route:"IM"},
-    {name:"Tramadol", conc:50, amt:"mg", low:3, high:3, route:"IM"}
-  ]},
-  {title:"Induction", items:[
-    {name:"Propofol", conc:10, amt:"mg", low:1, high:2, route:"IV"}
-  ]},
-  {title:"Antibiotics", items:[
-    {name:"Cefazolin", conc:200, amt:"mg", low:20, high:20, route:"IV"},
-    {name:"Cefovecin", conc:80, amt:"mg", low:8, high:8, route:"SC"}
-  ]},
-  {title:"Post-op", items:[
-    {name:"Meloxicam", conc:5, amt:"mg", low:0.3, high:0.3, route:"SC"}
-  ]},
-  {title:"Local block", items:[
-    {name:"Lidocaine", conc:20, amt:"mg", low:1.5, high:1.5, route:"Intratesticular", perTestis:true}
-  ]},
-  {title:"Fluid", items:[
-    {name:"Maintenance", rate:3, route:"IV", fluid:true}
-  ]}
-];
-const QUICK = [1,2,3,4,5,6];
+/* ---------- drug reference ---------- */
+const INFO = {
+  xyl:{n:"Xylazine",c:20,u:"mg",cls:"α2-agonist",
+    mech:"กระตุ้น α2 receptor ที่ CNS → ลดการหลั่ง NE → sedation, analgesia, muscle relaxation",
+    se:["Bradycardia, 1–2° AV block","Hypertension → hypotension, CO ลด","อาเจียน (โดยเฉพาะแมว)","Hyperglycemia, diuresis"],
+    tip:"Reversal: Atipamezole · Yohimbine 0.1–0.5 mg/kg"},
+  dex:{n:"Dexmedetomidine",c:500,u:"mcg",cls:"α2-agonist",
+    mech:"α2-agonist แบบ selective → sedation, analgesia, muscle relaxation · onset ~5 min, อยู่ 1–3 hr",
+    se:["Bradycardia, CO ลด","1–2° AV block","Vasoconstriction (เยื่อเมือกซีด) → hypotension","อาเจียน"],
+    tip:"ไม่ให้ร่วม atropine · Reversal: Atipamezole"},
+  zol:{n:"Zoletil",c:100,u:"mg",cls:"Tiletamine + Zolazepam",
+    mech:"Tiletamine (dissociative, NMDA antagonist) + Zolazepam (benzodiazepine, GABA-A)",
+    se:["Respiratory depression (dose-dependent)","HR ↑, myocardial work ↑, salivation","IOP/ICP ↑","Hypothermia, recovery นาน / ataxia"]},
+  atr:{n:"Atropine",c:0.6,u:"mg",cls:"Anticholinergic (muscarinic)",
+    mech:"Block muscarinic receptor → HR ↑, ลด secretion, bronchodilation",
+    se:["Tachycardia / arrhythmia","Myocardial O₂ demand ↑"],
+    tip:"ระวังใช้คู่ α2-agonist"},
+  prop:{n:"Propofol",c:10,u:"mg",cls:"GABA-A enhancer",
+    mech:"เสริม GABA-A → hypnosis เร็ว · onset 20–30 s, หมดฤทธิ์ ~5–10 min",
+    se:["Hypotension (vasodilation)","Apnea, respiratory depression","Myocardial depression, bradycardia"]},
+  iso:{n:"Isoflurane",cls:"Inhalant",
+    mech:"Inhalant anesthetic → CNS depression ตามความเข้มข้น",
+    se:["Hypotension, CV depression","Respiratory depression, TV ลด","ICP ↑","RBF/GFR ลด (reversible)"]},
+  tram:{n:"Tramadol",c:50,u:"mg",cls:"Atypical opioid",
+    mech:"Weak μ-agonist + ยับยั้ง reuptake ของ NE และ serotonin → ลดปวด",
+    se:["Sedation","อาเจียน","Serotonin syndrome ถ้าใช้ร่วม SSRI/TCA (amitriptyline)"]},
+  cefaz:{n:"Cefazolin",c:200,u:"mg",cls:"Cephalosporin 1st gen",
+    mech:"β-lactam ยับยั้งการสร้าง cell wall → bactericidal · G+ เด่น, G− บางชนิด (E. coli, Klebsiella)",
+    se:["GI upset","Anaphylaxis (rare)"],
+    tip:"1 g + sterile water 5 mL = 200 mg/mL"},
+  conv:{n:"Convenia",c:80,u:"mg",cls:"Cefovecin · Cephalosporin 3rd gen",
+    mech:"β-lactam long-acting → คุมเชื้อได้ ~14 วันจากเข็มเดียว",
+    se:["GI upset","Injection site reaction","Hypersensitivity (อยู่ในร่างกายนาน)"],
+    tip:"SC เท่านั้น · ไม่ต้องจ่าย antibiotic กลับบ้าน"},
+  bupi:{n:"Bupivacaine",c:5,u:"mg",cls:"Local anesthetic (amide)",
+    mech:"Block Na⁺ channel → หยุดการนำกระแสประสาท · onset 15–30 min, อยู่ 4–8 hr",
+    se:["Cardiotoxicity: bradycardia, arrhythmia, arrest","Neurotoxicity","Hypotension"],
+    tip:"ห้าม IV"},
+  lido:{n:"Lidocaine",c:20,u:"mg",cls:"Local anesthetic (amide)",
+    mech:"Block Na⁺ channel → local anesthesia · onset เร็ว",
+    se:["Neurotoxicity (กระวนกระวาย / ซึม)","Hypotension, arrhythmia","Local tissue irritation"],
+    tip:"เลี่ยง epididymis"},
+  melox:{n:"Meloxicam",c:5,u:"mg",cls:"NSAID (oxicam)",
+    mech:"ยับยั้ง COX (COX-2 preferential) → ลดปวด/อักเสบ",
+    se:["อาเจียน, ท้องเสีย, ถ่ายมีเลือด","AKI ถ้า hypotension"],
+    tip:"ให้เมื่อเริ่มฟื้นและ MAP > 60"},
+  melPO:{n:"Meloxicam",c:1.5,u:"mg",cls:"NSAID (oxicam) · 1.5 mg/mL",
+    mech:"ยับยั้ง COX (COX-2 preferential) → ลดปวด/อักเสบ",
+    se:["อาเจียน, ท้องเสีย, ถ่ายมีเลือด","ห้ามในแมวที่มีปัญหา GI, ไต, ตับ, bleeding"]},
+  carp:{n:"Carprofen",c:50,u:"mg",cls:"NSAID (propionic acid)",
+    mech:"COX-2 selective → ลดปวด/อักเสบ",
+    se:["GI upset","Hepatotoxicity (สุนัข)","Renal ถ้า hypotension"],
+    tip:"ยาหนืด ใช้เข็มใหญ่ขึ้น 1 เบอร์"},
+  carpPO:{n:"Carprofen",cls:"NSAID · 75 mg/tab",
+    mech:"COX-2 selective → ลดปวด/อักเสบ",
+    se:["GI upset","Hepatotoxicity (สุนัข)"],
+    tip:"เริ่มเย็นวันผ่า"},
+  ceph:{n:"Cephalexin",cls:"Cephalosporin 1st gen (PO)",
+    mech:"β-lactam ยับยั้ง cell wall → bactericidal · G+ เด่น",
+    se:["GI upset: อาเจียน ท้องเสีย","Anaphylaxis (rare)"]},
+  fluid:{n:"Maintenance fluid",cls:"Crystalloid",
+    mech:"ทดแทน insensible loss และช่วย perfusion ระหว่างวางยา",
+    se:["Fluid overload ถ้าให้เร็วเกิน"]},
+  pre:{n:"Pre-fluid",cls:"Crystalloid bolus",
+    mech:"ขยาย volume ก่อน propofol → ลดโอกาส hypotension",
+    se:["Fluid overload"]},
+  /* emergency */
+  epi:{n:"Epinephrine",c:1,u:"mg",cls:"Arrest · α/β agonist",
+    mech:"α1 → vasoconstriction ↑ coronary/cerebral perfusion · β1 → inotropy",
+    se:["Tachyarrhythmia, VF","Myocardial O₂ demand ↑"],
+    tip:"ทุก 3–5 min (ทุก 2 รอบ BLS)"},
+  vaso:{n:"Vasopressin",c:20,u:"U",cls:"Arrest · V1 agonist",
+    mech:"V1 receptor → vasoconstriction ยังได้ผลในภาวะ acidosis",
+    se:["Ischemia จาก vasoconstriction"]},
+  atrE:{n:"Atropine",c:0.6,u:"mg",cls:"Arrest · Anticholinergic",
+    mech:"Block muscarinic → แก้ vagal arrest / asystole / bradycardia",
+    se:["Tachycardia","Myocardial O₂ demand ↑"]},
+  amio:{n:"Amiodarone",c:50,u:"mg",cls:"Antiarrhythmic class III",
+    mech:"Block K⁺ channel (+Na⁺, Ca²⁺, β) → refractory VF / pulseless VT",
+    se:["Hypotension","Anaphylactoid (สุนัข)","Bradycardia"]},
+  lidoE:{n:"Lidocaine",c:20,u:"mg",cls:"Antiarrhythmic class Ib",
+    mech:"Block Na⁺ channel → VF / ventricular tachycardia",
+    se:["Neurotoxicity: สั่น, ชัก","Hypotension","แมวไวต่อพิษ"]},
+  esmo:{n:"Esmolol",c:10,u:"mg",cls:"Antiarrhythmic · β1 blocker",
+    mech:"β1 blocker ออกฤทธิ์สั้น → refractory VF",
+    se:["Bradycardia","Hypotension"],
+    tip:"IV/IO ช้า 3–5 min แล้ว CRI 50 mcg/kg/min"},
+  nalo:{n:"Naloxone",c:0.4,u:"mg",cls:"Reversal · opioid antagonist",
+    mech:"Competitive antagonist ที่ μ receptor",
+    se:["ปวดกลับมา","ฤทธิ์สั้นกว่า opioid → อาจกดซ้ำ"]},
+  fluma:{n:"Flumazenil",c:0.1,u:"mg",cls:"Reversal · benzodiazepine antagonist",
+    mech:"Antagonist ที่ benzodiazepine site ของ GABA-A (เช่น zolazepam)",
+    se:["ชัก","ฤทธิ์สั้น อาจซึมซ้ำ"]},
+  atip:{n:"Atipamezole",c:5000,u:"mcg",cls:"Reversal · α2 antagonist",
+    mech:"Antagonist ที่ α2 receptor → reverse dexmedetomidine / xylazine",
+    se:["Hypotension, tachycardia","Excitation"]},
+  defE:{n:"External defib",cls:"Biphasic",mech:"Defibrillation ผ่านผนังอก สำหรับ VF / pulseless VT",se:["Burn ที่ผิวหนัง"]},
+  defI:{n:"Internal defib",cls:"Biphasic",mech:"Defibrillation ที่หัวใจโดยตรง (open chest)",se:["Myocardial injury"]}
+};
+
+/* ---------- state ---------- */
+const S = {sp:null,w:null,sex:null,pr:null,dose:{},str:{},page:0};
+const PROTOS = {
+  cat:[
+    {v:"std",t:"Standard",d:"Dexmedetomidine → Propofol · Cefazolin"},
+    {v:"conv",t:"Convenia",d:"Dexmedetomidine → Propofol · Convenia"},
+    {v:"frac",t:"แมวดื้อ",d:"Zoletil + Atropine IM"}
+  ],
+  dog:[
+    {v:"prop",t:"Propofol",d:"Xylazine → Pre-fluid → Propofol"},
+    {v:"zol",t:"Zoletil",d:"Xylazine → Zoletil IV (ไม่มี propofol)"}
+  ]
+};
 const $ = s => document.querySelector(s);
 const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
 const trim = (n,d) => String(parseFloat(n.toFixed(d)));
 const fv = v => !Number.isFinite(v) ? "—" : (v < 1 ? trim(v,3) : trim(v,2));
-const outs = [];
-let w = 2;
+const frac = x => { const q=Math.round(x*4)/4, w=Math.floor(q), r=["","¼","½","¾"][Math.round((q-w)*4)]; return (w||!r ? String(w) : "") + r; };
+const parseW = s => { s=String(s).trim().replace(",","."); return /^\d+(\.\d+)?$/.test(s) ? parseFloat(s) : NaN; };
+const okW = v => Number.isFinite(v) && v >= 0.1 && v <= 100;
+const store = { get(){ try{ return JSON.parse(localStorage.getItem("vdc")||"null"); }catch(e){ return null; } },
+                set(v){ try{ localStorage.setItem("vdc",JSON.stringify(v)); }catch(e){} } };
 
-function build(){
-  const q = $("#quick");
-  QUICK.forEach(k => {
-    const b = el("button","chip num",String(k)); b.type="button"; b.dataset.w=k;
-    b.addEventListener("click",()=>setW(k)); q.appendChild(b);
-  });
-  const root = $("#groups");
-  GROUPS.forEach(g => {
-    root.appendChild(el("h2",null,g.title));
+/* ---------- protocol ---------- */
+const inj = (id,o) => Object.assign({k:"inj",id},o);
+function plan(){
+  const cat = S.sp==="cat", pr = S.pr, G = [];
+  const add = (t,items) => { items = items.filter(Boolean); if(items.length) G.push({t,items}); };
+  if (cat) add("Premed", pr==="frac"
+      ? [inj("zol",{opts:[5,8,11],def:11,route:"IM · combine"}), inj("atr",{opts:[0.01,0.02,0.04],def:0.02,route:"IM · combine"})]
+      : [inj("dex",{opts:[10,15,20],route:"IM"})]);
+  else add("Premed",[inj("xyl",{opts:[1,1.5],route:"IM"})]);
+  add("Fluid",[ {k:"fluid",id:"fluid",rate:cat?3:5}, !cat && pr==="prop" && {k:"pre",id:"pre",perkg:5} ]);
+  if (cat){ if (pr!=="frac") add("Induction",[inj("prop",{opts:[1,1.5,2],route:"IV slow"})]); }
+  else add("Induction",[ pr==="prop" ? inj("prop",{opts:[1,2,3,4],route:"IV slow"}) : inj("zol",{opts:[1,2,3],def:1,route:"IV"}) ]);
+  add("Maintenance",[{k:"iso",id:"iso",range: cat ? (pr==="frac"?"1–2":"0.5–2") : "1–3"}]);
+  add("หลังสอดท่อ",[
+    inj("tram",{opts:cat?[3]:[4],def:cat?3:4,route:"IM"}),
+    pr==="conv" ? inj("conv",{opts:[8],def:8,route:"SC"}) : inj("cefaz",{opts:[20,25,30],def:20,route:"IV"})
+  ]);
+  add("Local block",[ S.sex==="f"
+    ? inj("bupi",{opts:cat?[1]:[1.5,2],def:cat?1:null,route:"IP",dil:0.4})
+    : inj("lido",{opts:[1.5],def:1.5,route:"Intratesticular",per:"testis"}) ]);
+  add("Post-op",[ cat ? inj("melox",{opts:[0.2,0.3],def:0.3,route:"SC"}) : inj("carp",{opts:[4.4],def:4.4,route:"SC"}) ]);
+  add("ยากลับบ้าน",[
+    pr!=="conv" && {k:"tab",id:"ceph",opts:[20,25,30],def:25,strengths:[75,250,600],freq:"BID",days:7,n:14},
+    !cat && {k:"tab",id:"carpPO",opts:[4.4],def:4.4,strengths:[75],freq:"SID",days:3,n:3},
+    cat && dose(itemById("melox"))===0.2 && {k:"po",id:"melPO",opts:[0.05],def:0.05,freq:"SID",days:3,n:3}
+  ]);
+  return G;
+}
+function itemById(id){ return {id,def: id==="melox"?0.3:null}; }
+const EMER = [
+  {t:"Arrest",items:[inj("epi",{opts:[0.01],def:0.01,route:"IV/IO"}),inj("vaso",{opts:[0.8],def:0.8,route:"IV/IO"}),inj("atrE",{opts:[0.04],def:0.04,route:"IV/IO"})]},
+  {t:"Antiarrhythmic",items:[inj("amio",{opts:[5],def:5,route:"IV/IO"}),inj("lidoE",{opts:[2],def:2,route:"IV/IO"}),inj("esmo",{opts:[0.5],def:0.5,route:"IV/IO"})]},
+  {t:"Reversal",items:[inj("nalo",{opts:[0.04],def:0.04,route:"IV"}),inj("fluma",{opts:[0.01],def:0.01,route:"IV"}),inj("atip",{opts:[100],def:100,route:"IM/IV"})]},
+  {t:"Defibrillation",items:[{k:"def",id:"defE",lo:2,hi:4},{k:"def",id:"defI",lo:0.2,hi:0.4}]}
+];
+
+/* ---------- calc ---------- */
+function dose(it){ const v = S.dose[it.id]; return v!=null ? v : (it.def!=null ? it.def : null); }
+function doseLabel(it,u){ const d=dose(it); return d!=null ? `${d} ${u}/kg` : `${Math.min(...it.opts)}–${Math.max(...it.opts)} ${u}/kg`; }
+function vol(it){
+  const c = INFO[it.id].c, d = dose(it), w = S.w;
+  if (d!=null) return {txt:fv(w*d/c), v:w*d/c};
+  const lo=w*Math.min(...it.opts)/c, hi=w*Math.max(...it.opts)/c;
+  return {txt:`${fv(lo)}–${fv(hi)}`, v:hi, lo};
+}
+function tabCalc(it){
+  const d = dose(it), w = S.w;
+  let str = S.str[it.id];
+  if (!str){ const ok = it.strengths.filter(s => w*d/s >= 0.5); str = ok.length ? Math.max(...ok) : Math.min(...it.strengths); }
+  const per = Math.max(0.25, Math.round(w*d/str*4)/4);
+  return {str, per, total:per*it.n, actual:per*str/w};
+}
+function fluidCalc(it){
+  const hr = it.rate*S.w;
+  let set = S.sp==="cat" ? 60 : 20;
+  if (set===20 && 3600/(hr*20) > 6) set = 60;
+  const gtt = hr*set/60;
+  return {hr, set, gtt, spd: gtt>0 ? 60/gtt : 0};
+}
+function isoCalc(){
+  const w=S.w, cat=S.sp==="cat";
+  const nrb = w < 7;
+  const et = cat ? (w<=2?"2.5–3":w<=4?"3.5–4":"4–4.5") : (w<=5?"5–6":w<=10?"6–7":w<=15?"6–7.5":"7–8");
+  return {circ: nrb?"Non-rebreathing":"Rebreathing", o2: nrb? w*200+200 : w*50+200, bag: Math.max(0.5, Math.ceil(w*15*6/1000*2)/2), et};
+}
+function view(it){
+  const I = INFO[it.id];
+  switch(it.k){
+    case "inj": {
+      const r = vol(it);
+      let small = it.per ? "mL/testis ×2" : "mL";
+      if (it.dil) small = `mL → ${fv(it.dil*S.w)} mL`;
+      return {name:I.n, sub:`${doseLabel(it,I.u)} · ${it.route}`, b:r.txt, small};
+    }
+    case "fluid": { const f=fluidCalc(it); return {name:"Fluid rate", sub:`${it.rate} mL/kg/hr · ${f.set} gtt/mL`, b:trim(f.hr,1), small:`mL/hr · ${trim(f.gtt,1)} gtt/min`}; }
+    case "pre": return {name:I.n, sub:`${it.perkg} mL/kg · IV 5–10 min`, b:trim(it.perkg*S.w,1), small:"mL"};
+    case "iso": { const c=isoCalc(); return {name:I.n, sub:`O₂ ${trim(c.o2,0)} mL/min · ET ${c.et}`, b:it.range, small:"%"}; }
+    case "tab": { const t=tabCalc(it); return {name:I.n, sub:`${dose(it)} mg/kg · PO ${it.freq} × ${it.days} d · ${t.str} mg`, b:frac(t.per), small:`tab · รวม ${frac(t.total)}`}; }
+    case "po": { const v=S.w*dose(it)/I.c; return {name:I.n, sub:`${dose(it)} mg/kg · PO ${it.freq} × ${it.days} d`, b:fv(v), small:`mL · รวม ${fv(v*it.n)}`}; }
+    case "def": return {name:I.n, sub:`${it.lo}–${it.hi} J/kg`, b:`${trim(it.lo*S.w,1)}–${trim(it.hi*S.w,1)}`, small:"J"};
+  }
+}
+
+/* ---------- render lists ---------- */
+let rows = [];
+function renderList(root, groups, page){
+  root.textContent = "";
+  groups.forEach((g,i) => {
+    const h = el("h2"); h.append(el("i",null,String(i+1)), g.t); root.appendChild(h);
     const list = el("div","list");
     g.items.forEach(it => {
-      const row = el("div","row");
-      const info = el("div","info");
-      info.appendChild(el("div","name",it.name));
-      const dose = it.fluid ? `${it.rate} mL/kg/hr`
-        : `${it.low===it.high ? it.low : it.low+"–"+it.high} ${it.amt}/kg · ${it.route}`;
-      info.appendChild(el("div","sub num",dose));
-      const out = el("div","out num");
-      const b = el("b");
-      out.append(b, el("small",null, it.fluid ? "mL/hr" : it.perTestis ? "mL/testis" : "mL"));
-      row.append(info,out); list.appendChild(row);
-      outs.push({it,b});
+      const row = el("button","row"); row.type="button";
+      const info = el("div","info"), out = el("div","out num");
+      const n = el("div","name"), s = el("div","sub num"), b = el("b"), sm = el("small");
+      info.append(n,s); out.append(b,sm); row.append(info,out);
+      row.addEventListener("click", () => openSheet(it, page));
+      list.appendChild(row);
+      rows.push({it,n,s,b,sm});
     });
     root.appendChild(list);
   });
 }
-
+function renderAll(){
+  rows = [];
+  renderList($("#rx"), plan(), 0);
+  renderList($("#er"), EMER, 1);
+  update();
+}
 function update(){
-  const ok = Number.isFinite(w) && w > 0;
-  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(ok && Number(c.dataset.w)===w)));
-  outs.forEach(({it,b}) => {
-    if (!ok){ b.textContent="—"; return; }
-    if (it.fluid){ b.textContent = trim(w*it.rate,1); return; }
-    const lo = w*it.low/it.conc, hi = w*it.high/it.conc;
-    b.textContent = it.low===it.high ? fv(lo) : `${fv(lo)}–${fv(hi)}`;
-  });
-}
-function setW(v){
-  v = Math.min(100, Math.max(0.1, Math.round(v*10)/10));
-  w = v; $("#weight").value = String(v); update();
+  rows.forEach(r => { const v=view(r.it); r.n.textContent=v.name; r.s.textContent=v.sub; r.b.textContent=v.b; r.sm.textContent=v.small; });
+  $("#whoW").textContent = `${S.w} kg`;
+  const p = (PROTOS[S.sp]||[]).find(x=>x.v===S.pr);
+  $("#whoP").textContent = `${S.sp==="cat"?"🐱 แมว":"🐶 สุนัข"} · ${S.sex==="f"?"♀":"♂"} · ${p?p.t:""}`;
 }
 
-build();
-const inp = $("#weight");
-inp.addEventListener("input", e => { w = parseFloat(e.target.value.replace(",",".")); update(); });
-inp.addEventListener("focus", e => e.target.select());
-inp.addEventListener("blur", () => { if (Number.isFinite(w) && w > 0) setW(w); });
-document.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => setW((Number.isFinite(w)?w:0) + Number(b.dataset.step))));
-update();
+/* ---------- detail sheet ---------- */
+let cur = null;
+function openSheet(it, page){
+  cur = {it,page};
+  drawSheet();
+  $("#scrim").classList.add("open");
+  const sh=$("#sheet"); sh.classList.add("open"); sh.setAttribute("aria-hidden","false");
+  sh.scrollTop = 0;
+  setTimeout(()=>$("#sheet .x")?.focus({preventScroll:true}),50);
+}
+function closeSheet(){
+  $("#scrim").classList.remove("open");
+  const sh=$("#sheet"); sh.classList.remove("open"); sh.setAttribute("aria-hidden","true");
+  cur = null;
+}
+function chipRow(values, active, unit, onPick, custom){
+  const c = el("div","chips");
+  values.forEach(v => { const b=el("button","chip",String(v)); b.type="button"; b.setAttribute("aria-pressed",String(v===active)); b.addEventListener("click",()=>onPick(v)); c.appendChild(b); });
+  if (custom){
+    const inp = el("input","chip in"); inp.type="text"; inp.inputMode="decimal"; inp.placeholder="อื่นๆ"; inp.setAttribute("aria-label","dose อื่น");
+    if (active!=null && !values.includes(active)) { inp.value=String(active); inp.style.borderColor="var(--accent)"; }
+    inp.addEventListener("change",()=>{ const v=parseW(inp.value); if(Number.isFinite(v)&&v>0) onPick(v); else if(inp.value==="") onPick(null); });
+    c.appendChild(inp);
+  }
+  c.appendChild(el("span","u",unit));
+  return c;
+}
+function drawSheet(){
+  const {it} = cur, I = INFO[it.id], sh = $("#sheet");
+  sh.textContent = "";
+  sh.appendChild(el("div","grab"));
+  const head = el("div","shead"), h = el("h3"); h.id="sT"; h.textContent=I.n; h.appendChild(el("span","cls",I.cls));
+  const x = el("button","x","✕"); x.type="button"; x.setAttribute("aria-label","ปิด"); x.addEventListener("click",closeSheet);
+  head.append(h,x); sh.appendChild(head);
+
+  const big = el("div","big num"), facts = el("div","facts num");
+  const fact = (k,v) => { const d=el("div"); d.append(k+" "); d.appendChild(el("b",null,v)); facts.appendChild(d); };
+  const v = view(it);
+  big.append(el("b",null,v.b), el("span",null,v.small));
+  sh.appendChild(big);
+
+  const pick = val => { if(val==null) delete S.dose[it.id]; else S.dose[it.id]=val; afterPick(); };
+  if (it.k==="inj"){
+    if (it.opts.length>1 || cur.page===0) sh.appendChild(chipRow(it.opts, dose(it), `${I.u}/kg`, pick, true));
+    const d = dose(it), w=S.w;
+    if (d!=null) fact("Dose รวม", `${trim(w*d,3)} ${I.u}`);
+    fact("ความเข้มข้น", `${I.c>=1000? I.c/1000+" mg":I.c+" "+I.u}/mL`);
+    if (it.id==="prop"){ const r=vol(it); fact("เริ่ม ⅓", `${fv((r.lo!=null?r.lo:r.v)/3)} mL`); }
+    if (it.dil){ const r=vol(it), tot=it.dil*w; fact("+ NSS", `${fv(Math.max(0,tot-r.v))} mL → รวม ${fv(tot)} mL`); }
+    if (it.per) fact("เตรียม","2 syringes");
+    if (it.id==="esmo") fact("CRI","50 mcg/kg/min");
+  } else if (it.k==="tab"){
+    sh.appendChild(chipRow(it.opts, dose(it), "mg/kg", pick, it.opts.length>1));
+    const t = tabCalc(it);
+    if (it.strengths.length>1) sh.appendChild(chipRow(it.strengths, t.str, "mg/tab", s=>{ S.str[it.id]=s; afterPick(); }, false));
+    fact("ได้จริง", `${trim(t.actual,1)} mg/kg (${trim(t.per*t.str,1)} mg)`);
+    fact(`${it.freq} × ${it.days} d =`, `${it.n} ครั้ง · ${frac(t.total)} เม็ด`);
+  } else if (it.k==="po"){
+    fact(`${it.freq} × ${it.days} d =`, `${it.n} ครั้ง · ${fv(S.w*dose(it)/I.c*it.n)} mL`);
+  } else if (it.k==="fluid"){
+    const f = fluidCalc(it);
+    fact("สายน้ำเกลือ", `${f.set} gtt/mL`);
+    fact("หยด", `${trim(f.gtt,1)} gtt/min · 1 หยด / ${trim(f.spd,1)} s`);
+    fact("IV cath", S.sp==="cat"?"24 G":"22 G");
+  } else if (it.k==="iso"){
+    const c = isoCalc();
+    fact("Circuit", c.circ);
+    fact("O₂ flow", `${trim(c.o2,0)} mL/min`);
+    fact("Reservoir bag", `${c.bag} L`);
+    fact("ET tube", `ID ${c.et}`);
+  }
+  if (facts.childNodes.length) { facts.style.marginTop="10px"; sh.appendChild(facts); }
+
+  const m = el("div","sec"); m.append(el("h4",null,"กลไก"), el("p",null,I.mech)); sh.appendChild(m);
+  const s = el("div","sec"), ul = el("ul"); I.se.forEach(t=>ul.appendChild(el("li",null,t))); s.append(el("h4",null,"ผลข้างเคียง"), ul); sh.appendChild(s);
+  if (I.tip){ const t=el("div","sec"); t.appendChild(el("p",null,I.tip)); t.firstChild.style.color="var(--muted)"; t.firstChild.style.fontSize=".85rem"; sh.appendChild(t); }
+}
+function afterPick(){
+  if (cur && cur.it.id==="melox") renderAll(); else update();
+  drawSheet();
+}
+
+/* ---------- pager ---------- */
+const pager = $("#pager");
+function goPage(i){ pager.scrollTo({left:i*pager.clientWidth, behavior:"smooth"}); }
+$("#t0").addEventListener("click",()=>goPage(0));
+$("#t1").addEventListener("click",()=>goPage(1));
+pager.addEventListener("scroll",()=>{
+  const i = Math.round(pager.scrollLeft/Math.max(1,pager.clientWidth));
+  if (i!==S.page){ S.page=i; $("#t0").setAttribute("aria-selected",String(i===0)); $("#t1").setAttribute("aria-selected",String(i===1)); }
+},{passive:true});
+window.addEventListener("resize",()=>{ pager.scrollLeft = S.page*pager.clientWidth; });
+
+/* ---------- setup modal ---------- */
+const M = {sp:null,w:NaN,sex:null,pr:null};
+function segBind(id,key){
+  document.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener("click",()=>{
+    M[key]=b.dataset.v;
+    if (key==="sp"){ M.pr = PROTOS[M.sp][0].v; }
+    drawModal();
+  }));
+}
+function drawModal(){
+  document.querySelectorAll("#mSp button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===M.sp)));
+  document.querySelectorAll("#mSex button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===M.sex)));
+  const box = $("#mPr"); box.textContent="";
+  if (!M.sp) box.appendChild(el("div","hint","เลือกชนิดสัตว์ก่อน"));
+  else PROTOS[M.sp].forEach(p => {
+    const b = el("button","proto"); b.type="button"; b.setAttribute("aria-pressed",String(p.v===M.pr));
+    b.append(el("b",null,p.t), el("span",null,p.d));
+    b.addEventListener("click",()=>{ M.pr=p.v; drawModal(); });
+    box.appendChild(b);
+  });
+  $("#mW").closest(".wfield").style.borderColor = ($("#mW").value!=="" && !okW(M.w)) ? "var(--danger)" : "";
+  $("#mGo").disabled = !(M.sp && M.sex && M.pr && okW(M.w));
+}
+function openModal(){
+  Object.assign(M,{sp:S.sp,w:S.w==null?NaN:S.w,sex:S.sex,pr:S.pr});
+  $("#mW").value = okW(M.w) ? String(M.w) : "";
+  drawModal();
+  $("#modal").classList.add("open");
+}
+segBind("mSp","sp"); segBind("mSex","sex");
+$("#mW").addEventListener("input",e=>{ M.w=parseW(e.target.value); drawModal(); });
+$("#mW").addEventListener("focus",e=>e.target.select());
+document.querySelectorAll("[data-step]").forEach(b=>b.addEventListener("click",()=>{
+  const base = okW(M.w) ? M.w : 0;
+  M.w = Math.min(100, Math.max(0.1, Math.round((base+Number(b.dataset.step))*10)/10));
+  $("#mW").value = String(M.w); drawModal();
+}));
+$("#mGo").addEventListener("click",()=>{
+  if ($("#mGo").disabled) return;
+  const changed = M.sp!==S.sp || M.pr!==S.pr || M.sex!==S.sex;
+  Object.assign(S,{sp:M.sp,w:Math.round(M.w*100)/100,sex:M.sex,pr:M.pr});
+  if (changed) { S.dose={}; }
+  S.str={};
+  store.set({sp:S.sp,w:S.w,sex:S.sex,pr:S.pr});
+  $("#modal").classList.remove("open");
+  renderAll();
+  pager.scrollLeft = 0;
+});
+$("#who").addEventListener("click",openModal);
+$("#scrim").addEventListener("click",closeSheet);
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && cur) closeSheet(); });
+
+const last = store.get();
+if (last && PROTOS[last.sp] && PROTOS[last.sp].some(p=>p.v===last.pr)) Object.assign(S,{sp:last.sp,w:last.w,sex:last.sex,pr:last.pr});
+openModal();
 </script>
 </body>
 </html>
