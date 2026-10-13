@@ -3,422 +3,178 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f3f5f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d1318" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1216" media="(prefers-color-scheme: dark)">
 <title>Vet Dose Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f3f5f7;--surface:#ffffff;--surface-2:#eef1f4;--ink:#0f1a24;--muted:#5b6876;--line:#dde3e9;
-  --accent:#0f766e;--accent-ink:#ffffff;--accent-soft:#d6f0ec;
-  --warn:#8a5300;--warn-soft:#fff3dc;--danger:#b42318;--danger-soft:#fde8e6;--done:#15803d;--done-soft:#e3f5e8;
-  --shadow:0 1px 2px rgba(15,26,36,.06),0 4px 14px rgba(15,26,36,.05);
-  --top-h:180px;
+  --bg:#f4f5f7;--surface:#ffffff;--ink:#11181f;--muted:#6b7682;--line:#e3e7eb;
+  --accent:#0f766e;--accent-ink:#ffffff;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#0d1318;--surface:#151d24;--surface-2:#1d2730;--ink:#e8eef3;--muted:#93a1ae;--line:#263340;
-    --accent:#2dd4bf;--accent-ink:#04201c;--accent-soft:#113b37;
-    --warn:#f5b94a;--warn-soft:#2e2412;--danger:#f97066;--danger-soft:#3a1714;--done:#4ade80;--done-soft:#12291b;
-    --shadow:none;
+    --bg:#0e1216;--surface:#161c22;--ink:#e9eef2;--muted:#8a97a3;--line:#242d36;
+    --accent:#2dd4bf;--accent-ink:#04201c;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#0d1318;--surface:#151d24;--surface-2:#1d2730;--ink:#e8eef3;--muted:#93a1ae;--line:#263340;
-  --accent:#2dd4bf;--accent-ink:#04201c;--accent-soft:#113b37;
-  --warn:#f5b94a;--warn-soft:#2e2412;--danger:#f97066;--danger-soft:#3a1714;--done:#4ade80;--done-soft:#12291b;
-  --shadow:none;
+  --bg:#0e1216;--surface:#161c22;--ink:#e9eef2;--muted:#8a97a3;--line:#242d36;
+  --accent:#2dd4bf;--accent-ink:#04201c;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{scroll-behavior:smooth}
+html,body{margin:0;width:100%;overflow-x:hidden}
 body{
-  margin:0;background:var(--bg);color:var(--ink);
+  background:var(--bg);color:var(--ink);
   font-family:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
-  line-height:1.45;font-size:16px;
-  padding-bottom:env(safe-area-inset-bottom);
+  font-size:16px;line-height:1.4;
+  -webkit-text-size-adjust:100%;
 }
-.app{max-width:640px;margin:0 auto}
+.app{width:100%;max-width:560px;margin:0 auto}
 .num{font-variant-numeric:tabular-nums}
 
-/* ---------- Sticky top ---------- */
+/* top */
 .top{
-  position:sticky;top:0;z-index:10;
-  padding:calc(env(safe-area-inset-top) + 12px) 16px 10px;
-  background:color-mix(in srgb,var(--bg) 88%,transparent);
-  -webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px);
-  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:5;
+  padding:calc(env(safe-area-inset-top) + 12px) 16px 12px;
+  background:var(--bg);border-bottom:1px solid var(--line);
 }
-.title-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
-.title-row h1{font-size:1.05rem;margin:0;font-weight:700;letter-spacing:-.01em}
-.title-row .sub{font-size:.78rem;color:var(--muted)}
-.progress{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--muted);white-space:nowrap}
-.progress .bar{width:56px;height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-.progress .bar span{display:block;height:100%;width:0;background:var(--done);transition:width .25s}
-
-.weight{display:grid;grid-template-columns:52px 1fr 52px;gap:8px;align-items:stretch}
+.weight{display:flex;gap:8px;width:100%}
 .step{
-  border:1px solid var(--line);background:var(--surface);color:var(--ink);
-  border-radius:14px;font:inherit;font-size:1.5rem;font-weight:500;cursor:pointer;
-  display:grid;place-items:center;min-height:56px;
+  flex:0 0 48px;height:52px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:12px;font:inherit;font-size:1.4rem;cursor:pointer;
 }
-.step:active{background:var(--surface-2)}
+.step:active{opacity:.6}
 .wfield{
-  position:relative;display:flex;align-items:center;
-  background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:0 14px;
+  flex:1 1 auto;min-width:0;height:52px;display:flex;align-items:center;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 12px;
 }
-.wfield:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.wfield:focus-within{border-color:var(--accent)}
 .wfield input{
-  flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--ink);
-  font:inherit;font-size:1.75rem;font-weight:700;text-align:center;padding:6px 0;
-  font-variant-numeric:tabular-nums;
+  flex:1 1 auto;min-width:0;width:100%;border:0;outline:0;background:transparent;color:var(--ink);
+  font:inherit;font-size:1.6rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;
 }
-.wfield .u{font-weight:600;color:var(--muted);font-size:1rem}
-.wlabel{position:absolute;top:4px;left:14px;font-size:.68rem;color:var(--muted);letter-spacing:.02em}
-
-.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:10px -16px 0;padding:0 16px}
-.chips::-webkit-scrollbar{display:none}
+.wfield span{flex:0 0 auto;color:var(--muted);font-weight:500}
+.quick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:8px}
 .chip{
-  flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--ink);
-  font:inherit;font-size:.85rem;padding:7px 13px;border-radius:99px;cursor:pointer;min-height:36px;
+  min-width:0;height:34px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:9px;font:inherit;font-size:.85rem;cursor:pointer;padding:0;
 }
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
-.chip.nav{background:transparent;color:var(--muted)}
-.chip.nav.active{color:var(--ink);border-color:var(--ink)}
 
-.alert{margin:10px 0 0;padding:9px 12px;border-radius:12px;font-size:.84rem;display:none}
-.alert.show{display:block}
-.alert.warn{background:var(--warn-soft);color:var(--warn)}
-.alert.danger{background:var(--danger-soft);color:var(--danger)}
-
-/* ---------- Content ---------- */
-main{padding:14px 16px 24px}
-.banner{
-  display:flex;gap:10px;align-items:flex-start;font-size:.82rem;color:var(--warn);
-  background:var(--warn-soft);border-radius:14px;padding:10px 12px;margin-bottom:16px;
-}
-section.group{scroll-margin-top:calc(var(--top-h) + 8px);margin-bottom:22px}
-.group h2{
-  font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
-  margin:0 4px 10px;font-weight:600;
-}
-.group h2 small{text-transform:none;letter-spacing:0;font-weight:400}
-.cards{display:grid;gap:10px}
-@media (min-width:560px){.cards{grid-template-columns:1fr 1fr}}
-
-.drug{
-  background:var(--surface);border:1px solid var(--line);border-radius:18px;
-  padding:14px 14px 12px;box-shadow:var(--shadow);transition:border-color .2s,background .2s;
-}
-.drug.done{border-color:var(--done);background:var(--done-soft)}
-.drug-head{display:flex;align-items:flex-start;gap:10px}
-.drug-head .names{flex:1;min-width:0}
-.drug-name{font-weight:700;font-size:1.02rem}
-.drug-meta{font-size:.8rem;color:var(--muted);margin-top:1px}
-.route{
-  display:inline-block;font-size:.72rem;font-weight:600;color:var(--accent);
-  background:var(--accent-soft);border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:2px;
-}
-.check{
-  flex:0 0 auto;width:40px;height:40px;border-radius:50%;cursor:pointer;
-  border:1.5px solid var(--line);background:var(--surface);color:transparent;
-  display:grid;place-items:center;
-}
-.check svg{width:20px;height:20px}
-.drug.done .check{background:var(--done);border-color:var(--done);color:#fff}
-
-.vol{display:flex;align-items:baseline;gap:6px;margin-top:10px}
-.vol b{font-size:2.15rem;font-weight:700;letter-spacing:-.02em;line-height:1.05}
-.vol span{color:var(--muted);font-size:.95rem;font-weight:500}
-.facts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.fact{font-size:.78rem;background:var(--surface-2);color:var(--ink);border-radius:8px;padding:3px 8px}
-.fact.warn{background:var(--warn-soft);color:var(--warn)}
-
-.picker{margin-top:12px}
-.picker-row{display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:2px}
-.picker-row strong{color:var(--ink);font-weight:600}
-input[type=range]{width:100%;accent-color:var(--accent);height:32px;margin:0}
-
-.note{
-  display:flex;gap:6px;font-size:.8rem;color:var(--muted);margin-top:10px;
-  border-top:1px dashed var(--line);padding-top:9px;
-}
-.note.caution{color:var(--warn)}
-.note svg{flex:0 0 auto;width:15px;height:15px;margin-top:2px}
-
-details.disclaimer{
-  background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:.85rem;
-}
-details.disclaimer summary{cursor:pointer;font-weight:600;list-style:none;display:flex;justify-content:space-between}
-details.disclaimer summary::after{content:"+";color:var(--muted);font-weight:400}
-details.disclaimer[open] summary::after{content:"–"}
-details.disclaimer p{color:var(--muted);margin:8px 0 0}
-.foot{font-size:.76rem;color:var(--muted);text-align:center;margin:16px 8px 8px}
-.reset{
-  display:block;margin:6px auto 0;border:1px solid var(--line);background:var(--surface);color:var(--ink);
-  font:inherit;font-size:.85rem;padding:9px 18px;border-radius:99px;cursor:pointer;
-}
-button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* list */
+main{padding:4px 16px calc(env(safe-area-inset-bottom) + 24px)}
+h2{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:18px 4px 6px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;min-width:0}
+.row + .row{border-top:1px solid var(--line)}
+.info{flex:1 1 auto;min-width:0}
+.name{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.out{flex:0 0 auto;text-align:right;white-space:nowrap}
+.out b{font-size:1.35rem;font-weight:700;letter-spacing:-.01em}
+.out small{display:block;font-size:.72rem;color:var(--muted);margin-top:-2px}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 </head>
 <body>
 <div class="app">
-
-  <div class="top" id="top">
-    <div class="title-row">
-      <div>
-        <h1>Vet Dose Calculator</h1>
-        <div class="sub">โปรโตคอลแมว · คำนวณปริมาตรตามน้ำหนัก</div>
-      </div>
-      <div class="progress" aria-live="polite">
-        <span id="progressText" class="num">0/0</span>
-        <div class="bar"><span id="progressBar"></span></div>
-      </div>
-    </div>
-
+  <div class="top">
     <div class="weight">
-      <button class="step" type="button" data-step="-0.1" aria-label="ลดน้ำหนัก 0.1 kg">−</button>
+      <button class="step" type="button" data-step="-0.1" aria-label="ลด 0.1 kg">−</button>
       <label class="wfield">
-        <span class="wlabel">น้ำหนัก</span>
-        <input id="weight" type="text" inputmode="decimal" autocomplete="off" value="2" aria-label="น้ำหนักสัตว์ (kg)">
-        <span class="u">kg</span>
+        <input id="weight" type="text" inputmode="decimal" autocomplete="off" value="2" aria-label="น้ำหนัก kg">
+        <span>kg</span>
       </label>
-      <button class="step" type="button" data-step="0.1" aria-label="เพิ่มน้ำหนัก 0.1 kg">+</button>
+      <button class="step" type="button" data-step="0.1" aria-label="เพิ่ม 0.1 kg">+</button>
     </div>
-
-    <div class="chips" id="quick" aria-label="เลือกน้ำหนักด่วน"></div>
-    <div class="chips" id="nav" aria-label="ไปยังหมวดยา"></div>
-
-    <div class="alert danger" id="errAlert" role="alert">กรอกน้ำหนักเป็นตัวเลขมากกว่า 0 kg</div>
-    <div class="alert warn" id="highAlert" role="status">น้ำหนักเกิน 12 kg ผิดปกติสำหรับแมว — ตรวจสอบตัวเลขอีกครั้ง</div>
+    <div class="quick" id="quick"></div>
   </div>
-
-  <main>
-    <div class="banner">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:0 0 auto;margin-top:2px"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-      <span>ใช้เพื่อคำนวณและทบทวนเท่านั้น — สัตวแพทย์ผู้รับผิดชอบต้องตรวจ dose ก่อนใช้จริงทุกครั้ง</span>
-    </div>
-
-    <div id="groups"></div>
-
-    <details class="disclaimer">
-      <summary>ข้อควรระวังการใช้งาน</summary>
-      <p>ค่า dose และความเข้มข้นถอดตามโปรโตคอลที่ให้มา ไม่ได้ยืนยันว่าเหมาะกับผู้ป่วยทุกราย ต้องตรวจสอบ dose, route, ข้อบ่งใช้, ขนาดยาสูงสุด และสภาพผู้ป่วยก่อนใช้จริง โดยเฉพาะ NSAIDs ในแมวและยาปฏิชีวนะ ห้ามใช้ผลคำนวณนี้แทนคำสั่งรักษา</p>
-      <p>ยาที่ต้อง titrate ให้ยึดผลทางคลินิก ไม่ใช่ฉีดปริมาตรรวมทั้งหมดโดยอัตโนมัติ</p>
-    </details>
-
-    <button class="reset" type="button" id="reset">ล้างเครื่องหมาย “เตรียมแล้ว”</button>
-    <div class="foot">ปริมาตร (mL) = น้ำหนัก (kg) × dose (mg/kg หรือ mcg/kg) ÷ ความเข้มข้น (mg/mL หรือ mcg/mL)</div>
-  </main>
+  <main id="groups"></main>
 </div>
 
 <script>
 const GROUPS = [
-  {id:"premed", short:"Premed", title:"Premedication / Analgesia", items:[
-    {id:"dex", name:"Dexmedetomidine", conc:500, amt:"mcg", low:10, high:20, step:1, route:"IM",
-     note:"คำนวณเป็นช่วงตาม dose ในตาราง — เลื่อนเพื่อเลือก dose"},
-    {id:"tram", name:"Tramadol", conc:50, amt:"mg", low:3, high:3, route:"IM",
-     note:"ตามโปรโตคอลที่ให้มา"}
+  {title:"Premedication", items:[
+    {name:"Dexmedetomidine", conc:500, amt:"mcg", low:10, high:20, route:"IM"},
+    {name:"Tramadol", conc:50, amt:"mg", low:3, high:3, route:"IM"}
   ]},
-  {id:"induct", short:"Induction", title:"Induction", items:[
-    {id:"prop", name:"Propofol", conc:10, amt:"mg", low:1, high:2, step:0.1, route:"IV slow", titrate:true,
-     note:"Titrate to effect — ไม่ควรฉีดปริมาตรช่วงบนทั้งหมดโดยอัตโนมัติ", caution:true}
+  {title:"Induction", items:[
+    {name:"Propofol", conc:10, amt:"mg", low:1, high:2, route:"IV"}
   ]},
-  {id:"abx", short:"Antibiotics", title:"Antibiotics", hint:"ตรวจสอบข้อบ่งใช้ก่อน", items:[
-    {id:"cefa", name:"Cefazolin sodium", conc:200, amt:"mg", low:20, high:20, route:"IV",
-     note:"ความเข้มข้นหลังผสมตามเอกสารต้นทาง"},
-    {id:"conv", name:"Cefovecin (Convenia)", conc:80, amt:"mg", low:8, high:8, route:"SC",
-     note:"เลือกใช้ตามข้อบ่งใช้และแผนสัตวแพทย์"}
+  {title:"Antibiotics", items:[
+    {name:"Cefazolin", conc:200, amt:"mg", low:20, high:20, route:"IV"},
+    {name:"Cefovecin", conc:80, amt:"mg", low:8, high:8, route:"SC"}
   ]},
-  {id:"postop", short:"Post-op", title:"Postoperative analgesia", hint:"ตรวจสอบความเหมาะสม", items:[
-    {id:"melox", name:"Meloxicam", conc:5, amt:"mg", low:0.3, high:0.3, route:"SC",
-     note:"ถอดตามตารางต้นทาง — ตรวจ feline dose, ข้อบ่งใช้ และ renal perfusion ก่อนใช้", caution:true}
+  {title:"Post-op", items:[
+    {name:"Meloxicam", conc:5, amt:"mg", low:0.3, high:0.3, route:"SC"}
   ]},
-  {id:"block", short:"Local block", title:"Local block — แมวเพศผู้", items:[
-    {id:"lido", name:"Lidocaine", conc:20, amt:"mg", low:1.5, high:1.5, route:"Intratesticular", perTestis:true,
-     note:"ปริมาตรต่อ testis — เตรียมแยก 2 syringes"}
+  {title:"Local block", items:[
+    {name:"Lidocaine", conc:20, amt:"mg", low:1.5, high:1.5, route:"Intratesticular", perTestis:true}
   ]},
-  {id:"fluid", short:"Fluid", title:"Fluid rate", items:[
-    {id:"fluid", name:"Maintenance rate", fluid:true, rate:3, route:"IV",
-     note:"อัตราจริงต้องปรับตามสภาพผู้ป่วยและคำสั่งสัตวแพทย์"}
+  {title:"Fluid", items:[
+    {name:"Maintenance", rate:3, route:"IV", fluid:true}
   ]}
 ];
-const QUICK = [1,2,2.5,3,3.5,4,5,6];
-const HIGH_WARN = 12;
-
-const state = { w:2, pick:{}, done:new Set() };
-const ALL = GROUPS.flatMap(g => g.items);
-const refs = {};
-
+const QUICK = [1,2,3,4,5,6];
 const $ = s => document.querySelector(s);
-const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-
-function trim(n, d){ return String(parseFloat(n.toFixed(d))); }
-function fmtVol(v){ if (!Number.isFinite(v)) return "—"; return v < 1 ? trim(v,3) : trim(v,2); }
-function fmtAmt(v){ return Number.isFinite(v) ? trim(v,2) : "—"; }
-function doseStr(it){ return it.low === it.high ? `${it.low}` : `${it.low}–${it.high}`; }
-function syringe(v){
-  if (!Number.isFinite(v)) return null;
-  if (v < 0.1) return {t:"ปริมาตร < 0.1 mL — ระวังความแม่นยำ", warn:true};
-  if (v <= 1) return {t:"Syringe 1 mL"};
-  if (v <= 3) return {t:"Syringe 3 mL"};
-  if (v <= 5) return {t:"Syringe 5 mL"};
-  if (v <= 10) return {t:"Syringe 10 mL"};
-  return {t:"Syringe 20 mL"};
-}
-const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg>';
-const ICON_INFO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>';
-const ICON_WARN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>';
+const el = (t,c,x) => { const e=document.createElement(t); if(c) e.className=c; if(x!=null) e.textContent=x; return e; };
+const trim = (n,d) => String(parseFloat(n.toFixed(d)));
+const fv = v => !Number.isFinite(v) ? "—" : (v < 1 ? trim(v,3) : trim(v,2));
+const outs = [];
+let w = 2;
 
 function build(){
-  const quick = $("#quick");
-  QUICK.forEach(q => {
-    const b = el("button","chip num",`${q} kg`); b.type="button"; b.dataset.w=q;
-    b.addEventListener("click",()=>setWeight(q));
-    quick.appendChild(b);
+  const q = $("#quick");
+  QUICK.forEach(k => {
+    const b = el("button","chip num",String(k)); b.type="button"; b.dataset.w=k;
+    b.addEventListener("click",()=>setW(k)); q.appendChild(b);
   });
-
-  const nav = $("#nav"), root = $("#groups");
+  const root = $("#groups");
   GROUPS.forEach(g => {
-    const n = el("button","chip nav",g.short); n.type="button"; n.dataset.target=g.id;
-    n.addEventListener("click",()=>document.getElementById(g.id).scrollIntoView({behavior:"smooth",block:"start"}));
-    nav.appendChild(n);
-
-    const sec = el("section","group"); sec.id = g.id;
-    const h = el("h2",null,g.title);
-    if (g.hint){ h.append(" "); h.appendChild(el("small",null,`· ${g.hint}`)); }
-    sec.appendChild(h);
-    const cards = el("div","cards");
-
+    root.appendChild(el("h2",null,g.title));
+    const list = el("div","list");
     g.items.forEach(it => {
-      if (it.low !== it.high) state.pick[it.id] = it.low;
-      const card = el("article","drug");
-      const head = el("div","drug-head");
-      const names = el("div","names");
-      const nm = el("div","drug-name",it.name);
-      nm.appendChild(el("span","route",it.route));
-      const meta = el("div","drug-meta num",
-        it.fluid ? `${it.rate} mL/kg/hr` :
-        `${doseStr(it)} ${it.amt}/kg${it.perTestis?"/testis":""} · ${it.conc} ${it.amt}/mL`);
-      names.append(nm, meta);
-      const chk = el("button","check"); chk.type="button"; chk.innerHTML = ICON_CHECK;
-      chk.setAttribute("aria-label",`ทำเครื่องหมายว่าเตรียม ${it.name} แล้ว`);
-      chk.setAttribute("aria-pressed","false");
-      chk.addEventListener("click",()=>toggleDone(it.id));
-      head.append(names, chk);
-      card.appendChild(head);
-
-      const vol = el("div","vol num");
-      const vb = el("b"); const vu = el("span",null, it.fluid ? "mL/hr" : (it.perTestis ? "mL / testis" : "mL"));
-      vol.append(vb, vu); card.appendChild(vol);
-      const facts = el("div","facts"); card.appendChild(facts);
-
-      let rangeLbl = null, range = null;
-      if (it.low !== it.high){
-        const p = el("div","picker");
-        const row = el("div","picker-row num");
-        row.append(el("span",null,`${it.low}`));
-        rangeLbl = el("strong"); row.append(rangeLbl);
-        row.append(el("span",null,`${it.high}`));
-        range = document.createElement("input");
-        range.type="range"; range.min=it.low; range.max=it.high; range.step=it.step; range.value=it.low;
-        range.setAttribute("aria-label",`เลือก dose ${it.name} (${it.amt}/kg)`);
-        range.addEventListener("input",()=>{ state.pick[it.id] = Number(range.value); updateItem(it); });
-        p.append(row, range); card.appendChild(p);
-      }
-
-      const note = el("div","note"+(it.caution?" caution":""));
-      note.innerHTML = it.caution ? ICON_WARN : ICON_INFO;
-      note.appendChild(el("span",null,it.note));
-      card.appendChild(note);
-
-      refs[it.id] = {card, chk, vb, facts, rangeLbl};
-      cards.appendChild(card);
+      const row = el("div","row");
+      const info = el("div","info");
+      info.appendChild(el("div","name",it.name));
+      const dose = it.fluid ? `${it.rate} mL/kg/hr`
+        : `${it.low===it.high ? it.low : it.low+"–"+it.high} ${it.amt}/kg · ${it.route}`;
+      info.appendChild(el("div","sub num",dose));
+      const out = el("div","out num");
+      const b = el("b");
+      out.append(b, el("small",null, it.fluid ? "mL/hr" : it.perTestis ? "mL/testis" : "mL"));
+      row.append(info,out); list.appendChild(row);
+      outs.push({it,b});
     });
-    sec.appendChild(cards);
-    root.appendChild(sec);
+    root.appendChild(list);
   });
-
-  // active nav chip
-  if ("IntersectionObserver" in window){
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting){
-          document.querySelectorAll(".chip.nav").forEach(c => c.classList.toggle("active", c.dataset.target === e.target.id));
-        }
-      });
-    }, {rootMargin:"-40% 0px -55% 0px"});
-    document.querySelectorAll("section.group").forEach(s => io.observe(s));
-  }
 }
 
-function updateItem(it){
-  const r = refs[it.id], w = state.w, ok = Number.isFinite(w) && w > 0;
-  r.facts.replaceChildren();
-  if (it.fluid){
-    r.vb.textContent = ok ? fmtAmt(w*it.rate) : "—";
-    if (ok) r.facts.appendChild(el("span","fact num",`≈ ${fmtAmt(w*it.rate/60)} mL/min`));
-    return;
-  }
-  const dose = it.low === it.high ? it.low : state.pick[it.id];
-  if (r.rangeLbl) r.rangeLbl.textContent = `${trim(dose,2)} ${it.amt}/kg`;
-  const v = ok ? w*dose/it.conc : NaN;
-  r.vb.textContent = fmtVol(v);
-  if (!ok) return;
-  r.facts.appendChild(el("span","fact num",`= ${fmtAmt(w*dose)} ${it.amt}${it.perTestis?" / testis":""}`));
-  if (it.perTestis) r.facts.appendChild(el("span","fact num",`รวม 2 ข้าง ${fmtVol(v*2)} mL`));
-  if (it.low !== it.high){
+function update(){
+  const ok = Number.isFinite(w) && w > 0;
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(ok && Number(c.dataset.w)===w)));
+  outs.forEach(({it,b}) => {
+    if (!ok){ b.textContent="—"; return; }
+    if (it.fluid){ b.textContent = trim(w*it.rate,1); return; }
     const lo = w*it.low/it.conc, hi = w*it.high/it.conc;
-    r.facts.appendChild(el("span","fact num",`ช่วง ${fmtVol(lo)}–${fmtVol(hi)} mL`));
-  }
-  const s = syringe(v);
-  if (s) r.facts.appendChild(el("span","fact"+(s.warn?" warn":""),s.t));
-}
-
-function updateAll(){
-  const w = state.w, ok = Number.isFinite(w) && w > 0;
-  $("#errAlert").classList.toggle("show", !ok);
-  $("#highAlert").classList.toggle("show", ok && w > HIGH_WARN);
-  document.querySelectorAll("#quick .chip").forEach(c => c.setAttribute("aria-pressed", String(ok && Number(c.dataset.w) === w)));
-  ALL.forEach(updateItem);
-  syncTopHeight();
-}
-
-function parseW(s){ const n = parseFloat(String(s).replace(",",".")); return Number.isFinite(n) ? n : NaN; }
-function setWeight(v){
-  v = Math.min(100, Math.max(0.1, Math.round(v*10)/10));
-  state.w = v; $("#weight").value = String(v); updateAll();
-}
-function toggleDone(id){
-  state.done.has(id) ? state.done.delete(id) : state.done.add(id);
-  renderDone();
-}
-function renderDone(){
-  ALL.forEach(it => {
-    const on = state.done.has(it.id);
-    refs[it.id].card.classList.toggle("done", on);
-    refs[it.id].chk.setAttribute("aria-pressed", String(on));
+    b.textContent = it.low===it.high ? fv(lo) : `${fv(lo)}–${fv(hi)}`;
   });
-  const n = state.done.size, t = ALL.length;
-  $("#progressText").textContent = `เตรียมแล้ว ${n}/${t}`;
-  $("#progressBar").style.width = `${t ? n/t*100 : 0}%`;
 }
-function syncTopHeight(){
-  document.documentElement.style.setProperty("--top-h", $("#top").offsetHeight + "px");
+function setW(v){
+  v = Math.min(100, Math.max(0.1, Math.round(v*10)/10));
+  w = v; $("#weight").value = String(v); update();
 }
 
 build();
-$("#weight").addEventListener("input", e => { state.w = parseW(e.target.value); updateAll(); });
-$("#weight").addEventListener("blur", () => { if (Number.isFinite(state.w) && state.w > 0) setWeight(state.w); });
-$("#weight").addEventListener("focus", e => e.target.select());
-document.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => {
-  const base = Number.isFinite(state.w) ? state.w : 0;
-  setWeight(base + Number(b.dataset.step));
-}));
-$("#reset").addEventListener("click", () => { state.done.clear(); renderDone(); });
-window.addEventListener("resize", syncTopHeight);
-updateAll(); renderDone();
+const inp = $("#weight");
+inp.addEventListener("input", e => { w = parseFloat(e.target.value.replace(",",".")); update(); });
+inp.addEventListener("focus", e => e.target.select());
+inp.addEventListener("blur", () => { if (Number.isFinite(w) && w > 0) setW(w); });
+document.querySelectorAll("[data-step]").forEach(b => b.addEventListener("click", () => setW((Number.isFinite(w)?w:0) + Number(b.dataset.step))));
+update();
 </script>
 </body>
 </html>
