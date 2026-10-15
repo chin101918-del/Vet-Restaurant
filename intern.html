@@ -2,25 +2,41 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+<meta name="theme-color" content="#1E5B53">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>VetKU · ฝึกงานและบันทึกทักษะ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-html,body{margin:0;height:100%}
-body{background:#DDE3DE;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:'IBM Plex Sans Thai',sans-serif}
+*,*::before,*::after{-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;background:#F3F5F1}
+body{font-family:'IBM Plex Sans Thai',sans-serif;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 a{color:#1E5B53;text-decoration:none}a:hover{color:#123F3A}
-#stage{width:390px;height:844px;border-radius:36px;overflow:hidden;box-shadow:0 24px 60px rgba(18,35,31,.25);background:#F3F5F1}
-.screen{width:390px;height:844px}
+/* phone: the app is exactly the visible screen */
+#stage{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;overflow:hidden;background:#F3F5F1}
+.screen{width:100%;height:100%}
+.screen [style*="overflow-y: auto"],.screen [style*="overflow-x: auto"]{-webkit-overflow-scrolling:touch;overscroll-behavior:contain;scrollbar-width:none}
+.screen ::-webkit-scrollbar{display:none}
 button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #F2B544;outline-offset:2px}
-@media (max-width:430px){body{display:block;background:#F3F5F1}#stage{border-radius:0;box-shadow:none;margin:0 auto}}
+/* stop iOS zooming in when a field is focused */
+@media (hover:none) and (pointer:coarse){input,textarea{font-size:16px !important}}
+/* small phones (≤360px): tighten a little so nothing overflows */
+@media (max-width:360px){.screen{font-size:14px}.screen h1{font-size:21px !important}.screen header button,.screen header a{font-size:13px !important}}
+/* desktop / tablet: show it inside a phone frame */
+@media (min-width:600px){
+  html,body{background:#DDE3DE}
+  #stage{inset:auto;top:50%;left:50%;transform:translate(-50%,-50%);width:390px;height:min(844px,calc(100vh - 40px));border-radius:36px;box-shadow:0 24px 60px rgba(18,35,31,.25)}
+}
 </style>
 </head>
 <body>
 <div id="stage"></div>
 
 <template id="tpl-Main">
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box">
+<div style="width: 100%; height: 100%; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
+  <div style="flex: 1; min-height: 0; overflow-y: auto">
   <header style="background: #1E5B53; color: #FFFFFF; padding: 20px 16px 64px; display: flex; align-items: center; gap: 10px">
     <img src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23DCEBE5'/%3E%3Ccircle cx='32' cy='25' r='11' fill='%237FBFB2'/%3E%3Cpath d='M12 60c3-12 11-18 20-18s17 6 20 18z' fill='%237FBFB2'/%3E%3C/svg%3E" alt="ชินวร มาลีพัตร" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: center 20%; border: 2px solid #DCEBE5">
     <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
@@ -80,9 +96,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
             <span style="width: 28px; height: 28px; border-radius: 50%; background: #F7E2B4; border: 2px solid #FFFFFF; font-size: 12px; display: flex; align-items: center; justify-content: center">ภ</span>
             <span style="width: 28px; height: 28px; border-radius: 50%; background: #DCEBE5; border: 2px solid #FFFFFF; margin-left: -8px; font-size: 12px; display: flex; align-items: center; justify-content: center">ณ</span>
             <span style="width: 28px; height: 28px; border-radius: 50%; background: #DDE6F2; border: 2px solid #FFFFFF; margin-left: -8px; font-size: 12px; display: flex; align-items: center; justify-content: center">ป</span>
-            <span style="font-size: 12px; color: #5B6B66; margin-left: 8px">+ เพื่อนร่วมรอบ 3 คน</span>
+            <span style="font-size: 12px; color: #5B6B66; margin-left: 8px; white-space: nowrap">+ เพื่อน 3 คน</span>
           </div>
-          <a href="Log.dc.html" style="height: 40px; padding: 0 16px; border-radius: 999px; background: #1E5B53; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px">
+          <a href="Log.dc.html" style="height: 40px; padding: 0 16px; border-radius: 999px; background: #1E5B53; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; gap: 6px; white-space: nowrap; flex: 0 0 auto">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>เช็กอิน</a>
         </div>
       </div>
@@ -145,8 +161,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
       </div>
     </section>
   </main>
+  </div>
 
-  <nav aria-label="เมนูหลัก" style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
+  <nav aria-label="เมนูหลัก" style="position: absolute; left: 0; right: 0; bottom: 0; height: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 5; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
     <a href="Main.dc.html" aria-current="page" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: #123F3A">
       <span style="width: 56px; height: 30px; color: #1E5B53; display: flex; align-items: center; justify-content: center">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" fill="currentColor"/></svg>
@@ -170,7 +187,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
   </nav>
 
   <sc-if value="{{showNotif}}" hint-placeholder-val="{{ false }}">
-    <div style="position: absolute; inset: 0; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
+    <div style="position: absolute; inset: 0; z-index: 10; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
       <button onClick="{{closeNotif}}" aria-label="ปิด" style="flex: 0 0 88px; border: 0; background: transparent; cursor: pointer"></button>
       <section role="dialog" aria-modal="true" aria-label="การแจ้งเตือน" style="flex: 1; min-height: 0; background: #FFFFFF; border-radius: 24px 24px 0 0; display: flex; flex-direction: column">
         <div style="padding: 12px 16px 8px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #EEF1EC">
@@ -221,7 +238,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
   </sc-if>
 
   <sc-if value="{{showSheet}}" hint-placeholder-val="{{ false }}">
-    <div style="position: absolute; inset: 0; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
+    <div style="position: absolute; inset: 0; z-index: 10; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
       <button onClick="{{close}}" aria-label="ปิด" style="flex: 1; border: 0; background: transparent; cursor: pointer"></button>
       <section role="dialog" aria-modal="true" aria-label="{{sel.name}}" style="background: #FFFFFF; border-radius: 24px 24px 0 0; padding: 12px 20px 28px; display: flex; flex-direction: column; align-items: center; gap: 12px">
         <span style="width: 40px; height: 4px; border-radius: 4px; background: #D5DCD6"></span>
@@ -275,7 +292,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 </div>
 </template>
 <template id="tpl-Calendar">
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
+<div style="width: 100%; height: 100%; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
   <header style="padding: 20px 16px 12px; display: flex; flex-direction: column; gap: 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E1; flex: 0 0 auto">
     <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
       <h1 style="margin: 0; font-family: 'Anuphan', sans-serif; font-size: 24px; font-weight: 700">กิจกรรม</h1>
@@ -421,7 +438,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
     </div>
   </sc-if>
 
-  <nav aria-label="เมนูหลัก" style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
+  <nav aria-label="เมนูหลัก" style="position: absolute; left: 0; right: 0; bottom: 0; height: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 5; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
     <a href="Main.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: #6B7A75">
       <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
@@ -445,7 +462,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
   </nav>
 
   <sc-if value="{{sheetOpen}}" hint-placeholder-val="{{ false }}">
-    <div style="position: absolute; inset: 0; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
+    <div style="position: absolute; inset: 0; z-index: 10; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
       <button onClick="{{close}}" aria-label="ปิด" style="flex: 1; border: 0; background: transparent; cursor: pointer"></button>
 
       <sc-if value="{{isExport}}" hint-placeholder-val="{{ false }}">
@@ -563,7 +580,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 </div>
 </template>
 <template id="tpl-Book">
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
+<div style="width: 100%; height: 100%; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
   <header style="padding: 16px 16px 10px; background: #FFFFFF; border-bottom: 1px solid #E2E7E1; display: flex; flex-direction: column; gap: 10px; flex: 0 0 auto">
     <div style="display: flex; align-items: center; justify-content: space-between">
       <h1 style="margin: 0; font-family: 'Anuphan', sans-serif; font-size: 24px; font-weight: 700">ลงฝึก</h1>
@@ -723,7 +740,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
     </main>
   </sc-if>
 
-  <nav aria-label="เมนูหลัก" style="flex: 0 0 80px; height: 80px; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
+  <nav aria-label="เมนูหลัก" style="flex: 0 0 auto; height: calc(80px + env(safe-area-inset-bottom, 0px)); background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
     <a href="Main.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: #6B7A75">
       <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
@@ -747,7 +764,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
   </nav>
 
   <sc-if value="{{showFilter}}" hint-placeholder-val="{{ false }}">
-    <div style="position: absolute; inset: 0; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
+    <div style="position: absolute; inset: 0; z-index: 10; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
       <button onClick="{{closeFilter}}" aria-label="ปิด" style="flex: 1; border: 0; background: transparent; cursor: pointer"></button>
       <section role="dialog" aria-modal="true" aria-label="ตัวกรอง" style="background: #FFFFFF; border-radius: 24px 24px 0 0; padding: 12px 16px 20px; display: flex; flex-direction: column; gap: 16px">
         <span style="width: 40px; height: 4px; border-radius: 4px; background: #D5DCD6; align-self: center"></span>
@@ -785,7 +802,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
   </sc-if>
 
   <sc-if value="{{showDetail}}" hint-placeholder-val="{{ false }}">
-    <section role="dialog" aria-modal="true" aria-label="{{dp.name}}" style="position: absolute; inset: 0; background: #F3F5F1; display: flex; flex-direction: column">
+    <section role="dialog" aria-modal="true" aria-label="{{dp.name}}" style="position: absolute; inset: 0; z-index: 10; background: #F3F5F1; display: flex; flex-direction: column">
       <div style="flex: 1; min-height: 0; overflow-y: auto">
         <div style="{{dp.hero}}">
           <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="m21 16-5-5-8 8"/></svg>
@@ -876,7 +893,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
           </sc-for>
         </div>
       </div>
-      <div style="flex: 0 0 auto; padding: 10px 16px 20px; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: flex; gap: 8px">
+      <div style="flex: 0 0 auto; padding: 10px 16px calc(20px + env(safe-area-inset-bottom, 0px)); background: #FFFFFF; border-top: 1px solid #E2E7E1; display: flex; gap: 8px">
         <button style="width: 52px; height: 52px; border-radius: 14px; border: 1px solid #E2E7E1; background: #FFFFFF; color: #1E5B53; display: flex; align-items: center; justify-content: center; cursor: pointer" aria-label="โทรหาผู้ติดต่อ">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>
         </button>
@@ -887,18 +904,18 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 </div>
 </template>
 <template id="tpl-Log">
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box">
-  <header style="padding: 20px 16px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E1; display: flex; flex-direction: column; gap: 12px">
+<div style="width: 100%; height: 100%; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
+  <header style="padding: 20px 16px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E1; display: flex; flex-direction: column; gap: 12px; flex: 0 0 auto">
     <h1 style="margin: 0; font-family: 'Anuphan', sans-serif; font-size: 24px; font-weight: 700">บันทึกทักษะ</h1>
     <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
-      <button onClick="{{openCode}}" style="height: 48px; border-radius: 12px; border: 0; background: #1E5B53; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer">
+      <button onClick="{{openCode}}" style="height: 48px; border-radius: 12px; border: 0; background: #1E5B53; color: #FFFFFF; font-family: inherit; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 0 8px; cursor: pointer">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10v4M10.5 10v4M14 10v4M17.5 10v4"/></svg>กรอกรหัสกิจกรรม</button>
-      <a href="Lab.dc.html" style="height: 48px; border-radius: 12px; border: 1.5px solid #1E5B53; background: #FFFFFF; color: #1E5B53; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px">
+      <a href="Lab.dc.html" style="height: 48px; border-radius: 12px; border: 1.5px solid #1E5B53; background: #FFFFFF; color: #1E5B53; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; padding: 0 8px">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/></svg>บันทึกแลป</a>
     </div>
   </header>
 
-  <main style="height: 718px; overflow-y: auto; box-sizing: border-box; padding: 14px 16px 170px; display: flex; flex-direction: column; gap: 14px">
+  <main style="flex: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; padding: 14px 16px 170px; display: flex; flex-direction: column; gap: 14px">
     <section style="display: flex; flex-direction: column; gap: 8px">
       <h2 style="margin: 0; font-size: 14px; font-weight: 600">รอบที่รอบันทึก · 8 รอบ</h2>
       <div style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px">
@@ -973,11 +990,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
     </section>
   </main>
 
-  <div style="position: absolute; left: 12px; right: 12px; bottom: 92px">
+  <div style="position: absolute; left: 12px; right: 12px; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); z-index: 5">
     <button style="width: 100%; height: 52px; border-radius: 14px; border: 0; background: #F2B544; color: #16231F; font-family: inherit; font-size: 15px; font-weight: 700; box-shadow: 0 10px 24px rgba(18,63,58,0.20); cursor: pointer">ส่งบันทึก {{picked}} ทักษะ · {{cur.hrs}} ชม.</button>
   </div>
 
-  <nav aria-label="เมนูหลัก" style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
+  <nav aria-label="เมนูหลัก" style="position: absolute; left: 0; right: 0; bottom: 0; height: calc(80px + env(safe-area-inset-bottom, 0px)); z-index: 5; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
     <a href="Main.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: #6B7A75">
       <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
@@ -1001,7 +1018,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
   </nav>
 
   <sc-if value="{{showCode}}" hint-placeholder-val="{{ false }}">
-    <div style="position: absolute; inset: 0; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
+    <div style="position: absolute; inset: 0; z-index: 10; background: rgba(18,35,31,0.55); display: flex; flex-direction: column; justify-content: flex-end">
       <button onClick="{{closeCode}}" aria-label="ปิด" style="flex: 1; border: 0; background: transparent; cursor: pointer"></button>
       <section role="dialog" aria-modal="true" aria-label="กรอกรหัสกิจกรรม" style="background: #FFFFFF; border-radius: 24px 24px 0 0; padding: 12px 16px 28px; display: flex; flex-direction: column; gap: 14px">
         <span style="width: 40px; height: 4px; border-radius: 4px; background: #D5DCD6; align-self: center"></span>
@@ -1045,7 +1062,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 </div>
 </template>
 <template id="tpl-Lab">
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
+<div style="width: 100%; height: 100%; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
 
   <sc-if value="{{isPick}}" hint-placeholder-val="{{ true }}">
     <header style="padding: 12px 8px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E1; display: flex; align-items: center; gap: 4px; flex: 0 0 auto">
@@ -1197,14 +1214,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
       </section>
     </main>
 
-    <div style="flex: 0 0 auto; padding: 12px 16px 20px; background: #FFFFFF; border-top: 1px solid #E2E7E1">
+    <div style="flex: 0 0 auto; padding: 12px 16px calc(20px + env(safe-area-inset-bottom, 0px)); background: #FFFFFF; border-top: 1px solid #E2E7E1">
       <button style="width: 100%; height: 52px; border-radius: 14px; border: 0; background: #1E5B53; color: #FFFFFF; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer">ยืนยันบันทึก · {{roleName}} · {{animalName}}</button>
     </div>
   </sc-if>
 </div>
 </template>
 <template id="tpl-Me">
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
+<div style="width: 100%; height: 100%; position: relative; overflow: hidden; background: #F3F5F1; font-family: 'IBM Plex Sans Thai', sans-serif; color: #16231F; box-sizing: border-box; display: flex; flex-direction: column">
   <header style="padding: 20px 16px 12px; background: #FFFFFF; border-bottom: 1px solid #E2E7E1; display: flex; flex-direction: column; gap: 12px; flex: 0 0 auto">
     <h1 style="margin: 0; font-family: 'Anuphan', sans-serif; font-size: 24px; font-weight: 700">ฉัน</h1>
     <div role="tablist" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; background: #F3F5F1; border-radius: 12px; padding: 4px">
@@ -1443,7 +1460,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
     </sc-if>
   </main>
 
-  <nav aria-label="เมนูหลัก" style="flex: 0 0 80px; height: 80px; background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
+  <nav aria-label="เมนูหลัก" style="flex: 0 0 auto; height: calc(80px + env(safe-area-inset-bottom, 0px)); background: #FFFFFF; border-top: 1px solid #E2E7E1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); justify-items: center; align-items: start; padding-top: 8px; box-sizing: border-box">
     <a href="Main.dc.html" style="min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: #6B7A75">
       <span style="width: 56px; height: 30px; border-radius: 999px; display: flex; align-items: center; justify-content: center">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
