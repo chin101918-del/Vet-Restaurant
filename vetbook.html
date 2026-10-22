@@ -10,6 +10,7 @@ html.vb-splash,html.vb-splash body{background:#123F3A}
 #vb-splash canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #vb-splash.vb-out{opacity:0;pointer-events:none}
 html:not(.vb-splash) #vb-splash{display:none}
+html.vb-splash .shell{visibility:hidden}
 </style>
 
 <title>Vetbook Student</title>
@@ -65,8 +66,12 @@ const reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MX=x=>x+DX-627, MY=y=>627-y;
 const HX=MX(OX), HY=MY(TOP), YPT=MY(PY-16), XR=MX(XE+16);
 // ---------- geometry
-function sample(id,step){const p=$('vbs-'+id),L=p.getTotalLength(),n=Math.max(12,Math.round(L/step)),pts=[];
-  for(let i=0;i<n;i++){const q=p.getPointAtLength(L*i/n);pts.push([MX(q.x),MY(q.y)]);}return pts;}
+function sample(id,step){const p=$('vbs-'+id),L=p.getTotalLength(),n=Math.max(12,Math.round(L/step)),raw=[];
+  for(let i=0;i<n;i++){const q=p.getPointAtLength(L*i/n);raw.push([MX(q.x),MY(q.y)]);}
+  const out=[];for(let i=0;i<raw.length;i++){const a=raw[(i-1+raw.length)%raw.length],b=raw[i],c=raw[(i+1)%raw.length];
+    const cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]), l=Math.hypot(b[0]-a[0],b[1]-a[1])*Math.hypot(c[0]-b[0],c[1]-b[1])||1;
+    if(Math.abs(cr)/l>0.004)out.push(b);}                 // keep only points where the outline actually turns
+  return out.length>8?out:raw;}
 function prism(poly,z0,z1,tag,extra){const F=[],n=poly.length;
   F.push(Object.assign({pts:poly.map(p=>[p[0],p[1],z0]),tag,front:true},extra));
   F.push(Object.assign({pts:poly.slice().reverse().map(p=>[p[0],p[1],z1]),tag},extra));
@@ -121,37 +126,40 @@ function xf(p,f,st){
   return [x+st.T[0], y*c-zc*s+st.T[1], y*s+zc*c];
 }
 let W,H,DPR,CAM=60000;
-function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=window.innerWidth;H=window.innerHeight;cvs.width=W*DPR;cvs.height=H*DPR;}
+function resize(){DPR=Math.min(3,window.devicePixelRatio||1);W=window.innerWidth;H=window.innerHeight;cvs.width=W*DPR;cvs.height=H*DPR;}
 function proj(p,S){const k=CAM/(CAM-p[2]);return [W/2+p[0]*S*k,H/2-p[1]*S*k];}
 const mix=(a,b,t)=>a.map((v,i)=>Math.round(v+(b[i]-v)*t));
 const WHITE=[255,255,255], PAPER=[243,245,241], SIDE=[255,255,255], EDGE=[255,255,255], INK=[184,198,191], PAW=[30,91,83];
 function draw(st){
   ctx.setTransform(DPR,0,0,DPR,0,0);ctx.fillStyle=BG;ctx.fillRect(0,0,W,H);
-  const L=[];
+  const white=new Path2D(), paper=new Path2D(), inks=[], paws=[];
+  let hasPaper=false;
   for(const f of faces){
+    const isInk=f.tag==='ink', isPaw=f.tag==='paw';
     const inkA=f.right?st.inkR:st.ink;
-    if((f.tag==='ink'||f.tag==='paw')&&inkA<=0)continue;
-    const P=f.pts.map(p=>xf(p,f,st)), Q=P.map(p=>proj(p,st.S));
+    if((isInk||isPaw)&&inkA<=0)continue;
+    const Q=new Array(f.pts.length), P=f.tag==='ink'||isPaw?null:new Array(f.pts.length);
+    for(let i=0;i<f.pts.length;i++){const p=xf(f.pts[i],f,st);if(P)P[i]=p;Q[i]=proj(p,st.S);}
+    if(isInk){inks.push({Q,c:'rgb('+mix(PAPER,INK,inkA).join(',')+')'});continue;}
+    if(isPaw){paws.push({Q,c:'rgb('+mix(PAPER,PAW,inkA).join(',')+')'});continue;}
     let area=0;for(let i=0;i<Q.length;i++){const j=(i+1)%Q.length;area+=Q[i][0]*Q[j][1]-Q[j][0]*Q[i][1];}
-    if(area>=0&&f.tag!=='ink'&&f.tag!=='paw')continue;
-    const u=[P[1][0]-P[0][0],P[1][1]-P[0][1],P[1][2]-P[0][2]],w=[P[2][0]-P[0][0],P[2][1]-P[0][1],P[2][2]-P[0][2]];
-    const nx=u[1]*w[2]-u[2]*w[1],ny=u[2]*w[0]-u[0]*w[2],nz=u[0]*w[1]-u[1]*w[0];const facing=Math.abs(nz)/(Math.hypot(nx,ny,nz)||1);
-    let col;
-    if(f.tag==='ink') col=mix(PAPER,INK,inkA);
-    else if(f.tag==='paw') col=mix(PAPER,PAW,inkA);
-    else if(facing>.6) col=(f.tag==='page'||f.tag==='sheet')?mix(WHITE,PAPER,st.paper):WHITE;
-    else col=(f.tag==='page'||f.tag==='sheet')?EDGE:SIDE;
-    let z=0;for(const p of P)z+=p[2];
-    L.push({Q,ink:f.tag==='ink',z:z/P.length+(f.sheet!=null?f.sheet*4:0)+(f.tag==='ink'||f.tag==='paw'?2:0),c:'rgb('+col.join(',')+')'});
+    if(area>-0.4)continue;                                // back-facing or sub-pixel
+    let path=white;
+    if(st.paper>0&&(f.tag==='page'||f.tag==='sheet')){
+      const u=[P[1][0]-P[0][0],P[1][1]-P[0][1],P[1][2]-P[0][2]],w=[P[2][0]-P[0][0],P[2][1]-P[0][1],P[2][2]-P[0][2]];
+      const nx=u[1]*w[2]-u[2]*w[1],ny=u[2]*w[0]-u[0]*w[2],nz=u[0]*w[1]-u[1]*w[0];
+      if(Math.abs(nz)/(Math.hypot(nx,ny,nz)||1)>.6){path=paper;hasPaper=true;}
+    }
+    path.moveTo(Q[0][0],Q[0][1]);for(let i=1;i<Q.length;i++)path.lineTo(Q[i][0],Q[i][1]);path.closePath();
   }
-  L.sort((a,b)=>a.z-b.z);
-  ctx.lineJoin='round';ctx.lineCap='round';
-  const R=Math.max(.7,10*st.round*st.S);            // soft corners grow in as the model turns
-  for(const f of L){
-    if(f.ink){const q=f.Q,m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2],A=m(q[0],q[3]),B=m(q[1],q[2]);
-      const w=Math.hypot(q[0][0]-q[3][0],q[0][1]-q[3][1]),len=Math.hypot(B[0]-A[0],B[1]-A[1])||1,ux=(B[0]-A[0])/len,uy=(B[1]-A[1])/len;
-      ctx.beginPath();ctx.moveTo(A[0]+ux*w/2,A[1]+uy*w/2);ctx.lineTo(B[0]-ux*w/2,B[1]-uy*w/2);ctx.strokeStyle=f.c;ctx.lineWidth=w;ctx.stroke();continue;}
-    ctx.beginPath();f.Q.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));ctx.closePath();ctx.fillStyle=f.c;ctx.fill();ctx.strokeStyle=f.c;ctx.lineWidth=R;ctx.stroke();}
+  const R=Math.max(.5,10*st.round*st.S);
+  ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=R;
+  ctx.fillStyle=ctx.strokeStyle='#FFFFFF';ctx.fill(white);ctx.stroke(white);
+  if(hasPaper){const c='rgb('+mix(WHITE,PAPER,st.paper).join(',')+')';ctx.fillStyle=ctx.strokeStyle=c;ctx.fill(paper);ctx.stroke(paper);}
+  for(const f of paws){ctx.beginPath();f.Q.forEach((q,i)=>i?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1]));ctx.closePath();ctx.fillStyle=f.c;ctx.fill();}
+  for(const f of inks){const q=f.Q,m=(a,b)=>[(a[0]+b[0])/2,(a[1]+b[1])/2],A=m(q[0],q[3]),B=m(q[1],q[2]);
+    const w=Math.hypot(q[0][0]-q[3][0],q[0][1]-q[3][1]),len=Math.hypot(B[0]-A[0],B[1]-A[1])||1,ux=(B[0]-A[0])/len,uy=(B[1]-A[1])/len;
+    ctx.beginPath();ctx.moveTo(A[0]+ux*w/2,A[1]+uy*w/2);ctx.lineTo(B[0]-ux*w/2,B[1]-uy*w/2);ctx.strokeStyle=f.c;ctx.lineWidth=w;ctx.stroke();}
 }
 // ---------- timeline (seconds)
 const WV=()=>Math.min(W,H*0.6), S0=()=>WV()*0.44/1254, SEND=()=>Math.max(H*1.06/(D-24),W*1.06/(XR-HX));
@@ -174,7 +182,7 @@ function state(t){
 
 var bornAt=performance.now(), motionAt=0, booted=false, finished=false, raf=0;
 resize();build();draw(state(0));
-function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);root.classList.add('vb-out');setTimeout(done,320);}
+function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);document.documentElement.classList.remove('vb-splash');root.classList.add('vb-out');setTimeout(done,320);}
 function tick(now){
   var t=motionAt?.6+(now-motionAt)/1000:.6;
   draw(state(t));
