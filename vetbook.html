@@ -11,6 +11,10 @@ html.vb-splash,html.vb-splash body{background:#123F3A}
 #vb-splash.vb-out{opacity:0;pointer-events:none}
 html:not(.vb-splash) #vb-splash{display:none}
 html.vb-splash .shell{visibility:hidden}
+html.vb-reveal,html.vb-reveal body{background:#F3F5F1}
+@keyframes vbAppIn{0%{opacity:0;transform:translateY(16px)}100%{opacity:1;transform:none}}
+html.vb-reveal .shell{animation:vbAppIn .8s cubic-bezier(.4,0,.2,1) both}
+@media (prefers-reduced-motion:reduce){html.vb-reveal .shell{animation-name:none}}
 </style>
 
 <title>Vetbook Student</title>
@@ -151,7 +155,12 @@ function report(){if(!FPS||ft.length<5)return;var s=ft.slice().sort(function(a,b
   var d=document.createElement('div');d.textContent='splash (WebGL): '+ft.length+' frames · median '+med.toFixed(1)+' ms ('+Math.round(1000/med)+' fps) · late '+late;
   d.style.cssText='position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:2147483647;background:#16231F;color:#fff;font:13px/1.4 system-ui;padding:8px 10px;border-radius:10px';
   document.body.appendChild(d);setTimeout(function(){d.remove();},8000);}
-function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);report();document.documentElement.classList.remove('vb-splash');root.classList.add('vb-out');setTimeout(done,320);}
+function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);report();
+  // the last splash frame is a full-screen page in the app's paper colour: match the page background,
+  // drop the splash in the same frame (no visible change), then let the app fade up from the paper.
+  var h=document.documentElement;h.classList.add('vb-reveal');h.classList.remove('vb-splash');
+  if(root&&root.parentNode)root.parentNode.removeChild(root);
+  setTimeout(function(){h.classList.remove('vb-reveal');},1000);}
 var slow=0, MAXDPR=3;
 function tick(now){
   if(motionAt&&lastNow){var dt=now-lastNow;ft.push(dt);slow=dt>24?slow+1:0;
