@@ -56,7 +56,7 @@ html,body{margin:0;background:#DDE5DF;font-family:'IBM Plex Sans Thai',sans-seri
 window.__vbSplash=(function(){
 var root=document.getElementById('vb-splash'), cvs=document.getElementById('vb-splash-canvas');
 function done(){document.documentElement.classList.remove('vb-splash');if(root&&root.parentNode)root.parentNode.removeChild(root);}
-var gl=cvs&&cvs.getContext&&(cvs.getContext('webgl',{antialias:true,alpha:false,depth:true,premultipliedAlpha:false,powerPreference:'high-performance'})||cvs.getContext('experimental-webgl',{antialias:true,alpha:false}));
+var gl=cvs&&cvs.getContext&&(cvs.getContext('webgl',{antialias:true,alpha:false,depth:true,stencil:true,premultipliedAlpha:false,powerPreference:'high-performance'})||cvs.getContext('experimental-webgl',{antialias:true,alpha:false}));
 if(!root||!gl){done();return {boot:function(f){f();}};}
 try{
 var DX=-6.06, GS=1.0170, GX=-10.1, GY=-10.8;
@@ -72,27 +72,35 @@ function resample(pts,n){var L=[0],i;for(i=1;i<pts.length;i++)L.push(L[i-1]+Math
   var tot=L[L.length-1],o=[],j=1;for(i=0;i<n;i++){var d=tot*i/n;while(j<L.length-1&&L[j]<d)j++;var k=(d-L[j-1])/((L[j]-L[j-1])||1);
     o.push([pts[j-1][0]+(pts[j][0]-pts[j-1][0])*k,pts[j-1][1]+(pts[j][1]-pts[j-1][1])*k]);}return o;}
 function cat(){var o=[];for(var i=0;i<arguments.length;i++)o=o.concat(arguments[i]);return o;}
-// ---------- front view of the book (icon coordinates): spine strip x SX0..SX1, cover x CX0..967.8, both y 255..1020
-var SX0=362, SX1=414, CX0=410, BT=255, BB=1020;
-// spine: curl + left leg (outer/inner chains) -> thin strip
-var SEAM=628, CSEAM=626;                                       // where the V is split; 2 units of overlap so no hairline shows
-var spOutA=cat(arc(426.4,383,128,270,156,14), line([309.4,435.1],[546.6,967.8],20), arc(627,932,88,156,90,10), [P(SEAM,1020)]);
-var spOutB=cat(resample(cat(line([SX1,BT],[SX0+16,BT],6),quad([SX0+16,BT],[SX0,BT],[SX0,BT+16],6),[P(SX0,BT+16)]),14),
-  line([SX0,BT+16],[SX0,BB-16],20), resample(cat(quad([SX0,BB-16],[SX0,BB],[SX0+16,BB],6),line([SX0+16,BB],[SX1,BB],4),[P(SX1,BB)]),10), [P(SX1,BB)]);
-var spInA=cat(arc(426.4,335,48,270,90,14), resample(cat(line([426.4,383],[446.9,383],4),quad([446.9,383],[478.9,383],[491.9,412.2],8),line([491.9,412.2],[SEAM,715.6],20),[P(SEAM,715.6)]),20), line([SEAM,715.6],[SEAM,1020],10), [P(SEAM,1020)]);
-var spInB=cat(line([SX1,BT],[SX1,BT+48],14), line([SX1,BT+48],[SX1,1000],20), line([SX1,1000],[SX1,BB],10), [P(SX1,BB)]);
-// cover: right leg -> front cover (closed outline, matching segments)
-var cvA=cat(
-  line([807.1,383],[935.8,383],10), quad([935.8,383],[967.8,383],[954.7,412.2],6), line([954.7,412.2],[707.4,967.8],16),
-  arc(627,932,88,24,90,12), line([CSEAM,1020],[CSEAM,715.6],10),
-  resample(cat(line([CSEAM,715.6],[762.1,412.2],16),quad([762.1,412.2],[775.1,383],[807.1,383],6),[P(807.1,383)]),16));
-var cvB=cat(
-  line([CX0+4,BT],[935.8,BT],10), quad([935.8,BT],[967.8,BT],[967.8,BT+32],6), line([967.8,BT+32],[967.8,BB-32],16),
-  quad([967.8,BB-32],[967.8,BB],[935.8,BB],6), line([935.8,BB],[CX0+4,BB],6),
-  quad([CX0+4,BB],[CX0,BB],[CX0,BB-4],4), line([CX0,BB-4],[CX0,640],6),
-  line([CX0,640],[CX0,BT+4],12), quad([CX0,BT+4],[CX0,BT],[CX0+4,BT],4));
+// ---------- front view of the book (icon coordinates): spine x 298.4..SX1, cover CX0..967.8 (overlapping, no fold line), y BT..BB
+var SX1=414, CX0=410, BT=255, BB=1020, FX=430.4;   // no fold line: spine and cover read as one surface
+// The whole body (curl + both legs) is ONE outline that morphs through three keyframes:
+// K0 the icon, K1 the V notch closed (book seen at an angle), K2 the front of the book. Same point count in each.
+function rep(p,n){var o=[];for(var i=0;i<n;i++)o.push(P(p[0],p[1]));return o;}
+var K0=cat(arc(426.4,383,128,270,156,14), line([309.4,435.1],[546.6,967.8],20), arc(627,932,88,156,24,24),
+  line([707.4,967.8],[954.7,412.2],20), quad([954.7,412.2],[967.8,383],[935.8,383],6), line([935.8,383],[807.1,383],6),
+  quad([807.1,383],[775.1,383],[762.1,412.2],4), line([762.1,412.2],[627,715.6],12), line([627,715.6],[491.9,412.2],12),
+  quad([491.9,412.2],[478.9,383],[446.9,383],4), line([446.9,383],[426.4,383],2), arc(426.4,335,48,90,270,10), line([426.4,287],[426.4,255],2));
+var K2=cat(cat(line([FX,BT],[426.4,BT],2),arc(426.4,383,128,270,180,12)),   // front of the book: same left corners as K1
+  line([298.4,383],[298.4,920],20),
+  cat(quad([298.4,920],[298.4,BB],[398.4,BB],8),line([398.4,BB],[917.8,BB],8),quad([917.8,BB],[967.8,BB],[967.8,970],8)),
+  line([967.8,970],[967.8,BT+32],20), quad([967.8,BT+32],[967.8,BT],[935.8,BT],6), line([935.8,BT],[860,BT],6),
+  line([860,BT],[820,BT],4), line([820,BT],[FX,BT],12), rep([FX,BT],12+4+2+10+2));
+// K1: the V swells into a rounded block under the untouched top (curl + back cover + pages), like the icon's own book
+var J=106;                                                     // inner corner of the V = top of the fold line
+var K1=cat(arc(426.4,383,128,270,180,14), line([298.4,383],[298.4,920],20),
+  cat(quad([298.4,920],[298.4,1020],[398.4,1020],8),line([398.4,1020],[917.8,1020],8),quad([917.8,1020],[967.8,1020],[967.8,970],8)),
+  line([967.8,970],[967.8,415],20), quad([967.8,415],[967.8,383],[935.8,383],6), line([935.8,383],[807.1,383],6),
+  line([807.1,383],[762,383],4), line([762,383],[560,383],12), line([560,383],[480,383],12), line([480,383],[446,383],4),
+  line([446,383],[426.4,383],2), arc(426.4,335,48,90,270,10), line([426.4,287],[426.4,255],2));
+function smooth(Q,w){var n=Q.length,it,i;   // round joints while moving; the back-cover/spine joint stays put
+  for(it=0;w>0.001&&it<4;it++){var o=[];for(i=0;i<n;i++){var p=Q[(i-1+n)%n],q=Q[i],r=Q[(i+1)%n],k=(i<3||i>=n-3)?0:w;
+    o.push([q[0]+k*((p[0]+r[0])/2-q[0]),q[1]+k*((p[1]+r[1])/2-q[1])]);}Q=o;}
+  return Q;}
+function bodyAt(m1,m2){return m2>0?smooth(lerpL(K1,K2,m2),0.5*Math.sin(Math.PI*m2)):smooth(lerpL(K0,K1,m1),0.5*Math.sin(Math.PI*m1));}
+var spine=cat(line([SX1,BT],[426.4,BT],1),arc(426.4,383,128,270,180,12),line([298.4,383],[298.4,920],2),quad([298.4,920],[298.4,BB],[398.4,BB],8),line([398.4,BB],[SX1,BB],1),[P(SX1,BB)]);
+var cover=cat(line([CX0,BT],[935.8,BT],4),quad([935.8,BT],[967.8,BT],[967.8,BT+32],8),line([967.8,BT+32],[967.8,970],2),quad([967.8,970],[967.8,BB],[917.8,BB],8),line([917.8,BB],[CX0,BB],4),line([CX0,BB],[CX0,BT],4));
 function centroid(Q){var x=0,y=0;for(var i=0;i<Q.length;i++){x+=Q[i][0];y+=Q[i][1];}return [x/Q.length,y/Q.length];}
-var cvCA=centroid(cvA), cvCB=centroid(cvB);
 var HX=MX(CX0);                                                  // the hinge: the cover's left edge
 // static shapes
 var lid=cat(line([425.4,255],[951.8,255],8),arc(951.8,271,16,-90,90,8),line([951.8,287],[425.4,287],8),[P(425.4,287)]);
@@ -110,6 +118,7 @@ function strip(A,O,I,z,part,tone){for(var i=0;i<O.length-1;i++){push(A,O[i],z,pa
 var S=[];
 fan(S,lid,centroid(lid),-30,6,0); fan(S,pageLine,centroid(pageLine),-30,6,0);
 var nLines=S.length/5;
+fan(S,spine,centroid(spine),-1,0,0); fan(S,cover,centroid(cover),0,1,0);      // the closed book, once the morph lands
 for(var k=0;k<3;k++)fan(S,sheet,centroid(sheet),-10-2*k,2+k,2);    // pages are paper-coloured, so the white cover reads as it turns
 fan(S,sheet,centroid(sheet),-20,5,2);
 var nStatic=S.length/5;
@@ -131,7 +140,7 @@ gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,
  // with its angle, and a faint gutter shadow along the spine. All of it fades out before the page fills the screen.
  'float lift(float a,float id){if(a<0.001||a>3.14)return 0.0;float e=uW*cos(a);bool under=e>=0.0?vPart>id+0.5:vPart<id-0.5;'+
  ' float x=e>=0.0?vDx:-vDx;if(!under||x<0.0)return 0.0;float k=abs(e);return sin(a)*(1.0-smoothstep(k,k+uW*0.12,x));}'+
- 'void main(){vec3 c=vec3(1.0);if(vTone>2.5)c=mix(c,uSoft,uSpine);else if(vTone>1.5)c=mix(c,uPaperCol,uPaper);else if(vTone>0.5)c=uSoft;'+
+ 'void main(){vec3 c=vec3(1.0);if(vTone>3.5)c=uInk;else if(vTone>2.5)c=mix(c,uSoft,uSpine);else if(vTone>1.5)c=mix(c,uPaperCol,uPaper);else if(vTone>0.5)c=uSoft;'+
  ' if(vPart<5.5&&uShade>0.0){float d=max(max(lift(uAng.x,1.0),lift(uAng.y,2.0)),max(lift(uAng.z,3.0),lift(uAng.w,4.0)))*0.10;'+
  '  d=max(d,vLeaf*0.06);d=1.0-(1.0-d)*(1.0-0.08*exp(-abs(vDx)/(uW*0.05)));c=mix(c,uInk,d*uShade);}'+
  ' gl_FragColor=vec4(c,1.0);}'));
@@ -141,11 +150,16 @@ var la=gl.getAttribLocation(prog,'aPos'),lp=gl.getAttribLocation(prog,'aPart'),l
 gl.enableVertexAttribArray(la);gl.enableVertexAttribArray(lp);gl.enableVertexAttribArray(lt);
 function bindAttrs(b){gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.vertexAttribPointer(la,3,gl.FLOAT,false,20,0);gl.vertexAttribPointer(lp,1,gl.FLOAT,false,20,12);gl.vertexAttribPointer(lt,1,gl.FLOAT,false,20,16);}
 var sbuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(S),gl.STATIC_DRAW);
-var dbuf=gl.createBuffer(), dynM=-1, nDyn=0;
-function buildDyn(m){var D=[];
-  strip(D,lerpL(spOutA,spOutB,m),lerpL(spInA,spInB,m),-40,7,3);
-  var Q=lerpL(cvA,cvB,m);fan(D,Q,[cvCA[0]+(cvCB[0]-cvCA[0])*m,cvCA[1]+(cvCB[1]-cvCA[1])*m],0,1,0);
-  gl.bindBuffer(gl.ARRAY_BUFFER,dbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(D),gl.DYNAMIC_DRAW);nDyn=D.length/5;dynM=m;}
+var dbuf=gl.createBuffer(), dynM=-1, nFan=0;
+function buildDyn(m1,m2){var D=[],Q=bodyAt(m1,m2),i,x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,m=m2;
+  for(i=1;i<Q.length-1;i++){push(D,Q[0],-20,0,0);push(D,Q[i],-20,0,0);push(D,Q[i+1],-20,0,0);}   // stencil fan (even-odd fill: any outline works)
+  nFan=D.length/5;
+  Q.forEach(function(p){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);});
+  [[x0,y0],[x1,y0],[x1,y1],[x0,y0],[x1,y1],[x0,y1]].forEach(function(p){push(D,p,-20,0,0);});
+  // fold line between spine and cover: grows up from the tip of the V and ends as the hairline gap beside the spine
+  var top=Q[J], bot=P(560+(FX-560)*m,BB+12), w=(CX0-SX1)*GS*clamp((m-.3)/.45,0,1)/2, dx=top[0]-bot[0], dy=top[1]-bot[1], l=Math.hypot(dx,dy)||1, nx=-dy/l*w, ny=dx/l*w;
+  [[bot[0]-nx,bot[1]-ny],[bot[0]+nx,bot[1]+ny],[top[0]+nx,top[1]+ny],[bot[0]-nx,bot[1]-ny],[top[0]+nx,top[1]+ny],[top[0]-nx,top[1]-ny]].forEach(function(p){push(D,p,-19,0,4);});
+  gl.bindBuffer(gl.ARRAY_BUFFER,dbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(D),gl.DYNAMIC_DRAW);dynM=m1+2*m2;}
 var u={};['uCover','uHX','uS','uLine','uSheet','uT','uRes','uPaper','uSpine','uSoft','uPaperCol','uShade','uW','uInk','uAng'].forEach(function(n){u[n]=gl.getUniformLocation(prog,n);});
 gl.uniform1f(u.uHX,HX);gl.uniform1f(u.uW,MX(967.8)-HX);gl.uniform3f(u.uInk,18/255,63/255,58/255);
 gl.uniform3f(u.uSoft,228/255,236/255,232/255);
@@ -159,33 +173,38 @@ function resize(){DPR=Math.min(MAXDPR,window.devicePixelRatio||1);W=window.inner
 function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
 function seg(t,a,b){return clamp((t-a)/(b-a),0,1);}
 function io(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
-var END=2.6;
+var END=2.85;
 function frame(t){
-  var m=io(seg(t,.1,.9));                                   // the book turns to face the viewer
-  if(m!==dynM)buildDyn(m);
-  gl.uniform1f(u.uSpine,m);                                 // spine softens to a strip
+  // 1) the V swells into a rounded block under the untouched top  2) the top folds back into the front of the book
+  var m1=io(seg(t,.1,.65)), m2=io(seg(t,.65,1.2)), m=m2;
+  if(m<1&&m1+2*m2!==dynM)buildDyn(m1,m2);
   // the top lines are the top of the book seen from above: as the book turns to face us they fold away,
   // flattening toward the top edge (y 255) while the cover's top edge rises to meet them. Their left end stays
   // locked to the head of the spine, so the outline never breaks.
-  var L=425.4+(SX1-425.4)*m, Rr=967.8-32*m;
+  var L=425.4+(FX-425.4)*m-8*Math.min(1,m*4), Rr=967.8-32*m;                // lid tucks 8 units under the spine head: no seam
   gl.uniform4f(u.uLine,MX(L),(Rr-L)/(967.8-425.4),MY(255),1-m);
-  var cov=io(seg(t,.9,1.6));
-  var a1=io(seg(t,1.02,1.72))*Math.PI, a2=io(seg(t,1.12,1.82))*Math.PI, a3=io(seg(t,1.22,1.92))*Math.PI;
+  var cov=io(seg(t,1.2,1.9));
+  var a1=io(seg(t,1.32,2.02))*Math.PI, a2=io(seg(t,1.42,2.12))*Math.PI, a3=io(seg(t,1.52,2.22))*Math.PI;
   gl.uniform1f(u.uCover,cov*Math.PI);
   gl.uniform3f(u.uSheet,a1,a2,a3);
   gl.uniform4f(u.uAng,cov*Math.PI,a1,a2,a3);
-  gl.uniform1f(u.uShade,seg(t,.88,1.0)*(1-seg(t,1.95,2.35)));
+  gl.uniform1f(u.uShade,seg(t,1.18,1.3)*(1-seg(t,2.25,2.62)));
   var S0=Math.min(W,H*0.6)*0.44/1254, SEND=Math.max(H*1.04/PH,W*1.04/PW);
   var z=io(seg(t,.3,END)), sc=S0*Math.pow(SEND/S0,z), w=(sc-S0)/(SEND-S0);
   var fx=ICX+(HX-ICX)*cov, fy=ICY+(PCY-ICY)*cov;            // framing: icon -> open spread -> right page
   gl.uniform1f(u.uS,sc);
   gl.uniform2f(u.uT,-(fx+(PCX-fx)*w),-(fy+(PCY-fy)*w));
   gl.uniform1f(u.uPaper,1);
-  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT|gl.STENCIL_BUFFER_BIT);
   bindAttrs(sbuf);
-  if(m<1)gl.drawArrays(gl.TRIANGLES,0,nLines);              // top lines exist only until the cover hides them
-  if(m>.995)gl.drawArrays(gl.TRIANGLES,nLines,nStatic-nLines); // sheets + right page wait under the closed cover
-  bindAttrs(dbuf);gl.drawArrays(gl.TRIANGLES,0,nDyn);
+  if(m>=1){gl.drawArrays(gl.TRIANGLES,nLines,nStatic-nLines);return;}   // closed book + sheets + right page
+  gl.drawArrays(gl.TRIANGLES,0,nLines);                     // top lines fold away behind the body
+  bindAttrs(dbuf);
+  gl.enable(gl.STENCIL_TEST);gl.colorMask(false,false,false,false);gl.depthMask(false);
+  gl.stencilFunc(gl.ALWAYS,0,255);gl.stencilOp(gl.KEEP,gl.KEEP,gl.INVERT);gl.drawArrays(gl.TRIANGLES,0,nFan);
+  gl.colorMask(true,true,true,true);gl.depthMask(true);
+  gl.stencilFunc(gl.NOTEQUAL,0,255);gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);gl.drawArrays(gl.TRIANGLES,nFan,6);
+  gl.disable(gl.STENCIL_TEST);
 }
 resize();frame(0);
 var bornAt=performance.now(), motionAt=0, booted=false, finished=false, raf=0;
@@ -211,7 +230,7 @@ function tick(now){
   raf=requestAnimationFrame(tick);
 }
 window.__vbSplashSeek=function(t){frame(t);};
-window.__vbSplashInfo=function(){return {dpr:DPR,stat:nStatic,dyn:nDyn};};
+window.__vbSplashInfo=function(){return {dpr:DPR,stat:nStatic,k:[K0.length,K1.length,K2.length]};};
 window.addEventListener('resize',function(){resize();});
 root.addEventListener('click',function(){if(booted)finish();});
 setTimeout(function(){if(!booted)done();},6000);
