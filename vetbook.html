@@ -45,114 +45,153 @@ html,body{margin:0;background:#DDE5DF;font-family:'IBM Plex Sans Thai',sans-seri
 </style>
 </head>
 <body>
-<div id="vb-splash" aria-hidden="true"><canvas id="vb-splash-canvas"></canvas><svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <path id="vbs-pBody" d="M 426.4 255.0 A 128.0 128.0 0 0 0 309.4 435.1 L 546.6 967.8 A 88.0 88.0 0 0 0 707.4 967.8 L 954.7 412.2 Q 967.8 383.0 935.8 383.0 L 807.1 383.0 Q 775.1 383.0 762.1 412.2 L 627.0 715.6 L 491.9 412.2 Q 478.9 383.0 446.9 383.0 L 426.4 383.0 A 48.0 48.0 0 1 1 426.4 287.0 Z"></path>
-  <path id="vbs-pLid" d="M 425.4 255.0 L 951.8 255.0 A 16 16 0 0 1 951.8 287.0 L 425.4 287.0 Z"></path>
-  <path id="vbs-pPage" d="M 426.4 319.0 L 951.8 319.0 A 16 16 0 0 1 951.8 351.0 L 426.4 351.0 A 16 16 0 0 1 426.4 319.0 Z"></path>
-</svg></div>
+<div id="vb-splash" aria-hidden="true"><canvas id="vb-splash-canvas"></canvas></div>
 <script>
-/* Vetbook launch splash (WebGL): the icon is a 3D model; it turns top-toward-camera while the book opens,
-   the camera flies into the right page until it fills the screen, then the splash fades to reveal the app. */
+/* Vetbook launch splash — flat 2D motion (drawn with WebGL only because it is the fastest canvas on phones).
+   Icon anatomy: a standing book seen from slightly above at an angle. Left leg of the V = spine,
+   right leg = front cover, top lines = pages + back cover seen from above.
+   1) the book turns to face the viewer: the cover straightens and widens, the spine straightens into a thin soft strip,
+      the top lines slip behind the cover, 2) the cover flips open to the left (flat card flip) and a few sheets follow,
+   3) the view zooms into the right page until it fills the screen, 4) the page takes the app's paper colour and the app fades up. */
 window.__vbSplash=(function(){
 var root=document.getElementById('vb-splash'), cvs=document.getElementById('vb-splash-canvas');
 function done(){document.documentElement.classList.remove('vb-splash');if(root&&root.parentNode)root.parentNode.removeChild(root);}
 var gl=cvs&&cvs.getContext&&(cvs.getContext('webgl',{antialias:true,alpha:false,depth:true,premultipliedAlpha:false,powerPreference:'high-performance'})||cvs.getContext('experimental-webgl',{antialias:true,alpha:false}));
 if(!root||!gl){done();return {boot:function(f){f();}};}
 try{
-var DX=-6.06, OX=426.35, TOP=255.00, U=32.00, XE=951.76, PY=335.00, D=700;
-var GS=1.0170, GX=-10.1, GY=-10.8;
+var DX=-6.06, GS=1.0170, GX=-10.1, GY=-10.8;
 function MX(x){return GX+GS*(x+DX)-627;} function MY(y){return 627-(GY+GS*y);}
-var HX=MX(OX), HY=MY(TOP), YPT=MY(PY-16), XR=MX(XE+16);
+function P(x,y){return [MX(x),MY(y)];}
 var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-// ---------- geometry -> triangles (built once)
-function sample(id,step){var p=document.getElementById('vbs-'+id),L=p.getTotalLength(),n=Math.max(12,Math.round(L/step)),raw=[],i;
-  for(i=0;i<n;i++){var q=p.getPointAtLength(L*i/n);raw.push([MX(q.x),MY(q.y)]);}
-  var out=[];for(i=0;i<raw.length;i++){var a=raw[(i-1+raw.length)%raw.length],b=raw[i],c=raw[(i+1)%raw.length];
-    var cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]),l=Math.hypot(b[0]-a[0],b[1]-a[1])*Math.hypot(c[0]-b[0],c[1]-b[1])||1;
-    if(Math.abs(cr)/l>0.004)out.push(b);}
-  return out.length>8?out:raw;}
-function area(P){var s=0;for(var i=0;i<P.length;i++){var j=(i+1)%P.length;s+=P[i][0]*P[j][1]-P[j][0]*P[i][1];}return s/2;}
-function earcut(P){ // simple ear clipping for a simple polygon; returns index triples
-  var idx=[],i;for(i=0;i<P.length;i++)idx.push(i); if(area(P)<0)idx.reverse();
-  var tris=[],guard=0;
-  function inside(p,a,b,c){function s(p1,p2,p3){return (p1[0]-p3[0])*(p2[1]-p3[1])-(p2[0]-p3[0])*(p1[1]-p3[1]);}
-    var d1=s(p,a,b),d2=s(p,b,c),d3=s(p,c,a);return !((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0));}
-  while(idx.length>3&&guard++<20000){var ear=false;
-    for(i=0;i<idx.length;i++){var ia=idx[(i-1+idx.length)%idx.length],ib=idx[i],ic=idx[(i+1)%idx.length],a=P[ia],b=P[ib],c=P[ic];
-      if((b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])<=1e-9)continue;
-      var ok=true;for(var k=0;k<idx.length;k++){var ik=idx[k];if(ik===ia||ik===ib||ik===ic)continue;if(inside(P[ik],a,b,c)){ok=false;break;}}
-      if(!ok)continue;tris.push(ia,ib,ic);idx.splice(i,1);ear=true;break;}
-    if(!ear){idx.splice(0,1);} }
-  if(idx.length===3)tris.push(idx[0],idx[1],idx[2]);
-  return tris;}
-var V=[]; // x,y,z,part,paper
-function tri(a,b,c,part,paper){V.push(a[0],a[1],a[2],part,paper,b[0],b[1],b[2],part,paper,c[0],c[1],c[2],part,paper);}
-function prism(P,z0,z1,part,paper){var t=earcut(P),i;
-  for(i=0;i<t.length;i+=3){var a=P[t[i]],b=P[t[i+1]],c=P[t[i+2]];
-    tri([a[0],a[1],z0],[b[0],b[1],z0],[c[0],c[1],z0],part,paper);tri([a[0],a[1],z1],[b[0],b[1],z1],[c[0],c[1],z1],part,paper);}
-  for(i=0;i<P.length;i++){var p=P[i],q=P[(i+1)%P.length];
-    tri([p[0],p[1],z0],[q[0],q[1],z0],[q[0],q[1],z1],part,paper);tri([p[0],p[1],z0],[q[0],q[1],z1],[p[0],p[1],z1],part,paper);}}
-prism(sample('pBody',8),0,-D,0,0);
-prism(sample('pPage',10),-12,-D+12,0,1);
-for(var s=0;s<3;s++)prism([[HX,YPT],[XR-6-s*6,YPT],[XR-6-s*6,YPT+2.5],[HX,YPT+2.5]],-16-s*4,-D+16+s*4,2+s,1);
-prism(sample('pLid',10),0,-D,1,0);
-var nVert=V.length/5;
+var R=Math.PI/180;
+// ---------- 2D helpers (icon coordinates in, model coordinates out)
+function line(a,b,n){var o=[];for(var i=0;i<n;i++){var k=i/n;o.push(P(a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k));}return o;}
+function arc(cx,cy,r,a0,a1,n){var o=[];for(var i=0;i<n;i++){var a=(a0+(a1-a0)*i/n)*R;o.push(P(cx+r*Math.cos(a),cy+r*Math.sin(a)));}return o;}
+function quad(a,c,b,n){var o=[];for(var i=0;i<n;i++){var k=i/n,j=1-k;o.push(P(j*j*a[0]+2*j*k*c[0]+k*k*b[0],j*j*a[1]+2*j*k*c[1]+k*k*b[1]));}return o;}
+function resample(pts,n){var L=[0],i;for(i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
+  var tot=L[L.length-1],o=[],j=1;for(i=0;i<n;i++){var d=tot*i/n;while(j<L.length-1&&L[j]<d)j++;var k=(d-L[j-1])/((L[j]-L[j-1])||1);
+    o.push([pts[j-1][0]+(pts[j][0]-pts[j-1][0])*k,pts[j-1][1]+(pts[j][1]-pts[j-1][1])*k]);}return o;}
+function cat(){var o=[];for(var i=0;i<arguments.length;i++)o=o.concat(arguments[i]);return o;}
+// ---------- front view of the book (icon coordinates): spine strip x SX0..SX1, cover x CX0..967.8, both y 255..1020
+var SX0=362, SX1=414, CX0=410, BT=255, BB=1020;
+// spine: curl + left leg (outer/inner chains) -> thin strip
+var SEAM=628, CSEAM=626;                                       // where the V is split; 2 units of overlap so no hairline shows
+var spOutA=cat(arc(426.4,383,128,270,156,14), line([309.4,435.1],[546.6,967.8],20), arc(627,932,88,156,90,10), [P(SEAM,1020)]);
+var spOutB=cat(resample(cat(line([SX1,BT],[SX0+16,BT],6),quad([SX0+16,BT],[SX0,BT],[SX0,BT+16],6),[P(SX0,BT+16)]),14),
+  line([SX0,BT+16],[SX0,BB-16],20), resample(cat(quad([SX0,BB-16],[SX0,BB],[SX0+16,BB],6),line([SX0+16,BB],[SX1,BB],4),[P(SX1,BB)]),10), [P(SX1,BB)]);
+var spInA=cat(arc(426.4,335,48,270,90,14), resample(cat(line([426.4,383],[446.9,383],4),quad([446.9,383],[478.9,383],[491.9,412.2],8),line([491.9,412.2],[SEAM,715.6],20),[P(SEAM,715.6)]),20), line([SEAM,715.6],[SEAM,1020],10), [P(SEAM,1020)]);
+var spInB=cat(line([SX1,BT],[SX1,BT+48],14), line([SX1,BT+48],[SX1,1000],20), line([SX1,1000],[SX1,BB],10), [P(SX1,BB)]);
+// cover: right leg -> front cover (closed outline, matching segments)
+var cvA=cat(
+  line([807.1,383],[935.8,383],10), quad([935.8,383],[967.8,383],[954.7,412.2],6), line([954.7,412.2],[707.4,967.8],16),
+  arc(627,932,88,24,90,12), line([CSEAM,1020],[CSEAM,715.6],10),
+  resample(cat(line([CSEAM,715.6],[762.1,412.2],16),quad([762.1,412.2],[775.1,383],[807.1,383],6),[P(807.1,383)]),16));
+var cvB=cat(
+  line([CX0+4,BT],[935.8,BT],10), quad([935.8,BT],[967.8,BT],[967.8,BT+32],6), line([967.8,BT+32],[967.8,BB-32],16),
+  quad([967.8,BB-32],[967.8,BB],[935.8,BB],6), line([935.8,BB],[CX0+4,BB],6),
+  quad([CX0+4,BB],[CX0,BB],[CX0,BB-4],4), line([CX0,BB-4],[CX0,640],6),
+  line([CX0,640],[CX0,BT+4],12), quad([CX0,BT+4],[CX0,BT],[CX0+4,BT],4));
+function centroid(Q){var x=0,y=0;for(var i=0;i<Q.length;i++){x+=Q[i][0];y+=Q[i][1];}return [x/Q.length,y/Q.length];}
+var cvCA=centroid(cvA), cvCB=centroid(cvB);
+var HX=MX(CX0);                                                  // the hinge: the cover's left edge
+// static shapes
+var lid=cat(line([425.4,255],[951.8,255],8),arc(951.8,271,16,-90,90,8),line([951.8,287],[425.4,287],8),[P(425.4,287)]);
+var pageLine=cat(line([426.4,319],[951.8,319],8),arc(951.8,335,16,-90,90,8),line([951.8,351],[426.4,351],8),arc(426.4,335,16,90,270,8));
+var PX0=CX0, PX1=955.8, PY0=BT+8, PY1=BB-8;                       // sheets + right page sit just inside the cover
+var sheet=cat(line([PX0,PY0],[PX1-16,PY0],8),quad([PX1-16,PY0],[PX1,PY0],[PX1,PY0+16],4),line([PX1,PY0+16],[PX1,PY1-16],8),quad([PX1,PY1-16],[PX1,PY1],[PX1-16,PY1],4),line([PX1-16,PY1],[PX0,PY1],8),line([PX0,PY1],[PX0,PY0],8));
+var PCX=(MX(PX0)+MX(PX1))/2, PCY=(MY(PY0)+MY(PY1))/2, PW=MX(PX1)-MX(PX0), PH=MY(PY0)-MY(PY1);
+var ICX=MX(627), ICY=MY(627), LX0=MX(425.4), LY0=MY(255);
+// ---------- vertex builders: x,y,z(layer),part,tone
+// parts: 1 cover, 2..4 sheets, 5 right page, 6 top lines, 7 spine     tones: 0 white, 1 soft, 2 paper, 3 spine (white->soft)
+function push(A,p,z,part,tone){A.push(p[0],p[1],z,part,tone);}
+function fan(A,Q,c,z,part,tone){for(var i=0;i<Q.length;i++){var j=(i+1)%Q.length;push(A,c,z,part,tone);push(A,Q[i],z,part,tone);push(A,Q[j],z,part,tone);}}
+function strip(A,O,I,z,part,tone){for(var i=0;i<O.length-1;i++){push(A,O[i],z,part,tone);push(A,O[i+1],z,part,tone);push(A,I[i+1],z,part,tone);
+  push(A,O[i],z,part,tone);push(A,I[i+1],z,part,tone);push(A,I[i],z,part,tone);}}
+var S=[];
+fan(S,lid,centroid(lid),-30,6,0); fan(S,pageLine,centroid(pageLine),-30,6,0);
+var nLines=S.length/5;
+for(var k=0;k<3;k++)fan(S,sheet,centroid(sheet),-10-2*k,2+k,2);    // pages are paper-coloured, so the white cover reads as it turns
+fan(S,sheet,centroid(sheet),-20,5,2);
+var nStatic=S.length/5;
+function lerpL(A,B,m){var o=new Array(A.length);for(var i=0;i<A.length;i++)o[i]=[A[i][0]+(B[i][0]-A[i][0])*m,A[i][1]+(B[i][1]-A[i][1])*m];return o;}
 // ---------- GL program
 function sh(type,src){var o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o;}
 var prog=gl.createProgram();
 gl.attachShader(prog,sh(gl.VERTEX_SHADER,
- 'attribute vec3 aPos;attribute float aPart;attribute float aPaper;'+
- 'uniform float uRot,uCover,uCam,uS,uD;uniform vec3 uSheet,uSheetHy;uniform vec2 uHinge,uT,uRes;varying float vPaper;'+
- 'vec2 rz(vec2 p,vec2 c,float a){p-=c;float s=sin(a),k=cos(a);return c+vec2(p.x*k-p.y*s,p.x*s+p.y*k);}'+
- 'void main(){vec3 p=aPos;'+
- ' if(aPart>0.5&&aPart<1.5)p.xy=rz(p.xy,uHinge,uCover);'+
- ' else if(aPart>1.5){float k=aPart-2.0;float an=k<0.5?uSheet.x:(k<1.5?uSheet.y:uSheet.z);float hy=k<0.5?uSheetHy.x:(k<1.5?uSheetHy.y:uSheetHy.z);p.xy=rz(p.xy,vec2(uHinge.x,hy),an);}'+
- ' float zc=p.z+uD*0.5;float c=cos(uRot),s=sin(uRot);'+
- ' vec3 q=vec3(p.x+uT.x,p.y*c-zc*s+uT.y,p.y*s+zc*c);'+
- ' float f=uCam/(uCam-q.z);vec2 scr=q.xy*uS*f;'+
- ' gl_Position=vec4(scr/(uRes*0.5),-q.z/4000.0,1.0);vPaper=aPaper;}'));
+ 'attribute vec3 aPos;attribute float aPart;attribute float aTone;'+
+ 'uniform float uCover,uHX,uS;uniform vec3 uSheet;uniform vec4 uLine;uniform vec2 uT,uRes;varying float vTone,vDx,vPart,vLeaf;'+
+ 'void main(){vec3 p=aPos;float an=0.0,tone=aTone;'+
+ ' if(aPart>0.5&&aPart<1.5)an=uCover;else if(aPart>1.5&&aPart<2.5)an=uSheet.x;else if(aPart>2.5&&aPart<3.5)an=uSheet.y;else if(aPart>3.5&&aPart<4.5)an=uSheet.z;'+
+ ' if(aPart>5.5&&aPart<6.5)p.xy=vec2(uLine.x+(p.x-('+LX0.toFixed(3)+'))*uLine.y,uLine.z+(p.y-('+LY0.toFixed(3)+'))*uLine.w);'+
+ ' vLeaf=0.0;if(an>0.0){float dx=p.x-uHX,c=cos(an),s=sin(an);p.z=dx*s+p.z*c;p.x=uHX+dx*c;if(aPart<1.5&&c<0.0)tone=1.0;vLeaf=s;}'+   // flat card flip; z only orders layers
+ ' gl_Position=vec4((p.xy+uT)*uS/(uRes*0.5),-p.z/4000.0,1.0);vTone=tone;vDx=p.x-uHX;vPart=aPart;}'));
 gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,
- 'precision mediump float;uniform float uPaper;uniform vec3 uPaperCol;varying float vPaper;'+
- 'void main(){gl_FragColor=vec4(mix(vec3(1.0),uPaperCol,uPaper*vPaper),1.0);}'));
+ 'precision mediump float;uniform float uPaper,uSpine,uShade,uW;uniform vec3 uSoft,uPaperCol,uInk;uniform vec4 uAng;varying float vTone,vDx,vPart,vLeaf;'+
+ // paper feel while the book opens: a soft shadow under the leaf that is turning, the turning leaf dims a little
+ // with its angle, and a faint gutter shadow along the spine. All of it fades out before the page fills the screen.
+ 'float lift(float a,float id){if(a<0.001||a>3.14)return 0.0;float e=uW*cos(a);bool under=e>=0.0?vPart>id+0.5:vPart<id-0.5;'+
+ ' float x=e>=0.0?vDx:-vDx;if(!under||x<0.0)return 0.0;float k=abs(e);return sin(a)*(1.0-smoothstep(k,k+uW*0.12,x));}'+
+ 'void main(){vec3 c=vec3(1.0);if(vTone>2.5)c=mix(c,uSoft,uSpine);else if(vTone>1.5)c=mix(c,uPaperCol,uPaper);else if(vTone>0.5)c=uSoft;'+
+ ' if(vPart<5.5&&uShade>0.0){float d=max(max(lift(uAng.x,1.0),lift(uAng.y,2.0)),max(lift(uAng.z,3.0),lift(uAng.w,4.0)))*0.10;'+
+ '  d=max(d,vLeaf*0.06);d=1.0-(1.0-d)*(1.0-0.08*exp(-abs(vDx)/(uW*0.05)));c=mix(c,uInk,d*uShade);}'+
+ ' gl_FragColor=vec4(c,1.0);}'));
 gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));
 gl.useProgram(prog);
-var buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(V),gl.STATIC_DRAW);
-function attr(n,size,off){var l=gl.getAttribLocation(prog,n);gl.enableVertexAttribArray(l);gl.vertexAttribPointer(l,size,gl.FLOAT,false,20,off);}
-attr('aPos',3,0);attr('aPart',1,12);attr('aPaper',1,16);
-var u={};['uRot','uCover','uCam','uS','uD','uSheet','uSheetHy','uHinge','uT','uRes','uPaper','uPaperCol'].forEach(function(n){u[n]=gl.getUniformLocation(prog,n);});
-gl.uniform1f(u.uD,D);gl.uniform2f(u.uHinge,HX,HY);
-gl.uniform3f(u.uSheetHy,(YPT+HY+U+8)/2,(YPT+HY+U+14)/2,(YPT+HY+U+20)/2);
+var la=gl.getAttribLocation(prog,'aPos'),lp=gl.getAttribLocation(prog,'aPart'),lt=gl.getAttribLocation(prog,'aTone');
+gl.enableVertexAttribArray(la);gl.enableVertexAttribArray(lp);gl.enableVertexAttribArray(lt);
+function bindAttrs(b){gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.vertexAttribPointer(la,3,gl.FLOAT,false,20,0);gl.vertexAttribPointer(lp,1,gl.FLOAT,false,20,12);gl.vertexAttribPointer(lt,1,gl.FLOAT,false,20,16);}
+var sbuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(S),gl.STATIC_DRAW);
+var dbuf=gl.createBuffer(), dynM=-1, nDyn=0;
+function buildDyn(m){var D=[];
+  strip(D,lerpL(spOutA,spOutB,m),lerpL(spInA,spInB,m),-40,7,3);
+  var Q=lerpL(cvA,cvB,m);fan(D,Q,[cvCA[0]+(cvCB[0]-cvCA[0])*m,cvCA[1]+(cvCB[1]-cvCA[1])*m],0,1,0);
+  gl.bindBuffer(gl.ARRAY_BUFFER,dbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(D),gl.DYNAMIC_DRAW);nDyn=D.length/5;dynM=m;}
+var u={};['uCover','uHX','uS','uLine','uSheet','uT','uRes','uPaper','uSpine','uSoft','uPaperCol','uShade','uW','uInk','uAng'].forEach(function(n){u[n]=gl.getUniformLocation(prog,n);});
+gl.uniform1f(u.uHX,HX);gl.uniform1f(u.uW,MX(967.8)-HX);gl.uniform3f(u.uInk,18/255,63/255,58/255);
+gl.uniform3f(u.uSoft,228/255,236/255,232/255);
 gl.uniform3f(u.uPaperCol,243/255,245/255,241/255);
 gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.clearColor(18/255,63/255,58/255,1);
 // ---------- sizing
-var W,H,DPR;
-function resize(){DPR=Math.min(typeof MAXDPR==='number'?MAXDPR:3,window.devicePixelRatio||1);W=window.innerWidth;H=window.innerHeight;
+var W,H,DPR,MAXDPR=3;
+function resize(){DPR=Math.min(MAXDPR,window.devicePixelRatio||1);W=window.innerWidth;H=window.innerHeight;
   cvs.width=Math.round(W*DPR);cvs.height=Math.round(H*DPR);gl.viewport(0,0,cvs.width,cvs.height);gl.uniform2f(u.uRes,W,H);}
-// ---------- timeline
+// ---------- timeline (seconds from the start of motion)
 function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
 function seg(t,a,b){return clamp((t-a)/(b-a),0,1);}
 function io(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
-function sine(t){return -(Math.cos(Math.PI*t)-1)/2;}
-function quart(t){return 1-Math.pow(1-t,4);}
-var END=2.5;
+var END=2.6;
 function frame(t){
-  var pr=sine(seg(t,.6,2.0)), kk=Math.sin(Math.PI*pr);
-  var S0=Math.min(W,H*0.6)*0.44/1254, SEND=Math.max(H*1.04/(D-24),W*1.04/(XR-HX));
-  var z=io(seg(t,.6,END));                                  // one continuous fly-in to the right page
-  gl.uniform1f(u.uRot,pr*Math.PI/2);
-  gl.uniform1f(u.uCover,quart(seg(t,.75,1.75))*Math.PI);
-  gl.uniform3f(u.uSheet,quart(seg(t,.95,1.85))*Math.PI*.978,quart(seg(t,1.07,1.97))*Math.PI*.984,quart(seg(t,1.19,2.09))*Math.PI*.99);
-  gl.uniform1f(u.uCam,60000*(1-kk)+4200*kk);
-  gl.uniform1f(u.uS,S0*Math.pow(SEND/S0,z));
-  gl.uniform2f(u.uT,-(HX+XR)/2*z,0);
-  gl.uniform1f(u.uPaper,seg(t,2.0,2.45));
-  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.drawArrays(gl.TRIANGLES,0,nVert);
+  var m=io(seg(t,.1,.9));                                   // the book turns to face the viewer
+  if(m!==dynM)buildDyn(m);
+  gl.uniform1f(u.uSpine,m);                                 // spine softens to a strip
+  // the top lines are the top of the book seen from above: as the book turns to face us they fold away,
+  // flattening toward the top edge (y 255) while the cover's top edge rises to meet them. Their left end stays
+  // locked to the head of the spine, so the outline never breaks.
+  var L=425.4+(SX1-425.4)*m, Rr=967.8-32*m;
+  gl.uniform4f(u.uLine,MX(L),(Rr-L)/(967.8-425.4),MY(255),1-m);
+  var cov=io(seg(t,.9,1.6));
+  var a1=io(seg(t,1.02,1.72))*Math.PI, a2=io(seg(t,1.12,1.82))*Math.PI, a3=io(seg(t,1.22,1.92))*Math.PI;
+  gl.uniform1f(u.uCover,cov*Math.PI);
+  gl.uniform3f(u.uSheet,a1,a2,a3);
+  gl.uniform4f(u.uAng,cov*Math.PI,a1,a2,a3);
+  gl.uniform1f(u.uShade,seg(t,.88,1.0)*(1-seg(t,1.95,2.35)));
+  var S0=Math.min(W,H*0.6)*0.44/1254, SEND=Math.max(H*1.04/PH,W*1.04/PW);
+  var z=io(seg(t,.3,END)), sc=S0*Math.pow(SEND/S0,z), w=(sc-S0)/(SEND-S0);
+  var fx=ICX+(HX-ICX)*cov, fy=ICY+(PCY-ICY)*cov;            // framing: icon -> open spread -> right page
+  gl.uniform1f(u.uS,sc);
+  gl.uniform2f(u.uT,-(fx+(PCX-fx)*w),-(fy+(PCY-fy)*w));
+  gl.uniform1f(u.uPaper,1);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  bindAttrs(sbuf);
+  if(m<1)gl.drawArrays(gl.TRIANGLES,0,nLines);              // top lines exist only until the cover hides them
+  if(m>.995)gl.drawArrays(gl.TRIANGLES,nLines,nStatic-nLines); // sheets + right page wait under the closed cover
+  bindAttrs(dbuf);gl.drawArrays(gl.TRIANGLES,0,nDyn);
 }
 resize();frame(0);
 var bornAt=performance.now(), motionAt=0, booted=false, finished=false, raf=0;
 var FPS=/[?&]fps\b/.test(location.search), ft=[], lastNow=0;
 function report(){if(!FPS||ft.length<5)return;var s=ft.slice().sort(function(a,b){return a-b}),med=s[s.length>>1],late=ft.filter(function(x){return x>med*1.5}).length;
-  var d=document.createElement('div');d.textContent='splash (WebGL): '+ft.length+' frames · median '+med.toFixed(1)+' ms ('+Math.round(1000/med)+' fps) · late '+late;
+  var d=document.createElement('div');d.textContent='splash: '+ft.length+' frames · median '+med.toFixed(1)+' ms ('+Math.round(1000/med)+' fps) · late '+late;
   d.style.cssText='position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:2147483647;background:#16231F;color:#fff;font:13px/1.4 system-ui;padding:8px 10px;border-radius:10px';
   document.body.appendChild(d);setTimeout(function(){d.remove();},8000);}
 function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);report();
@@ -161,18 +200,18 @@ function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);rep
   var h=document.documentElement;h.classList.add('vb-reveal');h.classList.remove('vb-splash');
   if(root&&root.parentNode)root.parentNode.removeChild(root);
   setTimeout(function(){h.classList.remove('vb-reveal');},1000);}
-var slow=0, MAXDPR=3;
+var slow=0;
 function tick(now){
   if(motionAt&&lastNow){var dt=now-lastNow;ft.push(dt);slow=dt>24?slow+1:0;
     if(slow>=3&&MAXDPR>2){MAXDPR=2;resize();}}               // device struggling: render at 2x instead of 3x
   lastNow=now;
-  var t=motionAt?.6+(now-motionAt)/1000:.6;
+  var t=motionAt?(now-motionAt)/1000:0;
   frame(Math.min(t,END));
   if(t>=END){finish();return;}
   raf=requestAnimationFrame(tick);
 }
 window.__vbSplashSeek=function(t){frame(t);};
-window.__vbSplashInfo=function(){return {verts:nVert,dpr:DPR};};
+window.__vbSplashInfo=function(){return {dpr:DPR,stat:nStatic,dyn:nDyn};};
 window.addEventListener('resize',function(){resize();});
 root.addEventListener('click',function(){if(booted)finish();});
 setTimeout(function(){if(!booted)done();},6000);
