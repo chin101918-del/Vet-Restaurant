@@ -138,6 +138,39 @@ html.vb-inapp .vbi-note{display:block}
 .vb-book .vb-front,.vb-book .vb-back{backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .vb-book .vb-front{background:#FFFFFF;box-shadow:0 6px 14px rgba(0,0,0,.28)}
 .vb-book .vb-back{background:linear-gradient(90deg,#C9DBD4,#E3EEEA 30%);transform:rotateY(180deg)}
+
+/* First-launch login. Lives inside the splash: after "เข้าสู่ระบบ" the sheet drops away, the letters slide off,
+   the V glides to the centre and the opening animation plays on. The device then remembers the student. */
+#vb-logo{position:relative;z-index:2}
+#vb-logo.vbl-move{transition:transform .7s cubic-bezier(.65,0,.35,1)}
+#vb-splash .vb-login{position:absolute;inset:0;z-index:1;display:none;flex-direction:column;font-family:'IBM Plex Sans Thai',system-ui,sans-serif;color:#16231F;-webkit-tap-highlight-color:transparent}
+#vb-splash.vb-login-on .vb-login{display:flex}
+.vbl-top{flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding-top:env(safe-area-inset-top,0px)}
+.vbl-word{width:min(60vw,240px);height:auto;aspect-ratio:880/240;display:block;overflow:visible}
+.vbl-ch{transition:transform .38s cubic-bezier(.55,0,.75,.2),opacity .3s ease;transition-delay:calc(var(--i) * 35ms)}
+.vb-leaving .vbl-ch{transform:translateX(80px);opacity:0}
+.vbl-sheet{flex:0 0 auto;margin:0;background:#FAFBF9;border-radius:32px 32px 0 0;display:flex;flex-direction:column;gap:20px;
+  padding:36px max(24px,env(safe-area-inset-right,0px)) calc(36px + env(safe-area-inset-bottom,0px)) max(24px,env(safe-area-inset-left,0px));
+  transition:transform .5s cubic-bezier(.55,0,.8,.3)}
+.vb-leaving .vbl-sheet{transform:translateY(110%)}
+.vbl-group{display:flex;flex-direction:column;gap:10px}
+.vbl-group label{font:600 16px 'Anuphan',sans-serif;color:#123F3A}
+.vbl-field{display:flex;align-items:center;gap:12px;height:54px;padding:0 16px;background:#F1F3F2;border:1px solid #E3E7E5;border-radius:14px}
+.vbl-field:focus-within{border-color:#1E5B53;box-shadow:0 0 0 3px rgba(30,91,83,.14)}
+.vbl-field input{flex:1 1 auto;min-width:0;height:100%;border:0;background:transparent;font:400 16px 'IBM Plex Sans Thai',sans-serif;color:#16231F;outline:none;padding:0}
+.vbl-field input::placeholder{color:#9AA5A1}
+.vbl-err{margin:-8px 0 0;font-size:14px;line-height:1.5;color:#B3261E}
+.vbl-err:empty{display:none}
+.vbl-bad .vbl-field{border-color:#D4574E;background:#FBEFEE}
+.vbl-bad .vbl-group{animation:vblShake .35s ease}
+@keyframes vblShake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.vbl-btn{position:relative;margin-top:8px;height:56px;border:0;border-radius:14px;background:#123F3A;color:#FFFFFF;font:600 18px 'Anuphan',sans-serif;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.vbl-btn svg{position:absolute;right:20px}
+.vbl-btn:active{background:#1E5B53}
+.vbl-btn:focus-visible{outline:3px solid #F2B544;outline-offset:2px}
+.vbl-help{margin:4px 0 0;text-align:center;font-size:14px;color:#5A6863}
+.vbl-help a{color:#1E5B53;font-weight:600}
+@media (prefers-reduced-motion:reduce){.vbl-ch,.vbl-sheet,#vb-logo.vbl-move{transition-duration:.01s}}
 </style>
 <div id="vb-splash" aria-hidden="true">
   <svg id="vb-logo" viewBox="0 0 400 400" focusable="false">
@@ -153,6 +186,39 @@ html.vb-inapp .vbi-note{display:block}
   <div class="vb-book" id="vb-book" hidden>
     <div class="vb-pages"><div class="vb-lines" id="vb-lines"></div></div>
     <div class="vb-cover" id="vb-cover"><div class="vb-front"></div><div class="vb-back"></div></div>
+  </div>
+  <div class="vb-login" id="vb-login">
+    <div class="vbl-top">
+      <svg class="vbl-word" id="vbl-word" viewBox="490 300 880 240" role="img" aria-label="Vetbook">
+        <g fill="none" stroke="#FFFFFF" stroke-width="25" stroke-linecap="round" stroke-linejoin="round">
+          <g class="vbl-ch" style="--i:5"><path d="M 703.5 444 H 792.5 A 44.5 44.5 0 1 0 783.5 470.8"></path></g>
+          <g class="vbl-ch" style="--i:4"><path d="M 830.5 355 V 456 Q 830.5 486 860 486"></path><path d="M 830.5 398 H 867"></path></g>
+          <g class="vbl-ch" style="--i:3"><path d="M 903.5 355 V 444"></path><circle cx="947.5" cy="444" r="44"></circle></g>
+          <g class="vbl-ch" style="--i:2"><circle cx="1068.5" cy="444" r="44"></circle></g>
+          <g class="vbl-ch" style="--i:1"><circle cx="1189.5" cy="444" r="44"></circle></g>
+          <g class="vbl-ch" style="--i:0"><path d="M 1270 355 V 489"></path><path d="M 1339 397 L 1283 448"></path><path d="M 1290 448 L 1339 489"></path></g>
+        </g>
+      </svg>
+    </div>
+    <form class="vbl-sheet" id="vbl-form" novalidate>
+      <div class="vbl-group">
+        <label for="vbl-sid">รหัสนิสิต</label>
+        <div class="vbl-field">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7D8A86" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c1.4-3.6 4.4-5.5 8-5.5s6.6 1.9 8 5.5"></path></svg>
+          <input id="vbl-sid" type="text" inputmode="numeric" autocomplete="username" placeholder="กรอกรหัสนิสิต" maxlength="10">
+        </div>
+      </div>
+      <div class="vbl-group">
+        <label for="vbl-dob">วันเดือนปีเกิด</label>
+        <div class="vbl-field">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7D8A86" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path><path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"></path></svg>
+          <input id="vbl-dob" type="text" inputmode="numeric" autocomplete="bday" placeholder="วว/ดด/ปปปป" maxlength="10">
+        </div>
+      </div>
+      <p class="vbl-err" id="vbl-err" role="alert"></p>
+      <button type="submit" class="vbl-btn"><span>เข้าสู่ระบบ</span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+      <p class="vbl-help">มีปัญหาในการเข้าสู่ระบบ? <a href="#" id="vbl-help">ติดต่อผู้ดูแลระบบ</a></p>
+    </form>
   </div>
 </div>
 <script>
@@ -279,9 +345,52 @@ function tick(now){
   if(e>=END){finish();return;}
   raf=requestAnimationFrame(tick);
 }
+
+// ---------- first-launch login (remembered on this device)
+var AUTH='vb-auth', loginEl=$('vb-login'), word=$('vbl-word'), form=$('vbl-form'), sid=$('vbl-sid'), dob=$('vbl-dob'), err=$('vbl-err'), loginOpen=false;
+function savedUser(){try{return JSON.parse(localStorage.getItem(AUTH)||'null');}catch(e){return null;}}
+function saveUser(u){try{localStorage.setItem(AUTH,JSON.stringify(u));}catch(e){}}
+window.__vbLogout=function(){try{localStorage.removeItem(AUTH);}catch(e){}};
+function placeLogoOnWord(){                    // park the splash V exactly where the wordmark's V sits
+  logo.style.transform='';
+  var w=word.getBoundingClientRect(), L=logo.getBoundingClientRect();
+  var vx=w.left+w.width*0.1335, vy=w.top+w.height*0.5, s=(w.height*204/240)/(L.height*246/400);
+  logo.style.transform='translate('+(vx-(L.left+L.width/2)).toFixed(2)+'px,'+(vy-(L.top+L.height/2)).toFixed(2)+'px) scale('+s.toFixed(4)+')';
+}
+function openLogin(){
+  loginOpen=true; root.classList.add('vb-login-on'); root.removeAttribute('aria-hidden');
+  draw(0); placeLogoOnWord();
+}
+window.addEventListener('resize',function(){if(loginOpen)placeLogoOnWord();});
+// the wordmark moves whenever the sheet changes height (an error line, the keyboard): keep the V on it
+if(window.ResizeObserver)new ResizeObserver(function(){if(loginOpen)placeLogoOnWord();}).observe(loginEl.querySelector('.vbl-top'));
+sid.addEventListener('input',function(){sid.value=sid.value.replace(/\D/g,'').slice(0,10);err.textContent='';form.classList.remove('vbl-bad');});
+dob.addEventListener('input',function(){
+  var d=dob.value.replace(/\D/g,'').slice(0,8);
+  dob.value=d.length>4?d.slice(0,2)+'/'+d.slice(2,4)+'/'+d.slice(4):d.length>2?d.slice(0,2)+'/'+d.slice(2):d; err.textContent='';form.classList.remove('vbl-bad');
+});
+$('vbl-help').addEventListener('click',function(e){e.preventDefault();});
+form.addEventListener('submit',function(e){
+  e.preventDefault();
+  var m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dob.value);
+  if(!sid.value){err.textContent='กรอกรหัสนิสิต';sid.focus();return;}
+  if(!m||+m[1]<1||+m[1]>31||+m[2]<1||+m[2]>12){err.textContent='กรอกวันเกิดเป็น วว/ดด/ปปปป';dob.focus();return;}
+  // Demo account until the real student check is connected. Swap this for a call to the server.
+  if(sid.value!=='6610900000'||dob.value.replace(/\D/g,'')!=='01012000'){
+    err.textContent='รหัสนิสิตหรือวันเดือนปีเกิดไม่ถูกต้อง'; form.classList.remove('vbl-bad'); void form.offsetWidth; form.classList.add('vbl-bad'); return;}
+  saveUser({sid:sid.value,dob:dob.value,at:Date.now()});
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  loginOpen=false; root.classList.add('vb-leaving'); root.setAttribute('aria-hidden','true');
+  setTimeout(function(){logo.classList.add('vbl-move');logo.style.transform='';},230);   // the V glides to the centre
+  setTimeout(function(){loginEl.style.display='none';logo.classList.remove('vbl-move');start();},950);
+});
+function start(){
+  if(reduce){setTimeout(finish,250);return;}
+  motionAt=performance.now(); raf=requestAnimationFrame(tick);
+}
 window.__vbSplashSeek=function(ms){frame(ms);};
 window.addEventListener('resize',function(){if(!book.hidden)placeBook();});
-root.addEventListener('click',function(){if(booted)finish();});
+root.addEventListener('click',function(){if(booted&&motionAt)finish();});   // tap to skip, only once the animation runs
 setTimeout(function(){if(!booted)done();},6000);
 draw(0);
 return {boot:function(app){
@@ -289,9 +398,7 @@ return {boot:function(app){
     try{app();}catch(e){console.error(e);}
     booted=true;
     if(window.__vbSplashHold)return;              // test hook: keep the splash for frame-by-frame checks
-    if(reduce){setTimeout(finish,250);return;}
-    motionAt=performance.now();
-    raf=requestAnimationFrame(tick);
+    if(!savedUser())openLogin(); else start();     // first launch: log in, then the animation; afterwards straight to the animation
   },0);});
 }};
 }catch(e){console.error(e);done();return {boot:function(f){f();}};}
