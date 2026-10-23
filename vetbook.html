@@ -48,8 +48,10 @@ html,body{margin:0;background:#DDE5DF;font-family:'IBM Plex Sans Thai',sans-seri
 /* Vetbook launch splash: the V folds into a book, the book turns to face you, the cover opens and the page fills the screen. */
 #vb-splash{display:grid;place-items:center;overflow:hidden;-webkit-tap-highlight-color:transparent}
 #vb-logo{width:clamp(150px,46vw,240px);max-height:34vh;height:auto;aspect-ratio:1;display:block;overflow:visible}
-#vb-logo .vb-shade{fill:#FFFFFF;filter:drop-shadow(0 5px 7px rgba(0,0,0,.35))}
-#vb-logo .vb-edge{fill:none;stroke:#FFFFFF;stroke-linecap:round;stroke-linejoin:round}
+/* No SVG filter (phones redraw it on the CPU every frame): the soft shadow is two offset, translucent copies of the shapes. */
+#vb-logo .vb-shade{fill:#FFFFFF;stroke:#FFFFFF}
+#vb-logo .vb-edge{fill:none;stroke-linecap:round;stroke-linejoin:round}
+#vb-body{stroke:none}
 .vb-book{position:fixed;left:0;top:0;perspective:1100px;transform-origin:50% 50%;pointer-events:none;will-change:transform}
 .vb-book[hidden]{display:none}
 .vb-book .vb-pages,.vb-book .vb-front,.vb-book .vb-back{position:absolute;inset:0;border-radius:var(--vb-r,14px)}
@@ -65,7 +67,10 @@ html,body{margin:0;background:#DDE5DF;font-family:'IBM Plex Sans Thai',sans-seri
 </style>
 <div id="vb-splash" aria-hidden="true">
   <svg id="vb-logo" viewBox="0 0 400 400" focusable="false">
-    <g id="vb-motion"><g class="vb-shade">
+    <g id="vb-motion">
+      <g class="vb-sh" fill="rgba(0,0,0,.10)" stroke="rgba(0,0,0,.10)" transform="translate(0 6)"><use href="#vb-bar"></use><use href="#vb-line"></use><use href="#vb-body"></use></g>
+      <g class="vb-sh" fill="rgba(0,0,0,.14)" stroke="rgba(0,0,0,.14)" transform="translate(0 3)"><use href="#vb-bar"></use><use href="#vb-line"></use><use href="#vb-body"></use></g>
+      <g class="vb-shade">
       <path id="vb-bar" class="vb-edge"></path>
       <path id="vb-line" class="vb-edge"></path>
       <path id="vb-body"></path>
@@ -135,8 +140,10 @@ function pageEdges(v,p){
   place(34,o2); place(39,o1);
   v[89]=w; v[90]=w;
 }
+var lastP=-1, lastS=-1, lastR=-1;
 function draw(p){
   p=Math.max(0,Math.min(LAST,p));
+  if(p===lastP&&riffle===lastR)return; lastP=p; lastR=riffle;   // only touch the paths when the shape changes
   var v=sample(p); if(p>=BOOK)pageEdges(v,p);
   var r=Math.max(0.01,v[88]).toFixed(2);
   body.setAttribute('d','M '+pt(v,0)+' C '+pt(v,1)+' '+pt(v,2)+' '+pt(v,3)+' C '+pt(v,4)+' '+pt(v,5)+' '+pt(v,6)+' L '+pt(v,7)+
@@ -149,7 +156,7 @@ function draw(p){
   barLine.setAttribute('stroke-width',Math.max(0,v[89]).toFixed(2));
   pageLine.setAttribute('stroke-width',Math.max(0,v[90]).toFixed(2));
 }
-function pose(s){motion.setAttribute('transform',s&&s!==1?'translate(200 200) scale('+s.toFixed(4)+') translate(-200 -200)':'');}
+function pose(s){if(s===lastS)return;lastS=s;motion.setAttribute('transform',s&&s!==1?'translate(200 200) scale('+s.toFixed(4)+') translate(-200 -200)':'');}
 
 // The cover turns in 3D, so the last rectangle hands over to an HTML book in exactly the same place.
 // The drawn rectangle stays underneath, so there is never an empty frame while the browser builds the 3D layer.
