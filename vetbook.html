@@ -124,8 +124,9 @@ function pageEdges(v,p){
   v[1]=bandY; v[3]=bandY;
   setXY(v,30,v[60],top); setXY(v,31,v[60],slotY); setXY(v,32,v[64],slotY); setXY(v,33,v[64],bandY);
   v[88]=Math.max(0.01,(o2-w/2)/2);
-  var rc=EDGE.corner*S+0.5;
+  var Rb=Math.max(0,gy-top);   // facing you, the line corners follow the cover's round corner (radius + offset)
   function place(i0,off){
+    var rc=EDGE.corner*S+(1-S)*(Rb+off)+0.5;
     var y=top-off, s=(y-gy-off*ny)/uy, cx=gx+off*nx+s*ux, endY=v[2*(i0+4)+1], endS=(endY-gy-off*ny)/uy;
     setXY(v,i0,v[2*i0],y); setXY(v,i0+1,cx-rc,y); setXY(v,i0+2,cx,y);
     setXY(v,i0+3,cx+rc*ux,y+rc*uy); setXY(v,i0+4,gx+off*nx+endS*ux,endY);
