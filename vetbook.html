@@ -47,7 +47,7 @@ html,body{margin:0;background:#DDE5DF;font-family:'IBM Plex Sans Thai',sans-seri
 <style>
 /* Vetbook launch splash: the V folds into a book, the book turns to face you, the cover opens and the page fills the screen. */
 #vb-splash{display:grid;place-items:center;overflow:hidden;-webkit-tap-highlight-color:transparent}
-#vb-logo{width:min(64vmin,360px);height:auto;aspect-ratio:1;display:block;overflow:visible}
+#vb-logo{width:clamp(150px,46vw,240px);max-height:34vh;height:auto;aspect-ratio:1;display:block;overflow:visible}
 #vb-logo .vb-shade{fill:#FFFFFF;filter:drop-shadow(0 5px 7px rgba(0,0,0,.35))}
 #vb-logo .vb-edge{fill:none;stroke:#FFFFFF;stroke-linecap:round;stroke-linejoin:round}
 .vb-book{position:fixed;left:0;top:0;perspective:1100px;transform-origin:50% 50%;pointer-events:none;will-change:transform}
