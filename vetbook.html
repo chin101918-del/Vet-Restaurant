@@ -7,7 +7,6 @@
 <style>
 html.vb-splash,html.vb-splash body{background:#123F3A}
 #vb-splash{position:fixed;inset:0;z-index:2147483647;background:#123F3A;transition:opacity .3s ease}
-#vb-splash canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 #vb-splash.vb-out{opacity:0;pointer-events:none}
 html:not(.vb-splash) #vb-splash{display:none}
 html.vb-splash .shell{visibility:hidden}
@@ -45,202 +44,171 @@ html,body{margin:0;background:#DDE5DF;font-family:'IBM Plex Sans Thai',sans-seri
 </style>
 </head>
 <body>
-<div id="vb-splash" aria-hidden="true"><canvas id="vb-splash-canvas"></canvas></div>
+<style>
+/* Vetbook launch splash: the V folds into a book, the book turns to face you, the cover opens and the page fills the screen. */
+#vb-splash{display:grid;place-items:center;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#vb-logo{width:min(64vmin,360px);height:auto;aspect-ratio:1;display:block;overflow:visible}
+#vb-logo .vb-shade{fill:#FFFFFF;filter:drop-shadow(0 5px 7px rgba(0,0,0,.35))}
+#vb-logo .vb-edge{fill:none;stroke:#FFFFFF;stroke-linecap:round;stroke-linejoin:round}
+.vb-book{position:fixed;left:0;top:0;perspective:1100px;transform-origin:50% 50%;pointer-events:none;will-change:transform}
+.vb-book[hidden]{display:none}
+.vb-book .vb-pages,.vb-book .vb-front,.vb-book .vb-back{position:absolute;inset:0;border-radius:var(--vb-r,14px)}
+.vb-book .vb-pages{background:#F3F5F1;overflow:hidden}
+.vb-book .vb-lines{position:absolute;inset:0;background:
+  linear-gradient(90deg,transparent calc(14% - 1px),rgba(242,181,68,.55) calc(14% - 1px) 14%,transparent 14%),
+  repeating-linear-gradient(180deg,transparent 0 calc(var(--vb-rule,18px) - 1px),rgba(30,91,83,.16) calc(var(--vb-rule,18px) - 1px) var(--vb-rule,18px));
+  background-position:0 calc(var(--vb-rule,18px) * 2)}
+.vb-book .vb-cover{position:absolute;inset:0;transform-origin:0 50%;transform-style:preserve-3d;will-change:transform}
+.vb-book .vb-front,.vb-book .vb-back{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.vb-book .vb-front{background:#FFFFFF;box-shadow:0 6px 14px rgba(0,0,0,.28)}
+.vb-book .vb-back{background:linear-gradient(90deg,#C9DBD4,#E3EEEA 30%);transform:rotateY(180deg)}
+</style>
+<div id="vb-splash" aria-hidden="true">
+  <svg id="vb-logo" viewBox="0 0 400 400" focusable="false">
+    <g id="vb-motion"><g class="vb-shade">
+      <path id="vb-bar" class="vb-edge"></path>
+      <path id="vb-line" class="vb-edge"></path>
+      <path id="vb-body"></path>
+    </g></g>
+  </svg>
+  <div class="vb-book" id="vb-book" hidden>
+    <div class="vb-pages"><div class="vb-lines" id="vb-lines"></div></div>
+    <div class="vb-cover" id="vb-cover"><div class="vb-front"></div><div class="vb-back"></div></div>
+  </div>
+</div>
 <script>
-/* Vetbook launch splash — flat 2D motion (drawn with WebGL only because it is the fastest canvas on phones).
-   Icon anatomy: a standing book seen from slightly above at an angle. Left leg of the V = spine,
-   right leg = front cover, top lines = pages + back cover seen from above.
-   1) the book turns to face the viewer: the cover straightens and widens, the spine straightens into a thin soft strip,
-      the top lines slip behind the cover, 2) the cover flips open to the left (flat card flip) and a few sheets follow,
-   3) the view zooms into the right page until it fills the screen, 4) the page takes the app's paper colour and the app fades up. */
+/* Vetbook launch splash (SVG + CSS 3D, no canvas). Timeline, 2.8 s in all:
+   V rests → V folds into the book → its pages fan out and close → the book turns to face you
+   → a short breath → the cover swings open and the page rushes forward until it fills the screen.
+   The last frame is the app's paper colour (#F3F5F1), so the splash can drop out unseen and the app fades up.
+   Tap anywhere to skip. With "reduce motion" on, the splash only shows for a moment. */
 window.__vbSplash=(function(){
-var root=document.getElementById('vb-splash'), cvs=document.getElementById('vb-splash-canvas');
+var root=document.getElementById('vb-splash');
 function done(){document.documentElement.classList.remove('vb-splash');if(root&&root.parentNode)root.parentNode.removeChild(root);}
-var gl=cvs&&cvs.getContext&&(cvs.getContext('webgl',{antialias:true,alpha:false,depth:true,stencil:true,premultipliedAlpha:false,powerPreference:'high-performance'})||cvs.getContext('experimental-webgl',{antialias:true,alpha:false}));
-if(!root||!gl){done();return {boot:function(f){f();}};}
+if(!root){return {boot:function(f){f();}};}
 try{
-var DX=-6.06, GS=1.0170, GX=-10.1, GY=-10.8;
-function MX(x){return GX+GS*(x+DX)-627;} function MY(y){return 627-(GY+GS*y);}
-function P(x,y){return [MX(x),MY(y)];}
-var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-var R=Math.PI/180;
-// ---------- 2D helpers (icon coordinates in, model coordinates out)
-function line(a,b,n){var o=[];for(var i=0;i<n;i++){var k=i/n;o.push(P(a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k));}return o;}
-function arc(cx,cy,r,a0,a1,n){var o=[];for(var i=0;i<n;i++){var a=(a0+(a1-a0)*i/n)*R;o.push(P(cx+r*Math.cos(a),cy+r*Math.sin(a)));}return o;}
-function quad(a,c,b,n){var o=[];for(var i=0;i<n;i++){var k=i/n,j=1-k;o.push(P(j*j*a[0]+2*j*k*c[0]+k*k*b[0],j*j*a[1]+2*j*k*c[1]+k*k*b[1]));}return o;}
-function resample(pts,n){var L=[0],i;for(i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));
-  var tot=L[L.length-1],o=[],j=1;for(i=0;i<n;i++){var d=tot*i/n;while(j<L.length-1&&L[j]<d)j++;var k=(d-L[j-1])/((L[j]-L[j-1])||1);
-    o.push([pts[j-1][0]+(pts[j][0]-pts[j-1][0])*k,pts[j-1][1]+(pts[j][1]-pts[j-1][1])*k]);}return o;}
-function cat(){var o=[];for(var i=0;i<arguments.length;i++)o=o.concat(arguments[i]);return o;}
-// ---------- front view of the book (icon coordinates): spine x 298.4..SX1, cover CX0..967.8 (overlapping, no fold line), y BT..BB
-var SX1=414, CX0=410, BT=255, BB=1020, FX=430.4;   // no fold line: spine and cover read as one surface
-// The whole body (curl + both legs) is ONE outline that morphs through three keyframes:
-// K0 the icon, K1 the V notch closed (book seen at an angle), K2 the front of the book. Same point count in each.
-function rep(p,n){var o=[];for(var i=0;i<n;i++)o.push(P(p[0],p[1]));return o;}
-var K0=cat(arc(426.4,383,128,270,156,14), line([309.4,435.1],[546.6,967.8],20), arc(627,932,88,156,24,24),
-  line([707.4,967.8],[954.7,412.2],20), quad([954.7,412.2],[967.8,383],[935.8,383],6), line([935.8,383],[807.1,383],6),
-  quad([807.1,383],[775.1,383],[762.1,412.2],4), line([762.1,412.2],[627,715.6],12), line([627,715.6],[491.9,412.2],12),
-  quad([491.9,412.2],[478.9,383],[446.9,383],4), line([446.9,383],[426.4,383],2), arc(426.4,335,48,90,270,10), line([426.4,287],[426.4,255],2));
-var K2=cat(cat(line([FX,BT],[426.4,BT],2),arc(426.4,383,128,270,180,12)),   // front of the book: same left corners as K1
-  line([298.4,383],[298.4,920],20),
-  cat(quad([298.4,920],[298.4,BB],[398.4,BB],8),line([398.4,BB],[917.8,BB],8),quad([917.8,BB],[967.8,BB],[967.8,970],8)),
-  line([967.8,970],[967.8,BT+32],20), quad([967.8,BT+32],[967.8,BT],[935.8,BT],6), line([935.8,BT],[860,BT],6),
-  line([860,BT],[820,BT],4), line([820,BT],[FX,BT],12), rep([FX,BT],12+4+2+10+2));
-// K1: the V swells into a rounded block under the untouched top (curl + back cover + pages), like the icon's own book
-var J=106;                                                     // inner corner of the V = top of the fold line
-var K1=cat(arc(426.4,383,128,270,180,14), line([298.4,383],[298.4,920],20),
-  cat(quad([298.4,920],[298.4,1020],[398.4,1020],8),line([398.4,1020],[917.8,1020],8),quad([917.8,1020],[967.8,1020],[967.8,970],8)),
-  line([967.8,970],[967.8,415],20), quad([967.8,415],[967.8,383],[935.8,383],6), line([935.8,383],[807.1,383],6),
-  line([807.1,383],[762,383],4), line([762,383],[560,383],12), line([560,383],[480,383],12), line([480,383],[446,383],4),
-  line([446,383],[426.4,383],2), arc(426.4,335,48,90,270,10), line([426.4,287],[426.4,255],2));
-function smooth(Q,w){var n=Q.length,it,i;   // round joints while moving; the back-cover/spine joint stays put
-  for(it=0;w>0.001&&it<4;it++){var o=[];for(i=0;i<n;i++){var p=Q[(i-1+n)%n],q=Q[i],r=Q[(i+1)%n],k=(i<3||i>=n-3)?0:w;
-    o.push([q[0]+k*((p[0]+r[0])/2-q[0]),q[1]+k*((p[1]+r[1])/2-q[1])]);}Q=o;}
-  return Q;}
-function bodyAt(m1,m2){return m2>0?smooth(lerpL(K1,K2,m2),0.5*Math.sin(Math.PI*m2)):smooth(lerpL(K0,K1,m1),0.5*Math.sin(Math.PI*m1));}
-var spine=cat(line([SX1,BT],[426.4,BT],1),arc(426.4,383,128,270,180,12),line([298.4,383],[298.4,920],2),quad([298.4,920],[298.4,BB],[398.4,BB],8),line([398.4,BB],[SX1,BB],1),[P(SX1,BB)]);
-var cover=cat(line([CX0,BT],[935.8,BT],4),quad([935.8,BT],[967.8,BT],[967.8,BT+32],8),line([967.8,BT+32],[967.8,970],2),quad([967.8,970],[967.8,BB],[917.8,BB],8),line([917.8,BB],[CX0,BB],4),line([CX0,BB],[CX0,BT],4));
-function centroid(Q){var x=0,y=0;for(var i=0;i<Q.length;i++){x+=Q[i][0];y+=Q[i][1];}return [x/Q.length,y/Q.length];}
-var HX=MX(CX0);                                                  // the hinge: the cover's left edge
-// static shapes
-var lid=cat(line([425.4,255],[951.8,255],8),arc(951.8,271,16,-90,90,8),line([951.8,287],[425.4,287],8),[P(425.4,287)]);
-var pageLine=cat(line([426.4,319],[951.8,319],8),arc(951.8,335,16,-90,90,8),line([951.8,351],[426.4,351],8),arc(426.4,335,16,90,270,8));
-var PX0=CX0, PX1=955.8, PY0=BT+8, PY1=BB-8;                       // sheets + right page sit just inside the cover
-var sheet=cat(line([PX0,PY0],[PX1-16,PY0],8),quad([PX1-16,PY0],[PX1,PY0],[PX1,PY0+16],4),line([PX1,PY0+16],[PX1,PY1-16],8),quad([PX1,PY1-16],[PX1,PY1],[PX1-16,PY1],4),line([PX1-16,PY1],[PX0,PY1],8),line([PX0,PY1],[PX0,PY0],8));
-var PCX=(MX(PX0)+MX(PX1))/2, PCY=(MY(PY0)+MY(PY1))/2, PW=MX(PX1)-MX(PX0), PH=MY(PY0)-MY(PY1);
-var ICX=MX(627), ICY=MY(627), LX0=MX(425.4), LY0=MY(255);
-// ---------- vertex builders: x,y,z(layer),part,tone
-// parts: 1 cover, 2..4 sheets, 5 right page, 6 top lines, 7 spine     tones: 0 white, 1 soft, 2 paper, 3 spine (white->soft)
-function push(A,p,z,part,tone){A.push(p[0],p[1],z,part,tone);}
-function fan(A,Q,c,z,part,tone){for(var i=0;i<Q.length;i++){var j=(i+1)%Q.length;push(A,c,z,part,tone);push(A,Q[i],z,part,tone);push(A,Q[j],z,part,tone);}}
-function strip(A,O,I,z,part,tone){for(var i=0;i<O.length-1;i++){push(A,O[i],z,part,tone);push(A,O[i+1],z,part,tone);push(A,I[i+1],z,part,tone);
-  push(A,O[i],z,part,tone);push(A,I[i+1],z,part,tone);push(A,I[i],z,part,tone);}}
-var S=[];
-fan(S,lid,centroid(lid),-30,6,0); fan(S,pageLine,centroid(pageLine),-30,6,0);
-var nLines=S.length/5;
-fan(S,spine,centroid(spine),-1,0,0); fan(S,cover,centroid(cover),0,1,0);      // the closed book, once the morph lands
-for(var k=0;k<3;k++)fan(S,sheet,centroid(sheet),-10-2*k,2+k,2);    // pages are paper-coloured, so the white cover reads as it turns
-fan(S,sheet,centroid(sheet),-20,5,2);
-var nStatic=S.length/5;
-function lerpL(A,B,m){var o=new Array(A.length);for(var i=0;i<A.length;i++)o[i]=[A[i][0]+(B[i][0]-A[i][0])*m,A[i][1]+(B[i][1]-A[i][1])*m];return o;}
-// ---------- GL program
-function sh(type,src){var o=gl.createShader(type);gl.shaderSource(o,src);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o;}
-var prog=gl.createProgram();
-gl.attachShader(prog,sh(gl.VERTEX_SHADER,
- 'attribute vec3 aPos;attribute float aPart;attribute float aTone;'+
- 'uniform float uCover,uHX,uS;uniform vec3 uSheet;uniform vec4 uLine;uniform vec2 uT,uRes;varying float vTone,vDx,vPart,vLeaf;'+
- 'void main(){vec3 p=aPos;float an=0.0,tone=aTone;'+
- ' if(aPart>0.5&&aPart<1.5)an=uCover;else if(aPart>1.5&&aPart<2.5)an=uSheet.x;else if(aPart>2.5&&aPart<3.5)an=uSheet.y;else if(aPart>3.5&&aPart<4.5)an=uSheet.z;'+
- ' if(aPart>5.5&&aPart<6.5)p.xy=vec2(uLine.x+(p.x-('+LX0.toFixed(3)+'))*uLine.y,uLine.z+(p.y-('+LY0.toFixed(3)+'))*uLine.w);'+
- ' vLeaf=0.0;if(an>0.0){float dx=p.x-uHX,c=cos(an),s=sin(an);p.z=dx*s+p.z*c;p.x=uHX+dx*c;if(aPart<1.5&&c<0.0)tone=1.0;vLeaf=s;}'+   // flat card flip; z only orders layers
- ' gl_Position=vec4((p.xy+uT)*uS/(uRes*0.5),-p.z/4000.0,1.0);vTone=tone;vDx=p.x-uHX;vPart=aPart;}'));
-gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,
- 'precision mediump float;uniform float uPaper,uSpine,uShade,uW;uniform vec3 uSoft,uPaperCol,uInk;uniform vec4 uAng;varying float vTone,vDx,vPart,vLeaf;'+
- // paper feel while the book opens: a soft shadow under the leaf that is turning, the turning leaf dims a little
- // with its angle, and a faint gutter shadow along the spine. All of it fades out before the page fills the screen.
- 'float lift(float a,float id){if(a<0.001||a>3.14)return 0.0;float e=uW*cos(a);bool under=e>=0.0?vPart>id+0.5:vPart<id-0.5;'+
- ' float x=e>=0.0?vDx:-vDx;if(!under||x<0.0)return 0.0;float k=abs(e);return sin(a)*(1.0-smoothstep(k,k+uW*0.12,x));}'+
- 'void main(){vec3 c=vec3(1.0);if(vTone>3.5)c=uInk;else if(vTone>2.5)c=mix(c,uSoft,uSpine);else if(vTone>1.5)c=mix(c,uPaperCol,uPaper);else if(vTone>0.5)c=uSoft;'+
- ' if(vPart<5.5&&uShade>0.0){float d=max(max(lift(uAng.x,1.0),lift(uAng.y,2.0)),max(lift(uAng.z,3.0),lift(uAng.w,4.0)))*0.10;'+
- '  d=max(d,vLeaf*0.06);d=1.0-(1.0-d)*(1.0-0.08*exp(-abs(vDx)/(uW*0.05)));c=mix(c,uInk,d*uShade);}'+
- ' gl_FragColor=vec4(c,1.0);}'));
-gl.linkProgram(prog);if(!gl.getProgramParameter(prog,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(prog));
-gl.useProgram(prog);
-var la=gl.getAttribLocation(prog,'aPos'),lp=gl.getAttribLocation(prog,'aPart'),lt=gl.getAttribLocation(prog,'aTone');
-gl.enableVertexAttribArray(la);gl.enableVertexAttribArray(lp);gl.enableVertexAttribArray(lt);
-function bindAttrs(b){gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.vertexAttribPointer(la,3,gl.FLOAT,false,20,0);gl.vertexAttribPointer(lp,1,gl.FLOAT,false,20,12);gl.vertexAttribPointer(lt,1,gl.FLOAT,false,20,16);}
-var sbuf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,sbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(S),gl.STATIC_DRAW);
-var dbuf=gl.createBuffer(), dynM=-1, nFan=0;
-function buildDyn(m1,m2){var D=[],Q=bodyAt(m1,m2),i,x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,m=m2;
-  for(i=1;i<Q.length-1;i++){push(D,Q[0],-20,0,0);push(D,Q[i],-20,0,0);push(D,Q[i+1],-20,0,0);}   // stencil fan (even-odd fill: any outline works)
-  nFan=D.length/5;
-  Q.forEach(function(p){x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);});
-  [[x0,y0],[x1,y0],[x1,y1],[x0,y0],[x1,y1],[x0,y1]].forEach(function(p){push(D,p,-20,0,0);});
-  // fold line between spine and cover: grows up from the tip of the V and ends as the hairline gap beside the spine
-  var top=Q[J], bot=P(560+(FX-560)*m,BB+12), w=(CX0-SX1)*GS*clamp((m-.3)/.45,0,1)/2, dx=top[0]-bot[0], dy=top[1]-bot[1], l=Math.hypot(dx,dy)||1, nx=-dy/l*w, ny=dx/l*w;
-  [[bot[0]-nx,bot[1]-ny],[bot[0]+nx,bot[1]+ny],[top[0]+nx,top[1]+ny],[bot[0]-nx,bot[1]-ny],[top[0]+nx,top[1]+ny],[top[0]-nx,top[1]-ny]].forEach(function(p){push(D,p,-19,0,4);});
-  gl.bindBuffer(gl.ARRAY_BUFFER,dbuf);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(D),gl.DYNAMIC_DRAW);dynM=m1+2*m2;}
-var u={};['uCover','uHX','uS','uLine','uSheet','uT','uRes','uPaper','uSpine','uSoft','uPaperCol','uShade','uW','uInk','uAng'].forEach(function(n){u[n]=gl.getUniformLocation(prog,n);});
-gl.uniform1f(u.uHX,HX);gl.uniform1f(u.uW,MX(967.8)-HX);gl.uniform3f(u.uInk,18/255,63/255,58/255);
-gl.uniform3f(u.uSoft,228/255,236/255,232/255);
-gl.uniform3f(u.uPaperCol,243/255,245/255,241/255);
-gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.clearColor(18/255,63/255,58/255,1);
-// ---------- sizing
-var W,H,DPR,MAXDPR=3;
-function resize(){DPR=Math.min(MAXDPR,window.devicePixelRatio||1);W=window.innerWidth;H=window.innerHeight;
-  cvs.width=Math.round(W*DPR);cvs.height=Math.round(H*DPR);gl.viewport(0,0,cvs.width,cvs.height);gl.uniform2f(u.uRes,W,H);}
-// ---------- timeline (seconds from the start of motion)
-function clamp(x,a,b){return Math.max(a,Math.min(b,x));}
-function seg(t,a,b){return clamp((t-a)/(b-a),0,1);}
-function io(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
-var END=2.85;
-function frame(t){
-  // 1) the V swells into a rounded block under the untouched top  2) the top folds back into the front of the book
-  var m1=io(seg(t,.1,.65)), m2=io(seg(t,.65,1.2)), m=m2;
-  if(m<1&&m1+2*m2!==dynM)buildDyn(m1,m2);
-  // the top lines are the top of the book seen from above: as the book turns to face us they fold away,
-  // flattening toward the top edge (y 255) while the cover's top edge rises to meet them. Their left end stays
-  // locked to the head of the spine, so the outline never breaks.
-  var L=425.4+(FX-425.4)*m-8*Math.min(1,m*4), Rr=967.8-32*m;                // lid tucks 8 units under the spine head: no seam
-  gl.uniform4f(u.uLine,MX(L),(Rr-L)/(967.8-425.4),MY(255),1-m);
-  var cov=io(seg(t,1.2,1.9));
-  var a1=io(seg(t,1.32,2.02))*Math.PI, a2=io(seg(t,1.42,2.12))*Math.PI, a3=io(seg(t,1.52,2.22))*Math.PI;
-  gl.uniform1f(u.uCover,cov*Math.PI);
-  gl.uniform3f(u.uSheet,a1,a2,a3);
-  gl.uniform4f(u.uAng,cov*Math.PI,a1,a2,a3);
-  gl.uniform1f(u.uShade,seg(t,1.18,1.3)*(1-seg(t,2.25,2.62)));
-  var S0=Math.min(W,H*0.6)*0.44/1254, SEND=Math.max(H*1.04/PH,W*1.04/PW);
-  var z=io(seg(t,.3,END)), sc=S0*Math.pow(SEND/S0,z), w=(sc-S0)/(SEND-S0);
-  var fx=ICX+(HX-ICX)*cov, fy=ICY+(PCY-ICY)*cov;            // framing: icon -> open spread -> right page
-  gl.uniform1f(u.uS,sc);
-  gl.uniform2f(u.uT,-(fx+(PCX-fx)*w),-(fy+(PCY-fy)*w));
-  gl.uniform1f(u.uPaper,1);
-  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT|gl.STENCIL_BUFFER_BIT);
-  bindAttrs(sbuf);
-  if(m>=1){gl.drawArrays(gl.TRIANGLES,nLines,nStatic-nLines);return;}   // closed book + sheets + right page
-  gl.drawArrays(gl.TRIANGLES,0,nLines);                     // top lines fold away behind the body
-  bindAttrs(dbuf);
-  gl.enable(gl.STENCIL_TEST);gl.colorMask(false,false,false,false);gl.depthMask(false);
-  gl.stencilFunc(gl.ALWAYS,0,255);gl.stencilOp(gl.KEEP,gl.KEEP,gl.INVERT);gl.drawArrays(gl.TRIANGLES,0,nFan);
-  gl.colorMask(true,true,true,true);gl.depthMask(true);
-  gl.stencilFunc(gl.NOTEQUAL,0,255);gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP);gl.drawArrays(gl.TRIANGLES,nFan,6);
-  gl.disable(gl.STENCIL_TEST);
+// 9 storyboard frames, each the same 91 numbers: 44 points (x,y) in a 400×400 box, then slot radius, top-line width, page-line width.
+var K=[[133.12,76.28,103.05,76.28,82.94,107.22,95.17,134.7,95.17,134.7,95.17,134.7,95.17,134.7,172.12,307.51,176.72,317.83,186.91,324.44,198.2,324.44,198.2,324.44,209.49,324.44,219.67,317.83,224.28,307.51,304.5,127.27,307.33,120.95,305.28,117.8,298.37,117.8,256.62,117.8,249.71,117.8,243.42,124.13,242.03,127.27,198.2,225.7,198.2,225.7,198.2,225.7,154.37,127.27,152.98,124.13,146.68,117.8,139.77,117.8,133.12,117.8,133.12,86.66,144.02,86.66,144.02,76.28,133.12,81.47,303.56,81.47,303.56,81.47,303.56,81.47,303.56,81.47,133.12,102.23,303.56,102.23,303.56,102.23,303.56,102.23,303.56,102.23,15.57,10.38,10.38],[120.26,76.5,88.86,76.5,68.86,107.7,80.86,137.1,80.86,137.1,80.86,137.1,80.86,137.1,155.96,307.6,160.46,318.1,169.96,324.6,181.66,324.6,237.56,324.6,248.66,324.6,256.96,316.6,258.86,306.4,287.16,127.9,288.06,121.6,285.86,118.3,279.46,118.3,243.16,118.3,235.56,118.3,228.36,122.5,224.46,124.6,196.86,176.2,189.26,190.3,181.66,176.2,153.96,124.6,150.06,122.5,142.86,118.3,135.26,118.3,119.96,118.3,119.96,87.4,133.56,87.4,133.56,76.5,119.96,82.2,302.86,82.2,310.06,82.2,312.96,88.8,337.46,146.1,120.26,103,289.26,103,296.36,103,299.26,109.6,324.96,169.6,15.5,10.4,10.4],[110.08,76.8,77.18,76.8,57.28,108.1,69.18,139.5,69.18,139.5,69.18,139.5,69.18,139.5,142.28,307.6,146.78,318.3,155.58,324.7,167.78,324.7,279.48,324.7,290.48,324.7,296.88,315.3,295.98,305.2,272.28,128.6,271.48,122.3,268.98,118.8,263.08,118.8,232.28,118.8,223.98,118.8,215.88,121.0,209.38,122.0,190.38,145.5,182.78,154.8,175.18,145.5,156.18,122.0,149.68,121.0,141.58,118.8,133.28,118.8,109.48,118.8,109.48,88.0,125.68,88.0,125.68,76.8,109.48,82.2,286.48,82.2,293.68,82.2,296.58,88.8,345.58,203.4,110.08,103,272.88,103,279.98,103,282.88,109.6,334.38,229.6,15.4,10.4,10.4],[99.59,77.02,68.05,77.02,47.32,99.55,51.83,123.88,52.73,131.09,54.53,136.49,57.24,141.9,128.42,307.7,132.93,318.51,141.03,324.82,153.65,324.82,321.25,324.82,332.06,324.82,336.57,314.0,332.96,304.09,257.63,128.47,254.93,122.17,252.23,118.56,246.82,118.56,221.23,118.56,212.22,118.56,203.21,118.56,194.2,118.56,180.68,118.56,176.18,118.56,171.67,118.56,162.66,118.56,153.65,118.56,144.64,118.56,131.12,118.56,98.68,118.56,98.68,87.38,117.61,87.38,117.61,77.02,98.68,82.25,270.16,82.25,277.37,82.25,280.25,88.83,353.96,260.84,99.59,102.97,256.46,102.97,263.67,102.97,266.55,109.64,343.69,289.67,15.59,10.36,10.36],[97.01,76.94,76.19,76.94,64.74,92.55,64.74,113.36,64.74,114.72,64.74,116.17,64.74,117.53,115.74,302.78,118.86,316.31,127.19,323.59,140.72,323.59,292.66,323.59,303.07,323.59,309.32,316.31,306.19,305.9,259.46,123.15,257.38,115.86,254.26,111.7,248.02,111.7,221.89,111.7,211.49,111.7,201.08,111.7,190.67,111.7,175.06,111.7,169.86,111.7,164.65,111.7,149.04,111.7,138.64,111.7,128.23,111.7,117.82,111.7,107.41,111.7,107.41,86.3,117.82,86.3,117.82,76.94,97.01,81.1,271.95,81.1,280.28,81.1,282.36,89.22,332.4,285,106.37,99.0,258.11,99.0,266.44,99.0,268.52,107.12,317.8,300,12.7,10.41,10.41],[112.64,76.94,91.83,76.94,78.3,92.55,75.59,113.36,75.38,114.72,75.28,116.17,75.07,117.53,102.02,302.78,103.38,316.31,110.77,323.59,124.3,323.59,276.24,323.59,286.65,323.59,293.83,316.31,292.06,305.9,268.44,118.15,267.29,110.87,264.69,106.7,258.45,106.7,231.8,106.7,221.4,106.7,210.99,106.7,200.58,106.7,184.97,106.7,179.77,106.7,174.56,106.7,158.95,106.7,148.54,106.7,138.14,106.7,127.73,106.7,120.45,106.7,120.45,86.3,133.45,86.3,133.45,76.94,112.07,81.1,281.24,81.1,289.56,81.1,290.6,89.32,317.07,300,125.65,96.5,267.71,96.5,276.03,96.5,277.08,104.72,303.02,310,10.2,10.41,10.41],[113.6,76.47,97.93,76.47,88.0,86.39,88.73,102.07,88.94,106.98,89.26,111.78,89.46,116.69,99.18,311.05,99.55,318.36,105.03,323.59,112.35,323.59,275.35,323.59,282.67,323.59,287.63,318.36,287.27,311.05,276.9,104.0,276.6,97.0,273.3,91.5,266.0,91.5,234.71,91.5,224.26,91.5,213.81,91.5,203.36,91.5,187.69,91.5,182.46,91.5,177.24,91.5,161.56,91.5,151.11,91.5,140.66,91.5,124.99,91.5,111.2,91.5,111.2,87.96,119.35,87.96,118.83,76.47,113.86,82.21,277.1,82.21,285.1,82.21,285.5,90.57,296.8,317.8,125,108,262,108,268.5,108,270,116,279.88,318,1.77,11.49,9.93],[112.05,76.98,101.58,76.98,95.82,84.31,95.82,92.68,95.82,97.6,95.82,102.42,95.82,107.34,95.82,310.46,95.82,319.57,100.33,324.07,109.43,324.07,276.79,324.07,285.9,324.07,290.4,319.57,290.4,310.46,290.4,102.11,290.4,93.42,282.02,89.02,277.84,89.02,248.16,89.02,237.69,89.02,227.22,89.02,216.75,89.02,195.81,89.02,190.58,89.02,185.34,89.02,164.4,89.02,153.93,89.02,143.46,89.02,127.76,89.02,112.05,89.02,112.05,86.4,117.29,86.4,117.29,76.98,120.0,81.69,285.6,81.69,293.6,81.69,293.6,90.4,293.6,319.4,124,104,272,104,278,104,278,110,278.0,318,1.31,9.42,8.38],[118.93,77.02,110.44,77.02,103.49,83.96,103.49,92.46,103.49,96.1,103.49,99.85,103.49,103.49,103.49,308.65,103.49,317.14,110.44,324.09,118.93,324.09,282.17,324.09,290.67,324.09,297.62,317.14,297.62,308.65,297.62,92.46,297.62,83.96,290.67,77.02,282.17,77.02,255.7,77.02,244.67,77.02,233.64,77.02,222.61,77.02,200.55,77.02,195.04,77.02,189.52,77.02,167.46,77.02,156.43,77.02,145.4,77.02,134.37,77.02,123.34,77.02,123.34,77.02,123.34,77.02,123.34,77.02,124.0,81.45,277.76,81.45,288.79,81.45,288.79,90.0,288.79,300.0,123.34,92.46,272.25,92.46,279.97,92.46,279.97,100.18,279.97,300.0,0.01,8.82,0]];
+var LAST=K.length-1, BOOK=3;
+function $(id){return document.getElementById(id);}
+var body=$('vb-body'), barLine=$('vb-bar'), pageLine=$('vb-line'), logo=$('vb-logo'), motion=$('vb-motion');
+var book=$('vb-book'), cover=$('vb-cover'), lines=$('vb-lines');
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Catmull-Rom through the frames, split at the book (frame 04) so neither half overshoots into the other.
+function sample(p){
+  var lo=p<=BOOK?0:BOOK, hi=p<=BOOK?BOOK:LAST;
+  var s=Math.min(Math.floor(p),hi-1), t=p-s;
+  var a=K[Math.max(s-1,lo)], b=K[s], c=K[s+1], d=K[Math.min(s+2,hi)], t2=t*t, t3=t2*t, o=new Array(b.length);
+  for(var i=0;i<b.length;i++)o[i]=0.5*(2*b[i]+(-a[i]+c[i])*t+(2*a[i]-5*b[i]+4*c[i]-d[i])*t2+(-a[i]+3*b[i]-3*c[i]+d[i])*t3);
+  return o;
 }
-resize();frame(0);
-var bornAt=performance.now(), motionAt=0, booted=false, finished=false, raf=0;
-var FPS=/[?&]fps\b/.test(location.search), ft=[], lastNow=0;
-function report(){if(!FPS||ft.length<5)return;var s=ft.slice().sort(function(a,b){return a-b}),med=s[s.length>>1],late=ft.filter(function(x){return x>med*1.5}).length;
-  var d=document.createElement('div');d.textContent='splash: '+ft.length+' frames · median '+med.toFixed(1)+' ms ('+Math.round(1000/med)+' fps) · late '+late;
-  d.style.cssText='position:fixed;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));z-index:2147483647;background:#16231F;color:#fff;font:13px/1.4 system-ui;padding:8px 10px;border-radius:10px';
-  document.body.appendChild(d);setTimeout(function(){d.remove();},8000);}
-function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);report();
-  // the last splash frame is a full-screen page in the app's paper colour: match the page background,
-  // drop the splash in the same frame (no visible change), then let the app fade up from the paper.
+function pt(v,k){return v[2*k].toFixed(2)+' '+v[2*k+1].toFixed(2);}
+function setXY(v,k,x,y){v[2*k]=x;v[2*k+1]=y;}
+
+// Book → page (04→09): the two lines are the page edges seen past the cover. As the book turns to face you
+// that side foreshortens, so offsets, gaps and line widths all shrink by one factor S (1 at frame 04, 0 at 09).
+var BAND_TOP=77, EDGE={o1:15.6,o2:36.4,w:10.4,corner:7.2}, riffle=1;
+function pageEdges(v,p){
+  var S=Math.max(0,Math.min(1,(LAST-p)/(LAST-BOOK)));
+  var fx=v[28], fy=v[29];
+  var len=Math.hypot(fx-v[30],fy-v[31]), ux=(fx-v[30])/len, uy=(fy-v[31])/len;
+  var top=BAND_TOP+(EDGE.o2+EDGE.w/2)*S, d=top-v[37], k;   // silhouette top stays level while the book turns
+  for(k=15;k<=30;k++)v[2*k+1]+=d;
+  v[30]+=d*ux/uy; v[32]+=d*ux/uy;
+  var gx=v[30], gy=v[31];
+  len=Math.hypot(fx-gx,fy-gy); ux=(fx-gx)/len; uy=(fy-gy)/len;
+  var nx=uy, ny=-ux;
+  var w=EDGE.w*S, ex=(riffle-1)*EDGE.w*S, o1=EDGE.o1*S+ex, o2=EDGE.o2*S+2*ex;
+  var bandY=top-o2-w/2, slotY=top-o2+w/2;
+  v[1]=bandY; v[3]=bandY;
+  setXY(v,30,v[60],top); setXY(v,31,v[60],slotY); setXY(v,32,v[64],slotY); setXY(v,33,v[64],bandY);
+  v[88]=Math.max(0.01,(o2-w/2)/2);
+  var rc=EDGE.corner*S+0.5;
+  function place(i0,off){
+    var y=top-off, s=(y-gy-off*ny)/uy, cx=gx+off*nx+s*ux, endY=v[2*(i0+4)+1], endS=(endY-gy-off*ny)/uy;
+    setXY(v,i0,v[2*i0],y); setXY(v,i0+1,cx-rc,y); setXY(v,i0+2,cx,y);
+    setXY(v,i0+3,cx+rc*ux,y+rc*uy); setXY(v,i0+4,gx+off*nx+endS*ux,endY);
+  }
+  v[68]=Math.min(v[68],v[66]-1); v[78]=Math.max(v[78],v[60]);
+  place(34,o2); place(39,o1);
+  v[89]=w; v[90]=w;
+}
+function draw(p){
+  p=Math.max(0,Math.min(LAST,p));
+  var v=sample(p); if(p>=BOOK)pageEdges(v,p);
+  var r=Math.max(0.01,v[88]).toFixed(2);
+  body.setAttribute('d','M '+pt(v,0)+' C '+pt(v,1)+' '+pt(v,2)+' '+pt(v,3)+' C '+pt(v,4)+' '+pt(v,5)+' '+pt(v,6)+' L '+pt(v,7)+
+    ' C '+pt(v,8)+' '+pt(v,9)+' '+pt(v,10)+' L '+pt(v,11)+' C '+pt(v,12)+' '+pt(v,13)+' '+pt(v,14)+' L '+pt(v,15)+
+    ' C '+pt(v,16)+' '+pt(v,17)+' '+pt(v,18)+' L '+pt(v,19)+' C '+pt(v,20)+' '+pt(v,21)+' '+pt(v,22)+' L '+pt(v,23)+
+    ' Q '+pt(v,24)+' '+pt(v,25)+' L '+pt(v,26)+' C '+pt(v,27)+' '+pt(v,28)+' '+pt(v,29)+' L '+pt(v,30)+
+    ' A '+r+' '+r+' 0 0 1 '+pt(v,31)+' L '+pt(v,32)+' L '+pt(v,33)+' Z');
+  barLine.setAttribute('d','M '+pt(v,34)+' L '+pt(v,35)+' Q '+pt(v,36)+' '+pt(v,37)+' L '+pt(v,38));
+  pageLine.setAttribute('d','M '+pt(v,39)+' L '+pt(v,40)+' Q '+pt(v,41)+' '+pt(v,42)+' L '+pt(v,43));
+  barLine.setAttribute('stroke-width',Math.max(0,v[89]).toFixed(2));
+  pageLine.setAttribute('stroke-width',Math.max(0,v[90]).toFixed(2));
+}
+function pose(s){motion.setAttribute('transform',s&&s!==1?'translate(200 200) scale('+s.toFixed(4)+') translate(-200 -200)':'');}
+
+// The cover turns in 3D, so the last rectangle hands over to an HTML book in exactly the same place.
+// The drawn rectangle stays underneath, so there is never an empty frame while the browser builds the 3D layer.
+var bookFill=1;
+function placeBook(){
+  var box=logo.getBoundingClientRect(), u=box.width/400, s=0.92;
+  var x0=box.left+u*(200+s*(103.5-200)), x1=box.left+u*(200+s*(297.6-200));
+  var y0=box.top+u*(200+s*(77-200)), y1=box.top+u*(200+s*(324.1-200)), w=x1-x0, h=y1-y0;
+  book.style.left=x0+'px'; book.style.top=y0+'px'; book.style.width=w+'px'; book.style.height=h+'px';
+  book.style.setProperty('--vb-r',(15.4*u*s)+'px'); book.style.setProperty('--vb-rule',(h/13)+'px');
+  bookFill=Math.max(window.innerWidth/w,window.innerHeight/h)*1.6;
+}
+function openBook(x){
+  if(book.hidden){placeBook();book.hidden=false;}
+  var turn=inOutCubic(Math.min(1,x/0.7)), zoom=inCubic(Math.max(0,(x-0.15)/0.85));
+  cover.style.transform='rotateY('+(-178*turn).toFixed(2)+'deg)';
+  book.style.transform='scale('+(1+(bookFill-1)*zoom).toFixed(4)+')';
+  lines.style.opacity=(1-zoom).toFixed(3);
+}
+
+var T={intro:190,toBook:600,settle:375,toPage:630,breath:125,open:880};
+var marks={}, END=0; for(var key in T){marks[key]=[END,END+T[key]];END+=T[key];}
+function inOutCubic(x){return x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;}
+function inOutQuart(x){return x<0.5?8*x*x*x*x:1-Math.pow(-2*x+2,4)/2;}
+function inOutSine(x){return -(Math.cos(Math.PI*x)-1)/2;}
+function inCubic(x){return x*x*x;}
+function phase(e,k){return Math.min(1,Math.max(0,(e-marks[k][0])/T[k]));}
+function frame(e){
+  if(e<marks.intro[1]){draw(0);pose(1);}
+  else if(e<marks.toBook[1]){draw(inOutCubic(phase(e,'toBook'))*BOOK);pose(1);}
+  else if(e<marks.settle[1]){riffle=1+0.28*Math.sin(Math.PI*inOutSine(phase(e,'settle')));draw(BOOK);riffle=1;pose(1);}
+  else if(e<marks.toPage[1]){draw(BOOK+inOutQuart(phase(e,'toPage'))*(LAST-BOOK));pose(1);}
+  else if(e<marks.breath[1]){draw(LAST);pose(1-0.08*inOutSine(phase(e,'breath')));}
+  else{draw(LAST);pose(0.92);openBook(phase(e,'open'));}
+}
+
+var booted=false, finished=false, raf=0, motionAt=0;
+function finish(){if(finished)return;finished=true;cancelAnimationFrame(raf);
+  // the last frame is a full-screen page in the app's paper colour: match the page background,
+  // drop the splash in the same frame, then let the app fade up from the paper.
   var h=document.documentElement;h.classList.add('vb-reveal');h.classList.remove('vb-splash');
   if(root&&root.parentNode)root.parentNode.removeChild(root);
   setTimeout(function(){h.classList.remove('vb-reveal');},1000);}
-var slow=0;
 function tick(now){
-  if(motionAt&&lastNow){var dt=now-lastNow;ft.push(dt);slow=dt>24?slow+1:0;
-    if(slow>=3&&MAXDPR>2){MAXDPR=2;resize();}}               // device struggling: render at 2x instead of 3x
-  lastNow=now;
-  var t=motionAt?(now-motionAt)/1000:0;
-  frame(Math.min(t,END));
-  if(t>=END){finish();return;}
+  var e=now-motionAt; frame(Math.min(e,END));
+  if(e>=END){finish();return;}
   raf=requestAnimationFrame(tick);
 }
-window.__vbSplashSeek=function(t){frame(t);};
-window.__vbSplashInfo=function(){return {dpr:DPR,stat:nStatic,k:[K0.length,K1.length,K2.length]};};
-window.addEventListener('resize',function(){resize();});
+window.__vbSplashSeek=function(ms){frame(ms);};
+window.addEventListener('resize',function(){if(!book.hidden)placeBook();});
 root.addEventListener('click',function(){if(booted)finish();});
 setTimeout(function(){if(!booted)done();},6000);
+draw(0);
 return {boot:function(app){
   requestAnimationFrame(function(){setTimeout(function(){
     try{app();}catch(e){console.error(e);}
     booted=true;
     if(window.__vbSplashHold)return;              // test hook: keep the splash for frame-by-frame checks
     if(reduce){setTimeout(finish,250);return;}
-    motionAt=Math.max(performance.now(),bornAt+450);
+    motionAt=performance.now();
     raf=requestAnimationFrame(tick);
   },0);});
 }};
