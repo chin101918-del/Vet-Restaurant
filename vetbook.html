@@ -126,7 +126,7 @@ html.vb-inapp .vbi-note{display:block}
 #vb-logo .vb-shade{fill:#FFFFFF;stroke:#FFFFFF}
 #vb-logo .vb-edge{fill:none;stroke-linecap:round;stroke-linejoin:round}
 #vb-body{stroke:none}
-.vb-book{position:fixed;left:0;top:0;perspective:1100px;transform-origin:50% 50%;pointer-events:none;will-change:transform}
+.vb-book{position:fixed;z-index:3;left:0;top:0;perspective:1100px;transform-origin:50% 50%;pointer-events:none;will-change:transform}
 .vb-book[hidden]{display:none}
 .vb-book .vb-pages,.vb-book .vb-front,.vb-book .vb-back{position:absolute;inset:0;border-radius:var(--vb-r,14px)}
 .vb-book .vb-pages{background:#F3F5F1;overflow:hidden}
@@ -311,6 +311,7 @@ function placeBook(){
 }
 function openBook(x){
   if(book.hidden){placeBook();book.hidden=false;}
+  if(x>0.08)logo.style.visibility='hidden';   // the book has painted by now: drop the drawn rectangle underneath
   var turn=inOutCubic(Math.min(1,x/0.7)), zoom=inCubic(Math.max(0,(x-0.15)/0.85));
   cover.style.transform='rotateY('+(-178*turn).toFixed(2)+'deg)';
   book.style.transform='scale('+(1+(bookFill-1)*zoom).toFixed(4)+')';
