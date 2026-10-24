@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <script>
 /* Opened from the Home Screen (standalone) → splash + app. Opened in a browser on iPhone/iPad → the install guide instead. */
 (function(){var h=document.documentElement,ua=navigator.userAgent,
@@ -486,19 +486,20 @@ var __vbApp = function () {
     if (!tplCache[key]) { var d = document.createElement('template'); d.innerHTML = SCREENS[key].tpl; tplCache[key] = d.content; }
     return tplCache[key];
   }
+  var drawn = null;
   function draw() {
     var c = instance(current);
     var vals = c.renderVals();
     var acc = [];
     tpl(current).childNodes.forEach(function (ch) { render(ch, vals, acc); });
     var all0 = phone.querySelectorAll('*');
-    var scrolls = [].map.call(all0, function (n) { return n.scrollTop; });
+    var same = drawn === current, scrolls = same ? [].map.call(all0, function (n) { return [n.scrollTop, n.scrollLeft]; }) : []; drawn = current;
     var fi = [].indexOf.call(all0, document.activeElement), caret = null;
     if (fi >= 0) { try { caret = document.activeElement.selectionStart; } catch (e) {} }
     phone.innerHTML = '';
     acc.forEach(function (n) { phone.appendChild(n); });
     var nodes = phone.querySelectorAll('*');
-    scrolls.forEach(function (t, i) { if (t && nodes[i]) nodes[i].scrollTop = t; });
+    scrolls.forEach(function (t, i) { if (nodes[i]) { if (t[0]) nodes[i].scrollTop = t[0]; if (t[1]) nodes[i].scrollLeft = t[1]; } });
     if (fi >= 0 && nodes[fi] && nodes[fi].focus) { nodes[fi].focus(); if (caret != null) { try { nodes[fi].setSelectionRange(caret, caret); } catch (e) {} } }
     [].forEach.call(bar.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', b.dataset.key === current ? 'true' : 'false'); });
   }
@@ -509,6 +510,19 @@ var __vbApp = function () {
     b.addEventListener('click', function () { go(k); });
     bar.appendChild(b);
   });
+  // for the swipe gestures: render any screen without showing it, and switch screens
+  window.__vbNav = {
+    tabs: ['Main.dc.html', 'Calendar.dc.html', 'Log.dc.html', 'Book.dc.html', 'Me.dc.html'],
+    current: function () { return current; },
+    peek: function (key, patch) {
+      if (!SCREENS[key]) return null;
+      var c = instance(key), saved = c.state, acc = [];
+      if (patch) c.state = Object.assign({}, saved, patch);
+      try { var vals = c.renderVals(); tpl(key).childNodes.forEach(function (ch) { render(ch, vals, acc); }); } finally { c.state = saved; }
+      return acc.filter(function (n) { return n.nodeType === 1; })[0];
+    },
+    go: go
+  };
   draw();
 };
 if (window.__vbSplash) window.__vbSplash.boot(__vbApp); else __vbApp();
@@ -563,6 +577,223 @@ if (window.__vbSplash) window.__vbSplash.boot(__vbApp); else __vbApp();
     yes.disabled=true;
     location.reload();   // reopens on the login screen, which hands over to the opening animation as on first launch
   });
+})();
+</script>
+<style>
+/* Touch feel: no double-tap zoom, sheets follow the finger, swipe left/right between the main tabs. */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+.phone{position:relative}
+</style>
+<script>
+(function(){
+  var phone=document.getElementById('phone'); if(!phone)return;
+  var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var OUT='cubic-bezier(.22,.8,.24,1)';
+
+  // A bottom sheet = a dimmed layer holding a "ปิด" backdrop button and a dialog section.
+  function closeBtn(ov){for(var i=0;ov&&i<ov.children.length;i++){var c=ov.children[i];if(c.tagName==='BUTTON'&&c.getAttribute('aria-label')==='ปิด')return c;}return null;}
+  function sheetIn(root){
+    if(!root||!root.querySelectorAll)return null;
+    var ss=root.querySelectorAll('section[role="dialog"]');
+    for(var i=0;i<ss.length;i++){var ov=ss[i].parentElement,b=closeBtn(ov);if(b&&!ov.__vbExit)return {sec:ss[i],ov:ov,btn:b};}
+    return null;
+  }
+  function sheetOf(el){var s=el.closest&&el.closest('section[role="dialog"]');if(!s||!phone.contains(s))return null;var b=closeBtn(s.parentElement);return b?{sec:s,ov:s.parentElement,btn:b}:null;}
+  function dim(a){return 'rgba(18,35,31,'+(0.55*Math.max(0,Math.min(1,a))).toFixed(3)+')';}
+
+  // ---------- sheets slide up when they open and slide down when they close (whatever closed them)
+  new MutationObserver(function(recs){
+    var gone=null, added=null;
+    recs.forEach(function(r){
+      [].forEach.call(r.removedNodes,function(n){if(n.nodeType===1&&!n.__vbPeek&&!gone)gone=n;});
+      [].forEach.call(r.addedNodes,function(n){if(n.nodeType===1&&!n.__vbPeek)added=n;});
+    });
+    if(!added||!added.isConnected||reduce)return;
+    var was=gone&&sheetIn(gone), now=sheetIn(added);
+    if(now&&!was){
+      now.sec.animate([{transform:'translateY(100%)'},{transform:'translateY(0)'}],{duration:340,easing:OUT});
+      now.ov.animate([{backgroundColor:dim(0)},{backgroundColor:dim(1)}],{duration:260,easing:'ease-out'});
+    }else if(was&&!now){
+      // put the old sheet back for a moment and let it leave from wherever it is (mid-drag included)
+      var ov=was.ov, sec=was.sec, from=sec.style.transform||'translateY(0)', fromBg=ov.style.backgroundColor||dim(1);
+      var path=[], n=ov.parentElement; while(n&&n!==gone){path.unshift([].indexOf.call(n.parentElement.children,n));n=n.parentElement;}
+      var host=added; path.forEach(function(k){if(host&&host.children[k])host=host.children[k];});
+      ov.__vbExit=true; ov.style.pointerEvents='none'; host.appendChild(ov);
+      var fast=sec.__vbFast, dur=fast?Math.max(140,Math.min(260,fast)):260;
+      sec.animate([{transform:from},{transform:'translateY(100%)'}],{duration:dur,easing:fast?'cubic-bezier(.25,.6,.4,1)':'cubic-bezier(.4,0,.8,.4)',fill:'forwards'});
+      var a=ov.animate([{backgroundColor:fromBg},{backgroundColor:dim(0)}],{duration:dur,easing:'ease-out',fill:'forwards'});
+      a.onfinish=function(){if(ov.parentNode)ov.parentNode.removeChild(ov);};
+    }
+  }).observe(phone,{childList:true});
+
+  // ---------- drag a sheet down to close it
+  var sd=null;
+  function track(o,y){var t=performance.now();o.pts.push([t,y]);while(o.pts.length>2&&t-o.pts[0][0]>90)o.pts.shift();}
+  function speed(o){var a=o.pts[0],b=o.pts[o.pts.length-1];return b&&a&&b[0]>a[0]?(b[1]-a[1])/(b[0]-a[0]):0;}
+  phone.addEventListener('touchstart',function(e){
+    sd=null; if(e.touches.length!==1)return;
+    var t=e.target, s=sheetOf(t); if(!s||t.closest('input,textarea,select'))return;
+    var sc=null;
+    for(var n=t;n&&n!==s.ov;n=n.parentElement){
+      if(n.scrollHeight>n.clientHeight+1){var oy=getComputedStyle(n).overflowY;if(oy==='auto'||oy==='scroll'){sc=n;break;}}
+    }
+    sd={s:s,x:e.touches[0].clientX,y:e.touches[0].clientY,sc:sc,on:false,d:0,pts:[]};
+  },{passive:true});
+  phone.addEventListener('touchmove',function(e){
+    if(!sd)return;
+    var x=e.touches[0].clientX, y=e.touches[0].clientY, dx=x-sd.x, dy=y-sd.y;
+    if(!sd.on){
+      if(Math.abs(dx)<6&&Math.abs(dy)<6)return;
+      if(dy>0&&dy>Math.abs(dx)&&(!sd.sc||sd.sc.scrollTop<=0)){
+        sd.on=true; sd.y=y; sd.h=sd.s.sec.offsetHeight||1;
+        sd.s.sec.style.transition='none'; sd.s.sec.style.willChange='transform';
+      }else{sd=null;return;}
+    }
+    e.preventDefault();
+    var d=Math.max(0,y-sd.y); sd.d=d; track(sd,y);
+    sd.s.sec.style.transform='translateY('+d.toFixed(1)+'px)';
+    sd.s.ov.style.backgroundColor=dim(1-d/sd.h);
+  },{passive:false});
+  function endSheet(){
+    if(!sd)return; var o=sd; sd=null; if(!o.on)return;
+    var v=speed(o), sec=o.s.sec;
+    if(o.d>o.h*0.28||(v>0.45&&o.d>14)){
+      // keep going at roughly the finger's speed
+      sec.__vbFast=v>0.2?(o.h-o.d)/v:220;
+      o.s.btn.click();
+    }else{
+      sec.style.transition='transform .32s '+OUT; sec.style.transform='translateY(0)';
+      o.s.ov.style.transition='background-color .32s ease'; o.s.ov.style.backgroundColor=dim(1);
+      setTimeout(function(){sec.style.transition='';sec.style.willChange='';o.s.ov.style.transition='';},340);
+    }
+  }
+  phone.addEventListener('touchend',endSheet); phone.addEventListener('touchcancel',endSheet);
+
+  // ---------- swipe left / right between the main tabs, the next page follows the finger
+  var sw=null, busy=false;
+  function hScroller(t,root,dx){
+    for(var n=t;n&&n!==root;n=n.parentElement){
+      if(n.scrollWidth>n.clientWidth+1){
+        var ox=getComputedStyle(n).overflowX; if(ox!=='auto'&&ox!=='scroll')continue;
+        var max=n.scrollWidth-n.clientWidth;
+        if((dx<0&&n.scrollLeft<max-1)||(dx>0&&n.scrollLeft>1))return true;   // the strip can still scroll this way: let it
+      }
+    }
+    return false;
+  }
+  function movers(root){return [].filter.call(root.children,function(c){return c.tagName!=='NAV'&&!c.__vbPeek;});}
+  function makePeek(key,patch,keepNav){
+    var el=window.__vbNav.peek(key,patch); if(!el)return null;
+    el.__vbPeek=true; el.setAttribute('aria-hidden','true');
+    el.style.position='absolute'; el.style.left='0'; el.style.top='0'; el.style.zIndex='3'; el.style.pointerEvents='none'; el.style.willChange='transform';
+    var nv=el.querySelector('nav'); if(nv&&!keepNav)nv.style.visibility='hidden';   // the real tab bar stays put on top
+    phone.appendChild(el); return el;
+  }
+  function place(o,d,anim){
+    var tr=anim?'transform .3s '+OUT:'none';
+    o.mv.forEach(function(c){c.style.transition=tr;c.style.transform=d?'translateX('+d.toFixed(1)+'px)':'';});
+    [-1,1].forEach(function(s){var p=o.peeks[s];if(p){p.style.transition=tr;p.style.transform='translateX('+(s*o.W+d).toFixed(1)+'px)';p.style.visibility=(s===1?d<0:d>0)||anim?'':'hidden';}});
+  }
+  phone.addEventListener('touchstart',function(e){
+    sw=null; var nav=window.__vbNav;
+    if(busy||!nav||e.touches.length!==1)return;
+    var i=nav.tabs.indexOf(nav.current()), root=phone.firstElementChild;
+    if(i<0||!root||root.querySelector('[role="dialog"]'))return;           // not on a tab, or a sheet / detail page is open
+    var tg=e.target; if(tg.closest('nav,select,input[type=range]')||(tg===document.activeElement&&/^(INPUT|TEXTAREA)$/.test(tg.tagName)))return;
+    sw={x:e.touches[0].clientX,y:e.touches[0].clientY,i:i,root:root,t:e.target,on:false,d:0,pts:[],peeks:{}};
+  },{passive:true});
+  phone.addEventListener('touchmove',function(e){
+    if(!sw)return;
+    var x=e.touches[0].clientX, y=e.touches[0].clientY, dx=x-sw.x, dy=y-sw.y;
+    if(!sw.on){
+      if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+      if(Math.abs(dx)<Math.abs(dy)*1.15||hScroller(sw.t,sw.root,dx)){sw=null;return;}
+      sw.on=true; sw.x=x; sw.W=sw.root.offsetWidth||phone.offsetWidth; sw.mv=movers(sw.root);
+      sw.mv.forEach(function(c){c.style.willChange='transform';});
+    }
+    e.preventDefault();
+    var nav=window.__vbNav, d=x-sw.x, side=d<0?1:-1, j=sw.i+side;
+    if(d!==0&&j>=0&&j<nav.tabs.length){if(!sw.peeks[side])sw.peeks[side]=makePeek(nav.tabs[j]);}
+    else d*=0.22;                                                            // first / last tab: rubber band
+    sw.d=d; track(sw,x); place(sw,d,false);
+  },{passive:false});
+  function endSwipe(){
+    if(!sw)return; var o=sw; sw=null; if(!o.on)return;
+    var nav=window.__vbNav, v=speed(o), side=0;
+    if((o.d<-o.W*0.25||(v<-0.35&&o.d<-20))&&o.peeks[1])side=1;
+    else if((o.d>o.W*0.25||(v>0.35&&o.d>20))&&o.peeks[-1])side=-1;
+    busy=true; place(o,-side*o.W,true);
+    setTimeout(function(){
+      [-1,1].forEach(function(s){var p=o.peeks[s];if(p&&p.parentNode)p.parentNode.removeChild(p);});
+      if(side){
+        [].forEach.call(o.root.querySelectorAll('*'),function(n){if(n.scrollTop)n.scrollTop=0;});   // the new page opens at its top, as shown
+        nav.go(nav.tabs[o.i+side]);
+      }else o.mv.forEach(function(c){c.style.transition='';c.style.transform='';c.style.willChange='';});
+      busy=false;
+    },reduce?0:310);
+  }
+  phone.addEventListener('touchend',endSwipe); phone.addEventListener('touchcancel',endSwipe);
+  // ---------- sub-pages (เหรียญทั้งหมด, รายละเอียดที่ฝึก, บันทึกแลป): swipe right to go back, the page below shows through
+  var BACK='[aria-label="กลับ"],[aria-label="กลับไปเลือกแลป"]';
+  function backTarget(btn){                                    // what the back button leads to, for drawing it underneath
+    var h=btn.getAttribute('href');
+    if(h&&h!=='#')return {key:h.replace(/^#/,'')+'.dc.html'};  // links are rewritten to "#Log" by the app
+    if(btn.getAttribute('aria-label')==='กลับไปเลือกแลป')return {key:'Lab.dc.html',patch:{view:'pick'}};
+    return null;
+  }
+  var bk=null;
+  phone.addEventListener('touchstart',function(e){
+    bk=null; var nav=window.__vbNav;
+    if(busy||!nav||e.touches.length!==1)return;
+    var root=phone.firstElementChild; if(!root)return;
+    var tg=e.target; if(tg.closest('select,input[type=range]')||(tg===document.activeElement&&/^(INPUT|TEXTAREA)$/.test(tg.tagName)))return;
+    var dl=root.querySelector('section[role="dialog"]'), layer, btn, under=null;
+    if(dl){
+      if(closeBtn(dl.parentElement))return;                    // a bottom sheet: that one drags down instead
+      btn=dl.querySelector(BACK); layer=dl;                    // full-screen detail over its own page
+    }else if(nav.tabs.indexOf(nav.current())<0){
+      btn=root.querySelector(BACK); layer=root; under=btn&&backTarget(btn);   // a separate screen (บันทึกแลป)
+      if(!under)return;
+    }
+    if(!btn||!layer)return;
+    bk={x:e.touches[0].clientX,y:e.touches[0].clientY,t:tg,root:root,layer:layer,btn:btn,under:under,on:false,d:0,pts:[]};
+  },{passive:true});
+  phone.addEventListener('touchmove',function(e){
+    if(!bk)return;
+    var x=e.touches[0].clientX, y=e.touches[0].clientY, dx=x-bk.x, dy=y-bk.y;
+    if(!bk.on){
+      if(Math.abs(dx)<8&&Math.abs(dy)<8)return;
+      if(dx<=0||Math.abs(dx)<Math.abs(dy)*1.15||hScroller(bk.t,bk.layer,dx)){bk=null;return;}
+      bk.on=true; bk.x=x; bk.W=bk.root.offsetWidth||phone.offsetWidth;
+      if(bk.under){
+        bk.peek=makePeek(bk.under.key,bk.under.patch,true);
+        if(bk.peek){bk.peek.style.zIndex='1';bk.peek.style.visibility='';}
+        bk.layer.style.zIndex='3';
+      }
+      bk.layer.style.willChange='transform'; bk.layer.style.boxShadow='-10px 0 28px rgba(18,35,31,.18)';
+    }
+    e.preventDefault();
+    var d=Math.max(0,x-bk.x); bk.d=d; track(bk,x); moveBack(bk,d,false);
+  },{passive:false});
+  function moveBack(o,d,anim){
+    var tr=anim?'transform .28s '+OUT:'none';
+    o.layer.style.transition=tr; o.layer.style.transform=d?'translateX('+d.toFixed(1)+'px)':'';
+    if(o.peek){o.peek.style.transition=tr;o.peek.style.transform='translateX('+(-0.3*(o.W-d)).toFixed(1)+'px)';}
+  }
+  function endBack(){
+    if(!bk)return; var o=bk; bk=null; if(!o.on)return;
+    var v=speed(o), go=o.d>o.W*0.3||(v>0.35&&o.d>20);
+    busy=true; moveBack(o,go?o.W:0,true);
+    setTimeout(function(){
+      if(o.peek&&o.peek.parentNode)o.peek.parentNode.removeChild(o.peek);
+      if(go){
+        if(o.under)[].forEach.call(o.root.querySelectorAll('*'),function(n){if(n.scrollTop)n.scrollTop=0;});
+        o.btn.click();
+      }else{o.layer.style.transition='';o.layer.style.transform='';o.layer.style.willChange='';o.layer.style.boxShadow='';o.layer.style.zIndex=o.layer===o.root?'':o.layer.style.zIndex;}
+      busy=false;
+    },reduce?0:290);
+  }
+  phone.addEventListener('touchend',endBack); phone.addEventListener('touchcancel',endBack);
 })();
 </script>
 </body>
