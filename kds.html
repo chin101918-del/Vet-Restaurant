@@ -780,10 +780,12 @@
                         note: item.orders.note,
                         pax: sessionObj?.pax || 0,
                         discount: sessionObj?.discount || 0,
+                        is_takehome: item.orders.order_type === 'takehome' || Boolean(item.is_takehome),
                         created_at: item.created_at,
                         items: []
                     };
                 }
+                ordersData[orderId].is_takehome = ordersData[orderId].is_takehome || Boolean(item.is_takehome);
                 ordersData[orderId].items.push(item);
             });
             renderBoard();
@@ -861,7 +863,6 @@
                         <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(241,102,106,0.18);color:#ffb4b6;font-size:0.875rem;font-weight:500;text-transform:uppercase;letter-spacing:0.05em;padding:4px 12px;border-radius:9999px;box-shadow:0 1px 2px rgba(0,0,0,0.1);white-space:nowrap;">
                             ส่วนลด ${pct}%
                         </span>` : '';
-
                 if (order.order_type === 'takehome') {
                     headerBg = 'linear-gradient(160deg, rgba(45,28,74,0.9), var(--bg) 130%)'; // Dark Purple (Takehome)
                     cardBorderColor = 'rgba(167,139,214,0.35)';
@@ -972,6 +973,7 @@
                                     
                                     <div class="item-info">
                                         <p class="text-xl font-bold leading-tight" style="color: var(--text);">${item.item_name_th}</p>
+                                        ${item.is_takehome ? '<span style="display:inline-flex;align-items:center;margin-top:6px;background:rgba(167,139,214,0.18);color:#d8c7ff;font-size:0.7rem;font-weight:700;letter-spacing:0.06em;padding:3px 8px;border-radius:9999px;border:1px solid rgba(167,139,214,0.35);white-space:nowrap;">TAKEHOME</span>' : ''}
                                         <div class="mt-1 flex flex-wrap gap-1">${formatOptionChips(item.option)}</div>
                                         ${item.note ? `
                                             <div class="note-container">
