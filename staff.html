@@ -2561,6 +2561,7 @@
         let activeSessionData = null;
         let selectedDiscount = 0;
         let editingStatus = '';
+        let activeTakehomeDiscountOrderId = null;
 
         // Audio state
         let audioEnabled = true;   // default: เปิด
@@ -3027,12 +3028,8 @@
             const REAL_ZONES = ['D', 'A', 'B', 'C', 'W', 'X', 'Y'];
             const realTables = tables.filter(t => REAL_ZONES.includes(t.zone) && t.is_active !== false);
             const freeTablesCount = realTables.filter(t => t.status !== 'occupied').length;
-            const freeLabelEl = document.getElementById('freeTableLabel');
-            if (freeLabelEl) {
-                freeLabelEl.innerHTML = `ว่าง <b>${freeTablesCount}</b> โต๊ะ`;
-                freeLabelEl.classList.toggle('is-full', freeTablesCount === 0);
-                freeLabelEl.title = `โต๊ะว่าง ${freeTablesCount} จากทั้งหมด ${realTables.length} โต๊ะ`;
-            }
+            latestFreeTables = { count: freeTablesCount, total: realTables.length };
+            renderHeaderStatusLabel();
 
             // เริ่มการวาดแผนผังใหม่
             const container = document.getElementById('floorPlan');
@@ -3783,9 +3780,9 @@
             if (currentChannel === 'takehome') {
                 const { data: orders } = await supabaseClient
                     .from('orders')
-                    .select('id, th_code, created_at, status, sessions(discount), order_items(total_price, status)')
-                    .eq('order_type', 'takehome')
-                    .in('status', ['served', 'cancel'])
+                    .select('id, th_code, table_id, order_type, is_takehome, payment_method, staff_name, note, created_at, status, th_handover_at, sessions(discount), order_items!inner(total_price, status, kds_station, is_takehome)')
+                    .eq('order_items.is_takehome', true)
+                    .or('status.in.(served,cancel),th_handover_at.not.is.null')
                     .gte('created_at', getStartOfTodayBKK())
                     .order('created_at', { ascending: false })
                     .limit(30);
@@ -3798,17 +3795,24 @@
                 container.innerHTML = orders.map(o => {
                     const sessionObj = Array.isArray(o.sessions) ? o.sessions[0] : o.sessions;
                     const discount = parseFloat(sessionObj?.discount || 0) || 0;
+                    const isDedicatedTakehome = o.order_type === 'takehome';
                     const digits = String(o.th_code || '').replace(/\D/g, '');
-                    const thDisplay = digits ? `TH${digits.padStart(2, '0')}` : 'TH??';
+                    const thDisplay = isDedicatedTakehome
+                        ? (digits ? `TH${digits.padStart(2, '0')}` : 'TH??')
+                        : (o.table_id === 'STAFF' ? (o.staff_name || 'พนักงาน') : `โต๊ะ ${o.table_id || '?'}`);
                     const total = (o.order_items || []).filter(i => i.status !== 'cancel').reduce((s, i) => s + (parseFloat(i.total_price) || 0), 0);
                     const discountable = (o.order_items || []).filter(i => i.status !== 'cancel' && i.kds_station !== 'น้ำ').reduce((s, i) => s + (parseFloat(i.total_price) || 0), 0);
                     const net = total - (discountable * (discount / 100));
                     const timeStr = new Date(o.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
                     const dateStr = new Date(o.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
                     const isCancelled = o.status === 'cancel';
+                    // ✅ ออเดอร์ staff ที่ส่งมอบส่วน TakeHome แล้ว (th_handover_at) แต่ orders.status ยังเป็น pending อยู่ (รอเช็คบิลที่หน้าพนักงาน)
+                    const isPortionHandover = !isDedicatedTakehome && !!o.th_handover_at && o.status !== 'served' && o.status !== 'cancel';
                     const statusBadge = isCancelled
                         ? `<span class="text-red-400 text-xs"><i class="fas fa-times-circle mr-1"></i>ยกเลิก</span>`
-                        : `<span class="text-emerald-400 text-xs"><i class="fas fa-check-circle mr-1"></i>ส่งมอบแล้ว</span>`;
+                        : isPortionHandover
+                            ? `<span class="text-emerald-400 text-xs"><i class="fas fa-check-circle mr-1"></i>ส่งมอบแล้ว (รอเช็คบิลที่หน้าพนักงาน)</span>`
+                            : `<span class="text-emerald-400 text-xs"><i class="fas fa-check-circle mr-1"></i>ส่งมอบแล้ว</span>`;
 
                     return `
                             <div class="bg-[#1a1a1a] border border-white/5 p-5 rounded-2xl flex justify-between items-center hover:border-white/10 transition-colors">
@@ -3819,6 +3823,8 @@
                                     <div>
                                         <div class="flex items-center gap-2 mb-1">
                                             
+                                            ${!isDedicatedTakehome ? '<span class="bg-amber-500/20 text-amber-300 text-[10px] px-2 py-0.5 rounded-full border border-amber-500/30">รับกลับบ้าน</span>' : ''}
+                                            ${isDedicatedTakehome && o.payment_method ? `<span class="text-[10px] px-2 py-0.5 rounded-full border" style="background-color: var(--accent-soft-strong); color: var(--accent-active); border-color: rgba(107, 127, 215, 0.35);">${o.payment_method === 'cash' ? 'เงินสด' : 'เงินโอน'}</span>` : ''}
                                             ${discount > 0 ? `<span class="bg-red-500/20 text-red-400 text-[10px] px-2 py-0.5 rounded-full border border-red-500/30">ลด ${discount}%</span>` : ''}
                                             ${statusBadge}
                                         </div>
@@ -3920,7 +3926,7 @@
                                     <span class="text-white font-bold leading-none mt-0.5">${session.table_id}</span>
                                 </div>
                                 <div>
-                                    <p class="text-slate-300 text-sm mb-1"><i class="fas fa-users text-slate-500 mr-1"></i> ลูกค้า: ${session.pax} ท่าน &nbsp;|&nbsp; ส่วนลด: ${session.discount}%</p>
+                                    <p class="text-slate-300 text-sm mb-1"><span class="inline-flex items-center" style="color:#64748b; margin-right:4px; font-size:0.85em;">${STAFF_GROUP_ICON_SVG}</span> ลูกค้า: ${session.pax} ท่าน &nbsp;|&nbsp; ส่วนลด: ${session.discount}%</p>
                                     <p class="text-xs text-slate-500"><i class="far fa-clock mr-1"></i> ปิดบิลเมื่อ: ${dateStr} เวลา ${timeStr}</p>
                                 </div>
                             </div>
@@ -4011,10 +4017,16 @@
             if (!activeSessionData) return;
 
             try {
-                const { error } = await supabaseClient
-                    .from('sessions')
-                    .update({ discount: stagedDiscountValue })
-                    .eq('id', activeSessionData.id);
+                const isTakehomeDiscount = window._currentDiscountSource === 'takehome' && activeTakehomeDiscountOrderId;
+                const { error } = isTakehomeDiscount
+                    ? await supabaseClient
+                        .from('orders')
+                        .update({ note: `TH_DISC|${stagedDiscountValue}` })
+                        .eq('id', activeTakehomeDiscountOrderId)
+                    : await supabaseClient
+                        .from('sessions')
+                        .update({ discount: stagedDiscountValue })
+                        .eq('id', activeSessionData.id);
 
                 if (error) throw error;
 
@@ -4034,6 +4046,7 @@
                 }
 
                 window._currentDiscountSource = null;
+                activeTakehomeDiscountOrderId = null;
 
             } catch (err) {
                 console.error("Confirm Discount Error:", err);
@@ -4586,10 +4599,30 @@
         // CHANNEL SWITCHING (Tables / TakeHome / Staff)
         // ════════════════════════════════════════════════════════
         let currentChannel = 'tables';
+        let latestFreeTables = { count: 0, total: 0 };
+        let pendingCardCount = { takehome: 0, staff: 0 };
+
+        // ป้ายสถานะบนหัวจอ: โชว์ "โต๊ะว่าง" เฉพาะตอนอยู่ panel ผังโต๊ะ (table grid)
+        // ส่วน panel เพื่อนสั่งกินเอง (staff) และ TakeHome ให้โชว์ "รอชำระ: N" (จำนวนการ์ดที่ยังรอชำระ/ส่งมอบ) แทน
+        function renderHeaderStatusLabel() {
+            const label = document.getElementById('freeTableLabel');
+            if (!label) return;
+            if (currentChannel === 'tables') {
+                label.innerHTML = `ว่าง <b>${latestFreeTables.count}</b> โต๊ะ`;
+                label.classList.toggle('is-full', latestFreeTables.count === 0);
+                label.title = `โต๊ะว่าง ${latestFreeTables.count} จากทั้งหมด ${latestFreeTables.total} โต๊ะ`;
+            } else {
+                const count = pendingCardCount[currentChannel] || 0;
+                label.innerHTML = `รอชำระ: <b>${count}</b>`;
+                label.classList.toggle('is-full', false);
+                label.title = `ออเดอร์รอชำระ ${count} ใบ`;
+            }
+        }
         const newOrdersDot = { tables: 0, takehome: 0, staff: 0 };
 
         function switchChannel(channel) {
             currentChannel = channel;
+            renderHeaderStatusLabel();
             if (channel === 'tables') setTimeout(fitFloorPlan, 0);
 
             // 1. จัดการ Class Active บน Navbar (เปลี่ยนคลาสสีขาว)
@@ -4641,16 +4674,24 @@
         // ════════════════════════════════════════════════════════
         async function reopenOrder(orderId, channelType) {
             Notify.confirm('ดึงออเดอร์กลับ', 'ต้องการดึงออเดอร์นี้กลับมาดำเนินการใหม่ใช่ไหม?', async () => {
+                const orderUpdate = { status: 'pending' };
+                if (channelType === 'takehome') orderUpdate.th_handover_at = null; // ✅ ล้างสถานะ "ส่งมอบส่วนกลับบ้าน" ด้วย เผื่อเป็นออเดอร์ staff ที่ดึงกลับ
                 const { error: orderErr } = await supabaseClient
                     .from('orders')
-                    .update({ status: 'pending' })
+                    .update(orderUpdate)
                     .eq('id', orderId);
                 if (orderErr) { Notify.toast('เกิดข้อผิดพลาด: ' + orderErr.message, 'error'); return; }
-                await supabaseClient
-                    .from('order_items')
-                    .update({ status: 'pending', served_at: null })
-                    .eq('order_id', orderId)
-                    .eq('status', 'served');
+
+                // ✅ TakeHome: ครัวทำเสร็จไปแล้วตั้งแต่ก่อนส่งมอบ ไม่ต้องรีเซ็ตรายการอาหารกลับเป็น pending
+                // ดึงกลับแค่ตัวออเดอร์ให้กลับมาอยู่ในหน้ารอส่งมอบ โดยการ์ดจะขึ้นเป็น "Ready" ทันที
+                if (channelType !== 'takehome') {
+                    await supabaseClient
+                        .from('order_items')
+                        .update({ status: 'pending', served_at: null })
+                        .eq('order_id', orderId)
+                        .eq('status', 'served');
+                }
+
                 Notify.toast('ดึงออเดอร์กลับสำเร็จ');
                 closeModal('historyModal');
                 if (channelType === 'takehome') fetchTakehomeOrders();
@@ -4667,18 +4708,21 @@
             const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select(`
-                    id, th_code, table_id, created_at, status, staff_name, note, customer_name, customer_phone,
+                    id, th_code, table_id, created_at, status, order_type, is_takehome, payment_method, staff_name, note, customer_name, customer_phone, th_handover_at,
                     sessions(discount),
-                    order_items(id, item_name_th, quantity, total_price, option, note, status, kds_station)
+                    order_items!inner(id, item_name_th, quantity, total_price, option, note, status, kds_station, is_takehome)
                 `)
-                .eq('order_type', 'takehome')
+                .eq('order_items.is_takehome', true)
                 .eq('status', 'pending')
+                .is('th_handover_at', null)
                 .gte('created_at', getStartOfTodayBKK())
                 .order('created_at', { ascending: true });
 
             if (error) { console.error('TH fetch error:', error); return; }
 
             document.getElementById('cntTH').innerText = (orders || []).length;
+            pendingCardCount.takehome = (orders || []).length;
+            if (currentChannel === 'takehome') renderHeaderStatusLabel();
             renderKdsCards('takehomeContainer', orders || [], 'takehome');
         }
 
@@ -4716,9 +4760,17 @@
             const totalNet = totalGross - discountAmount;
 
             document.getElementById('cntStaff').innerText = (orders || []).length;
+            pendingCardCount.staff = (orders || []).length;
+            if (currentChannel === 'staff') renderHeaderStatusLabel();
             renderKdsCards('staffContainer', orders || [], 'staff');
         }
 
+
+        // ════════════════════════════════════════════════════════
+        // ไอคอนกลาง: ใช้อันเดียวกับ navbar ด้านล่างทั้งเว็บ (ถุงกลับบ้าน / กลุ่มคน)
+        // ════════════════════════════════════════════════════════
+        const TAKEHOME_BAG_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;"><path fill-rule="evenodd" d="M7.5 6v.75H5.513c-.96 0-1.764.724-1.865 1.679l-1.263 12A1.875 1.875 0 0 0 4.25 22.5h15.5a1.875 1.875 0 0 0 1.865-2.071l-1.263-12a1.875 1.875 0 0 0-1.865-1.679H16.5V6a4.5 4.5 0 1 0-9 0ZM12 3a3 3 0 0 0-3 3v.75h6V6a3 3 0 0 0-3-3Zm-3 8.25a3 3 0 1 0 6 0v-.75a.75.75 0 0 1 1.5 0v.75a4.5 4.5 0 1 1-9 0v-.75a.75.75 0 0 1 1.5 0v.75Z" clip-rule="evenodd" /></svg>';
+        const STAFF_GROUP_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:1em;height:1em;display:inline-block;vertical-align:-0.125em;"><path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 1 1 7.5 0 3.75 3.75 0 0 1-7.5 0ZM15.75 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM2.25 9.75a3 3 0 1 1 6 0 3 3 0 0 1-6 0ZM6.31 15.117A6.745 6.745 0 0 1 12 12a6.745 6.745 0 0 1 6.709 7.498.75.75 0 0 1-.372.568A12.696 12.696 0 0 1 12 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 0 1-.372-.568 6.787 6.787 0 0 1 1.019-4.38Z" clip-rule="evenodd" /><path d="M5.082 14.254a8.287 8.287 0 0 0-1.308 5.135 9.687 9.687 0 0 1-1.764-.44l-.115-.04a.563.563 0 0 1-.373-.487l-.01-.121a3.75 3.75 0 0 1 3.57-4.047ZM20.226 19.389a8.287 8.287 0 0 0-1.308-5.135 3.75 3.75 0 0 1 3.57 4.047l-.01.121a.563.563 0 0 1-.373.486l-.115.04c-.567.2-1.156.349-1.764.441Z" /></svg>';
 
         // ════════════════════════════════════════════════════════
         // KDS-style card renderer (ใช้ทั้ง TH + Staff)
@@ -4730,7 +4782,7 @@
                 const emptyMsg = channelType === 'takehome' ? 'ไม่มีออเดอร์ TakeHome รออยู่' : 'ไม่มีออเดอร์ Staff รออยู่';
                 container.innerHTML = `
                     <div class="channel-empty">
-                        <div class="icon"><i class="fas fa-${channelType === 'takehome' ? 'shopping-bag' : 'users'}"></i></div>
+                        <div class="icon">${channelType === 'takehome' ? TAKEHOME_BAG_ICON_SVG : STAFF_GROUP_ICON_SVG}</div>
                         <p class="text-base">${emptyMsg}</p>
                     </div>`;
                 return;
@@ -4745,10 +4797,39 @@
                 let headerTitle = '';
                 let discountBadge = '';
                 let discountPercent = 0; // ✅ เพิ่มตัวแปรเก็บเปอร์เซ็นต์ส่วนลด
+                let isDedicatedTakehome = false;
 
+                let takehomeBadge = '';
                 if (channelType === 'takehome') {
+                    isDedicatedTakehome = order.order_type === 'takehome';
                     const digits = String(order.th_code || '').replace(/\D/g, '');
-                    headerTitle = digits ? `TH${digits.padStart(2, '0')}` : 'TH??';
+
+                    if (isDedicatedTakehome) {
+                        headerTitle = digits ? `TH${digits.padStart(2, '0')}` : 'TH??';
+                    } else if (order.table_id === 'STAFF') {
+                        // ✅ ออเดอร์จาก staff123 ที่ติ๊กรับกลับบ้าน — โชว์ชื่อ + ซุ้ม เหมือนหน้า staff panel
+                        let staffName = order.staff_name || 'พนักงาน';
+                        let staffStation = '';
+                        if (order.note && String(order.note).startsWith('STAFF|')) {
+                            const parts = order.note.split('|');
+                            staffName = parts[1] || staffName;
+                            staffStation = parts[2] || '';
+                        }
+                        headerTitle = staffStation
+                            ? `${staffName}<span class="text-[0.65rem] font-normal opacity-60 ml-1">ซุ้ม${staffStation}</span>`
+                            : staffName;
+                    } else {
+                        headerTitle = `โต๊ะ ${order.table_id || '?'}`;
+                    }
+
+                    if (isDedicatedTakehome) {
+                        const paymentLabel = order.payment_method === 'cash' ? 'เงินสด'
+                            : order.payment_method === 'transfer' ? 'เงินโอน'
+                            : 'ไม่ระบุการชำระ';
+                        takehomeBadge = `<span class="text-[10px] px-2 py-0.5 rounded-md border ml-2 whitespace-nowrap" style="background-color: var(--accent-soft); color: var(--accent-active); border-color: rgba(107, 127, 215, 0.35);">${paymentLabel}</span>`;
+                    } else {
+                        takehomeBadge = '<span class="text-[10px] px-2 py-0.5 rounded-md border ml-2 whitespace-nowrap bg-amber-500/10 text-amber-300 border-amber-500/30">รับกลับบ้าน</span>';
+                    }
 
                     if (order.note && String(order.note).startsWith('TH_DISC|')) {
                         discountPercent = parseFloat(order.note.split('|')[1]) || 0;
@@ -4757,15 +4838,12 @@
                         discountPercent = parseFloat(sessionObj?.discount || 0) || 0;
                     }
 
-                    const badgeColor = discountPercent > 0 ? 'bg-red-500/20 text-red-400 border-red-500/30' : 'bg-white/5 text-slate-500 border-white/10';
-                    const badgeText = discountPercent > 0 ? `ลด ${discountPercent}%` : 'เพิ่มส่วนลด';
-
-                    discountBadge = `
-                        <span onclick="prepareDiscountFromCard('${order.id}', '${headerTitle}', ${discountPercent}, '${channelType}')" 
-                              class="${badgeColor} text-[10px] px-2 py-0.5 rounded-full border ml-2 whitespace-nowrap cursor-pointer hover:scale-110 active:scale-95 transition-all">
-                            ${badgeText} <i class="fas fa-edit ml-1 opacity-50"></i>
-                        </span>
-                    `;
+                    if (isDedicatedTakehome) {
+                        // ✅ แสดงที่ footer ด้านขวาของราคา แบบเล็กและไม่เด่น (วงเล็บ ไม่มีกรอบ)
+                        const discColor = discountPercent > 0 ? 'rgba(248, 113, 113, 0.55)' : 'rgba(148, 163, 184, 0.45)';
+                        const discText = discountPercent > 0 ? `(-${discountPercent}%)` : '(0%)';
+                        discountBadge = `<span onclick="prepareDiscountFromCard('${order.id}', '${headerTitle}', ${discountPercent}, '${channelType}')" class="ml-1 text-[10px] cursor-pointer" style="color: ${discColor};">${discText}</span>`;
+                    }
                 } else {
                     let staffName = order.staff_name || 'Unknown';
                     let staffStation = '';
@@ -4783,13 +4861,13 @@
                     discountPercent = 10; // ✅ Staff ลด 10% อัตโนมัติ
                 }
 
-                const headerIcon = channelType === 'takehome' ? 'fa-shopping-bag' : 'fa-user';
+                const headerIcon = channelType === 'takehome' ? TAKEHOME_BAG_ICON_SVG : STAFF_GROUP_ICON_SVG;
 
                 // แสดงชื่อ+เบอร์โทรลูกค้า (ถ้ามี) — ใช้ได้ทั้ง panel takehome และ staff
                 let customerInfoHtml = '';
                 if (order.customer_name || order.customer_phone) {
                     customerInfoHtml = `
-                        <div class="text-[11px] text-slate-400 flex items-center flex-wrap gap-y-0.5 mt-1">
+                        <div class="text-[11px] text-slate-400 flex items-center flex-wrap gap-y-0.5">
                             ${order.customer_name ? `<span class="inline-flex items-center gap-1"><i class="fas fa-user text-[9px] opacity-60"></i>${order.customer_name}</span>` : ''}
                             ${order.customer_phone ? `<span class="inline-flex items-center gap-1 ml-2"><i class="fas fa-phone text-[9px] opacity-60"></i>${order.customer_phone}</span>` : ''}
                         </div>`;
@@ -4847,30 +4925,41 @@
 
                 return `
                     <div class="kds-card ${cardClass}">
-                        <div class="kds-card-header">
-                            <div>
+                        <div class="kds-card-header" style="flex-direction: column; align-items: stretch; gap: 6px;">
+                            <div class="flex items-start justify-between">
                                 <div class="kds-card-title flex items-center flex-wrap">
-                                    <i class="fas ${headerIcon}" style="font-size:0.9em;opacity:0.8;margin-right:6px;"></i>
-                                    <span>${headerTitle}</span>${discountBadge}
+                                    <span class="inline-flex items-center" style="font-size:0.9em;opacity:0.8;margin-right:6px;">${headerIcon}</span>
+                                    <span>${headerTitle}</span>${takehomeBadge}
                                 </div>
-                                ${customerInfoHtml}
-                                <div class="kds-card-subtitle">
-                                    ${pendingCount === 0
-                        ? '<span class="font-bold tracking-wider px-2 py-0.5 rounded-md border" style="background-color: rgba(16, 185, 129, 0.1); color: #34D399; border-color: rgba(16, 185, 129, 0.2);"><i class="fas fa-check-circle mr-1"></i>พร้อมส่งมอบ</span>'
-                        : `${pendingCount} รายการรอ`
-                    }
+                                <div class="kds-card-time ${cardClass ? 'warning' : ''}">
+                                    <i class="far fa-clock"></i> ${elapsedMin}m
                                 </div>
                             </div>
-                            <div class="kds-card-time ${cardClass ? 'warning' : ''}">
-                                <i class="far fa-clock"></i> ${elapsedMin}m
+                            <div class="flex items-center justify-between">
+                                <div>${customerInfoHtml}</div>
+                                <div>
+                                    ${pendingCount > 0
+                        ? `<span class="text-[11px] font-medium" style="color: rgba(212, 175, 55, 0.55);">Pending: ${pendingCount}</span>`
+                        : `<span class="text-[11px] font-medium inline-flex items-center gap-1" style="color: rgba(52, 211, 153, 0.85);"><i class="far fa-check-circle"></i> Ready</span>`
+                    }
+                                </div>
                             </div>
                         </div>
                         <div>${itemRows}</div>
                         <div class="kds-card-footer">
                             <div class="text-xs flex items-center gap-1">
-                                <i class="fas fa-receipt text-white/50"></i> ${priceHtml}
+                                <i class="fas fa-receipt text-white/50"></i> ${priceHtml}${discountBadge}
                             </div>
                             <div class="flex gap-2">
+                                ${channelType === 'takehome' && !isDedicatedTakehome
+                        ? `
+                                <button onclick="completeTakehomePortionHandover('${order.id}', ${pendingCount})"
+                                    class="flex items-center gap-1 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95"
+                                    style="background-color: #059669; border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 4px 6px -1px rgba(6, 78, 59, 0.3);">
+                                    <i class="fas fa-check mr-1"></i> ส่งมอบ
+                                </button>
+                                `
+                        : `
                                 <button onclick="confirmKdsOrder('${order.id}', ${pendingCount}, '${channelType}', '${cleanTitle}', ${totalNet})"                                class="flex items-center gap-1 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95"
                                 style="background-color: #059669; border: 1px solid rgba(16, 185, 129, 0.4); box-shadow: 0 4px 6px -1px rgba(6, 78, 59, 0.3);">
                                 ${channelType === 'takehome' ? '<i class="fas fa-check mr-1"></i> ส่งมอบ' : '<i class="fas fa-cash-register mr-1"></i> เช็คบิล'}
@@ -4879,6 +4968,8 @@
                                 class="flex items-center gap-1 bg-white/5 hover:bg-red-600 text-slate-400 hover:text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-all active:scale-95">
                                 <i class="fas fa-times"></i>
                             </button>
+                                `
+                    }
                         </div>
                         </div>
                     </div>`;
@@ -4916,8 +5007,23 @@
 
         let kdsCheckoutContext = null;
 
-            // แก้ไขฟังก์ชัน confirmKdsOrder เดิม
+            // TakeHome บันทึกวิธีจ่ายตั้งแต่สร้างออเดอร์แล้ว จึงส่งมอบได้ทันที
             function confirmKdsOrder(orderId, pendingCount, channelType, title, totalNet) {
+                if (channelType === 'takehome') {
+                    const completeHandover = () => completeTakehomeHandover(orderId, pendingCount);
+                    if (pendingCount > 0) {
+                        Notify.macWarn(
+                            `มี ${pendingCount} รายการที่ยังไม่ได้ทำ`,
+                            'รายการเหล่านี้ยังไม่ถูกทำเครื่องหมายว่าเสร็จแล้ว ต้องการบังคับจบและส่งมอบเลยหรือไม่?',
+                            'บังคับส่งมอบ',
+                            completeHandover
+                        );
+                    } else {
+                        completeHandover();
+                    }
+                    return;
+                }
+
                 kdsCheckoutContext = { orderId, pendingCount, channelType, title };
                 
                 // ตั้งค่าว่ามาจากหน้า KDS (Takehome/Staff)
@@ -4943,6 +5049,75 @@
                     document.getElementById('checkoutModal').classList.remove('hidden');
                 }
             }
+
+        async function completeTakehomeHandover(orderId, pendingCount) {
+            const nowIso = new Date().toISOString();
+            try {
+                if (pendingCount > 0) {
+                    const { error: itemErr } = await supabaseClient
+                        .from('order_items')
+                        .update({ status: 'served', served_at: nowIso })
+                        .eq('order_id', orderId)
+                        .eq('status', 'pending');
+                    if (itemErr) throw itemErr;
+                }
+
+                const { error: orderErr } = await supabaseClient
+                    .from('orders')
+                    .update({ status: 'served' })
+                    .eq('id', orderId);
+                if (orderErr) throw orderErr;
+
+                Notify.toast('ส่งมอบเรียบร้อย');
+                fetchTakehomeOrders();
+            } catch (err) {
+                console.error('TakeHome handover error:', err);
+                Notify.toast('ส่งมอบไม่สำเร็จ: ' + err.message, 'error');
+            }
+        }
+
+        // ✅ ส่งมอบเฉพาะ "ส่วนกลับบ้าน" ของออเดอร์ staff (ไม่แตะ orders.status)
+        // เพราะออเดอร์ยังต้องไปเช็คบิล/จ่ายเงินต่อที่หน้า "พนักงาน" ตามปกติ
+        // ใช้คอลัมน์ orders.th_handover_at (timestamptz, nullable) แยกต่างหากจากสถานะหลักของออเดอร์
+        function completeTakehomePortionHandover(orderId, pendingCount) {
+            const doHandover = () => completeTakehomePortionHandoverAction(orderId, pendingCount);
+            if (pendingCount > 0) {
+                Notify.macWarn(
+                    `มี ${pendingCount} รายการที่ยังไม่ได้เสิร์ฟ`,
+                    'รายการเหล่านี้ยังไม่ถูกทำเครื่องหมายว่าเสร็จแล้ว ต้องการบังคับเปลี่ยนรายการเหล่านี้เป็นสถานะ served และส่งมอบเลยหรือไม่?',
+                    'บังคับส่งมอบ',
+                    doHandover
+                );
+            } else {
+                doHandover();
+            }
+        }
+
+        async function completeTakehomePortionHandoverAction(orderId, pendingCount) {
+            try {
+                if (pendingCount > 0) {
+                    const { error: itemErr } = await supabaseClient
+                        .from('order_items')
+                        .update({ status: 'served', served_at: new Date().toISOString() })
+                        .eq('order_id', orderId)
+                        .eq('is_takehome', true) // ✅ แตะเฉพาะรายการที่เป็นส่วนกลับบ้าน ไม่ยุ่งกับของกินที่ร้าน
+                        .eq('status', 'pending');
+                    if (itemErr) throw itemErr;
+                }
+
+                const { error } = await supabaseClient
+                    .from('orders')
+                    .update({ th_handover_at: new Date().toISOString() })
+                    .eq('id', orderId);
+                if (error) throw error;
+
+                Notify.toast('ส่งมอบ TakeHome เรียบร้อย');
+                fetchTakehomeOrders();
+            } catch (err) {
+                console.error('TakeHome portion handover error:', err);
+                Notify.toast('ส่งมอบไม่สำเร็จ: ' + (err.message || ''), 'error');
+            }
+        }
 
         async function cancelKdsOrder(orderId, channelType) {
             Notify.macWarn('ยืนยันการยกเลิก', 'ต้องการยกเลิกออเดอร์นี้ทั้งหมดใช่ไหม? การกระทำนี้ไม่สามารถย้อนกลับได้', 'ยกเลิกออเดอร์', async () => {
@@ -5221,7 +5396,7 @@
                 // Mark dot ใน channel ที่ไม่ได้เปิดอยู่
                 const orderType = payload.new?.order_type || 'dine_in';
                 let targetChannel = 'tables';
-                if (orderType === 'takehome') targetChannel = 'takehome';
+                if (orderType === 'takehome' || payload.new?.is_takehome === true) targetChannel = 'takehome';
                 else if (orderType === 'staff') targetChannel = 'staff';
 
                 if (currentChannel !== targetChannel) {
