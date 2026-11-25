@@ -415,6 +415,36 @@
     </div>
 </div>
 
+<!-- เลือกวิธีชำระเงินสำหรับ TakeHome ก่อนบันทึกออเดอร์ -->
+<div id="takehomePaymentModal" class="fixed inset-0 z-[80] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="if (event.target === this) closeTakehomePaymentModal()">
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <button type="button" onclick="closeTakehomePaymentModal()" aria-label="ปิด" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 hover:text-gray-800 active:scale-95 transition-all flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+        </button>
+        <div class="p-6 pt-8 text-center">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">เลือกวิธีชำระเงิน</h3>
+            <div class="grid grid-cols-2 gap-3 mt-5" role="group" aria-label="วิธีชำระเงิน">
+                <button type="button" id="takehomePayCash" onclick="selectTakehomePaymentMethod('cash')" class="h-32 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                    </svg>
+                    <span class="text-lg">เงินสด</span>
+                </button>
+                <button type="button" id="takehomePayTransfer" onclick="selectTakehomePaymentMethod('transfer')" class="h-32 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z" />
+                    </svg>
+                    <span class="text-lg">เงินโอน</span>
+                </button>
+            </div>
+        </div>
+        <div class="border-t border-gray-100 p-4">
+            <button type="button" id="confirmTakehomePaymentBtn" onclick="confirmTakehomePayment()" disabled class="w-full py-4 rounded-xl bg-orange-300 text-white font-bold transition-colors cursor-not-allowed">ยืนยันออเดอร์</button>
+        </div>
+    </div>
+</div>
+
 <div id="bottomSheet" class="fixed inset-0 z-50 hidden">
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeBottomSheet()"></div>
     <div id="bottomSheetContent" class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl transform translate-y-full transition-transform duration-300 max-h-[90vh] flex flex-col">
@@ -436,7 +466,19 @@
                 <div id="bs-radio-container"></div>
                 <div id="bs-validation-message" class="hidden text-red-500 text-sm mt-2 text-center bg-red-50 p-2 rounded-lg border border-red-200">* กรุณาระบุตัวเลือก</div>
             </div>
-            <div class="px-5 mb-4">
+            <div id="bs-takehome-group" class="px-5 mb-4">
+                <label for="bs-takehome" id="bs-takehome-label" class="relative flex items-center gap-3 rounded-xl border-2 border-gray-200 p-3.5 cursor-pointer select-none transition-all hover:border-orange-300">
+                    <input type="checkbox" id="bs-takehome" class="sr-only" onchange="updateTakehomeToggleUI()">
+                    <div id="bs-takehome-icon" class="w-9 h-9 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center shrink-0 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="w-4 h-4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 0 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z" /></svg>
+                    </div>
+                    <span class="flex-1 font-medium text-gray-700 text-sm">ใส่กล่องกลับบ้าน</span>
+                    <div id="bs-takehome-check" class="w-5 h-5 rounded-md border-2 border-gray-300 bg-white flex items-center justify-center shrink-0 transition-colors">
+                        <svg class="w-4 h-4 text-white opacity-0 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+                    </div>
+                </label>
+            </div>
+            <div class="px-5 mb-5">
                 <label id="bs-note-label" class="block text-gray-700 font-semibold mb-2 text-sm">หมายเหตุถึงร้าน</label>
                 <textarea id="bs-note" rows="2" class="w-full border border-gray-300 rounded-xl p-3 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none transition-shadow" placeholder="เช่น ไม่ใส่ผัก, ขอช้อนส้อม"></textarea>
             </div>
@@ -527,6 +569,7 @@ let globalCartTotalQty = 0;
 let globalCartTotalPrice = 0;
 let hasOrderedStarter = false;
 let isSubmittingOrder = false; // กันกดยืนยันซ้ำ/ดับเบิลแท็บ ทำให้ออเดอร์ซ้ำ
+let selectedTakehomePaymentMethod = null;
 
 // SERVER_DATA from URL Params / LocalStorage
 const urlParams = new URLSearchParams(window.location.search);
@@ -1884,9 +1927,43 @@ function renderOptionsHTML(item) {
     });
 }
 
+function updateTakehomeToggleUI() {
+    const checkbox = document.getElementById('bs-takehome');
+    const label = document.getElementById('bs-takehome-label');
+    const icon = document.getElementById('bs-takehome-icon');
+    const check = document.getElementById('bs-takehome-check');
+    const checkSvg = check ? check.querySelector('svg') : null;
+    if (!checkbox || !label || !icon || !check) return;
+
+    if (checkbox.checked) {
+        label.classList.add('border-orange-500', 'bg-orange-50');
+        label.classList.remove('border-gray-200');
+        icon.classList.add('bg-orange-100', 'text-orange-600');
+        icon.classList.remove('bg-gray-100', 'text-gray-500');
+        check.classList.add('border-orange-500', 'bg-orange-500');
+        check.classList.remove('border-gray-300', 'bg-white');
+        if (checkSvg) { checkSvg.classList.add('opacity-100'); checkSvg.classList.remove('opacity-0'); }
+    } else {
+        label.classList.remove('border-orange-500', 'bg-orange-50');
+        label.classList.add('border-gray-200');
+        icon.classList.remove('bg-orange-100', 'text-orange-600');
+        icon.classList.add('bg-gray-100', 'text-gray-500');
+        check.classList.remove('border-orange-500', 'bg-orange-500');
+        check.classList.add('border-gray-300', 'bg-white');
+        if (checkSvg) { checkSvg.classList.remove('opacity-100'); checkSvg.classList.add('opacity-0'); }
+    }
+}
+
 function openProductModal(item, mode = 'ADD', index = null) {
     activeMenuItem = item;
     editingIndex = (mode === 'EDIT') ? index : null;
+
+    const takehomeGroup = document.getElementById('bs-takehome-group');
+    const takehomeCheckbox = document.getElementById('bs-takehome');
+    const isDedicatedTakehome = isTakehomeMode();
+    if (takehomeGroup) takehomeGroup.classList.toggle('hidden', isDedicatedTakehome);
+    if (takehomeCheckbox) takehomeCheckbox.checked = isDedicatedTakehome;
+    updateTakehomeToggleUI();
 
     const bsNoteLabel = document.getElementById('bs-note-label');
     if (bsNoteLabel) bsNoteLabel.textContent = t('note_label');
@@ -1916,6 +1993,7 @@ function openProductModal(item, mode = 'ADD', index = null) {
         const oldData = cart[index];
         document.getElementById('bs-qty').textContent = oldData.quantity;
         document.getElementById('bs-note').value = oldData.note || '';
+        if (takehomeCheckbox) takehomeCheckbox.checked = isDedicatedTakehome || Boolean(oldData.isTakehome);
 
         if (oldData.options) {
             oldData.options.forEach(opt => {
@@ -2104,12 +2182,13 @@ function handleCommitTransaction() {
     const finalUnitPrice = basePrice + totalOptionPrice;
     const originalBasePrice = parseFloat(activeMenuItem.price) || 0;
 
-    const uniqueKey = `${activeMenuItem.item.th}|${JSON.stringify(optionsToSave)}|${note}|${finalUnitPrice}`;
+    const isTakehome = isTakehomeMode() || Boolean(document.getElementById('bs-takehome')?.checked);
+    const uniqueKey = `${activeMenuItem.item.th}|${JSON.stringify(optionsToSave)}|${note}|${finalUnitPrice}|${isTakehome}`;
 
     const newItem = {
         cartKey: uniqueKey, itemKey: activeMenuItem.item.th, quantity: qty,
         options: optionsToSave, note: note, station: activeMenuItem.station,
-        itemFullPrice: finalUnitPrice, basePrice: originalBasePrice
+        itemFullPrice: finalUnitPrice, basePrice: originalBasePrice, isTakehome
     };
 
     if (editingIndex !== null) {
@@ -2201,13 +2280,16 @@ function renderCart() {
             if (cartItem.note) {
                 noteHTML = '<div class="mt-2"><span class="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-100 flex items-center gap-1 w-fit">' + newNoteIcon + cartItem.note + '</span></div>';
             }
+            var takehomeHTML = cartItem.isTakehome
+                ? '<div class="mt-2"><span class="text-xs font-bold text-violet-700 bg-violet-50 px-2 py-1 rounded-md border border-violet-200 inline-flex items-center">ใส่กล่องกลับบ้าน</span></div>'
+                : '';
 
             itemsHTML += '<div class="flex items-start py-4 border-b border-gray-100 last:border-0 group relative">';
             itemsHTML += '<div class="flex-grow flex cursor-pointer active:opacity-70 transition-opacity min-w-[0]" onclick="editCartItem(' + index + ')">';
             itemsHTML += '<div class="flex-shrink-0 mr-4"><img src="' + imgSrc + '" loading="lazy" decode="async" width="64" height="64" class="w-16 h-16 rounded-xl object-cover border border-gray-100 shadow-sm"></div>';
             itemsHTML += '<div class="flex-shrink flex-grow-0 min-w-0 pr-2 flex flex-col justify-center">';
             itemsHTML += '<div class="flex items-center gap-2 mb-1"><h4 class="font-bold text-gray-800 text-base leading-tight truncate max-w-full whitespace-nowrap">' + itemName + '</h4><div class="flex-shrink-0 text-orange-500 bg-orange-50 p-1 rounded-md">' + editIcon + '</div></div>';
-            itemsHTML += optionsHTML + noteHTML;
+            itemsHTML += optionsHTML + noteHTML + takehomeHTML;
             itemsHTML += '</div></div>'; 
 
             itemsHTML += '<div class="flex flex-col items-end gap-2 flex-shrink-0">';
@@ -2363,6 +2445,15 @@ function submitOrder() {
         return; 
     }
 
+    if (STAFF_ROLE === 'takehome123') {
+        openTakehomePaymentModal();
+        return;
+    }
+
+    openConfirmOrderModal();
+}
+
+function openConfirmOrderModal() {
     document.getElementById('conf-title').textContent = t('confirm_modal_title');
     document.getElementById('conf-msg').textContent = t('confirm_modal_msg');
     document.getElementById('conf-btn-cancel').textContent = t('btn_cancel');
@@ -2381,7 +2472,53 @@ function closeConfirmModal() {
     modal.style.display = 'none';
 }
 
-async function processSubmission() {
+function openTakehomePaymentModal() {
+    selectedTakehomePaymentMethod = null;
+    ['cash', 'transfer'].forEach(method => {
+        const btn = document.getElementById(method === 'cash' ? 'takehomePayCash' : 'takehomePayTransfer');
+        btn.className = 'h-32 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-2';
+    });
+    const confirmBtn = document.getElementById('confirmTakehomePaymentBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.className = 'w-full py-4 rounded-xl bg-orange-300 text-white font-bold transition-colors cursor-not-allowed';
+    document.getElementById('takehomePaymentModal').classList.remove('hidden');
+}
+
+function closeTakehomePaymentModal() {
+    document.getElementById('takehomePaymentModal').classList.add('hidden');
+    selectedTakehomePaymentMethod = null;
+}
+
+function selectTakehomePaymentMethod(method) {
+    selectedTakehomePaymentMethod = method;
+    const cashBtn = document.getElementById('takehomePayCash');
+    const transferBtn = document.getElementById('takehomePayTransfer');
+    [cashBtn, transferBtn].forEach(btn => {
+        btn.className = 'h-32 rounded-2xl border-2 border-gray-200 text-gray-700 font-bold transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-2';
+    });
+    const activeBtn = method === 'cash' ? cashBtn : transferBtn;
+    activeBtn.className = 'h-32 rounded-2xl border-2 border-orange-500 bg-orange-50 text-orange-700 font-bold transition-all active:scale-[0.98] flex flex-col items-center justify-center gap-2';
+    const confirmBtn = document.getElementById('confirmTakehomePaymentBtn');
+    confirmBtn.disabled = false;
+    confirmBtn.className = 'w-full py-4 rounded-xl bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-bold transition-colors';
+}
+
+function processSubmission() {
+    if (isSubmittingOrder) return;
+    if (STAFF_ROLE === 'takehome123') {
+        submitOrderToDatabase(selectedTakehomePaymentMethod);
+        return;
+    }
+    submitOrderToDatabase();
+}
+
+function confirmTakehomePayment() {
+    if (!selectedTakehomePaymentMethod || isSubmittingOrder) return;
+    document.getElementById('takehomePaymentModal').classList.add('hidden');
+    openConfirmOrderModal();
+}
+
+async function submitOrderToDatabase(takehomePaymentMethod = null) {
     // กันกดยืนยันซ้ำ/ดับเบิลแท็บบนมือถือ ทำให้เกิดออเดอร์ซ้ำ
     if (isSubmittingOrder) return;
     isSubmittingOrder = true;
@@ -2480,6 +2617,25 @@ async function processSubmission() {
         if (orderErr) throw orderErr;
         newOrderId = orderData[0].order_id;
 
+        const orderMetadata = {
+            is_takehome: orderType === 'takehome'
+        };
+        if (orderType === 'takehome') {
+            if (!['cash', 'transfer'].includes(takehomePaymentMethod)) {
+                throw new Error('กรุณาเลือกวิธีชำระเงินก่อนยืนยันออเดอร์');
+            }
+            orderMetadata.payment_method = takehomePaymentMethod;
+        }
+        const { error: metadataErr } = await supabaseClient
+            .from('orders')
+            .update(orderMetadata)
+            .eq('id', newOrderId);
+        if (metadataErr) {
+            try { await supabaseClient.from('orders').delete().eq('id', newOrderId); } catch (rollbackErr) { console.error('Rollback order metadata failed:', rollbackErr); }
+            newOrderId = null;
+            throw metadataErr;
+        }
+
         const itemsToInsert = cart.flatMap(cartItem => {
             const menuItem = flatMenu[cartItem.itemKey];
             const optString = cartItem.options.map(opt => `${opt.label.th || ''}: ${opt.choice.th || ''}${opt.price ? `(+${opt.price})` : ''}`).join(' | ');
@@ -2487,7 +2643,8 @@ async function processSubmission() {
                 order_id: newOrderId, menu_id: menuItem.db_id, item_name_th: menuItem.item.th,
                 kds_station: menuItem.kds_station || menuItem.station, quantity: 1, unit_price: cartItem.basePrice,
                 total_price: cartItem.itemFullPrice, option: optString || null, note: cartItem.note || null,
-                status: 'pending', session_token: currentToken
+                status: 'pending', session_token: currentToken,
+                is_takehome: orderType === 'takehome' || Boolean(cartItem.isTakehome)
             }));
         });
 
@@ -2509,7 +2666,7 @@ async function processSubmission() {
                 if (custErr) console.error("บันทึกชื่อ/เบอร์โทรลูกค้าไม่สำเร็จ:", custErr);
             }
         }
-/*
+
         // --- เพิ่มโค้ดส่วนนี้เพื่อยิงข้อความไปที่ Discord ---
         try {
             console.log("กำลังส่งออเดอร์ไป Discord...");
@@ -2523,11 +2680,12 @@ async function processSubmission() {
             console.error("เกิดข้อผิดพลาดตอนเรียกเรียก Edge Function:", discordErr);
         }
         // ------------------------------------------
-*/
+
         showToast(typeof t === 'function' ? t('toast_success') : 'สั่งอาหารสำเร็จ!', 'success');
         if (typeof saveOrderToHistory === 'function') saveOrderToHistory(cart);
 
-        cart = []; renderCart();
+        cart = [];
+        renderCart();
         if (typeof closeCartSheet === 'function') closeCartSheet();
 
         updateHistoryBadge();
