@@ -1033,6 +1033,36 @@
             return `${mins} นาที`;
         }
         function formatMoney(n) { return `฿${Math.round(n || 0).toLocaleString()}`; }
+
+        // ════════════════════════════════════════════════
+        // ตัวช่วยกลาง: แปลง "ราคาต่อชิ้น" ให้เป็นยอดหลังหักส่วนลดของเซสชันนั้นๆ
+        // ใช้ร่วมกันทั้งการ์ดสรุป, กราฟ, และโมดัลรายละเอียดซุ้ม/โต๊ะ เพื่อให้ยอด "รายได้" ทุกจุดตรงกัน (หลังหักส่วนลดเสมอ)
+        // ════════════════════════════════════════════════
+        function buildSessionNetRatioMap(items, sessions) {
+            const discountMap = {};
+            (sessions || []).forEach(s => { discountMap[s.token] = parseFloat(s.discount || 0); });
+            const sessionDiscountable = {};
+            (items || []).forEach(it => {
+                if (it.status !== 'served') return;
+                if (it.kds_station === 'น้ำ') return; // เครื่องดื่มไม่ถูกหักส่วนลด
+                const t = it.session_token; if (!t) return;
+                sessionDiscountable[t] = (sessionDiscountable[t] || 0) + (parseFloat(it.total_price) || 0);
+            });
+            const ratioMap = {};
+            Object.keys(sessionDiscountable).forEach(t => {
+                const pct = discountMap[t] || 0;
+                const discountable = sessionDiscountable[t];
+                const disc = Math.floor(discountable * (pct / 100));
+                ratioMap[t] = discountable > 0 ? (discountable - disc) / discountable : 1;
+            });
+            return ratioMap;
+        }
+        function itemNetRevenue(it, ratioMap) {
+            const price = parseFloat(it.total_price) || 0;
+            if (it.kds_station === 'น้ำ') return price; // เครื่องดื่มไม่ถูกหักส่วนลด
+            const ratio = ratioMap ? ratioMap[it.session_token] : undefined;
+            return ratio !== undefined ? price * ratio : price;
+        }
         function setTrendText(elId, current, previous) {
             const el = document.getElementById(elId); if (!el) return;
             if (!previous) { el.innerHTML = `<span class="trend-pill text-slate-400">N/A</span>`; return; }
@@ -1190,7 +1220,7 @@
             const prevEnd = bkkBoundsForDate(prevDates[rangeLen - 1]).end;
 
             const cols = 'id,item_name_th,quantity,total_price,status,kds_station,created_at,served_at,session_token,order_id';
-            const ocols = 'id,order_type,table_id,created_at';
+            const ocols = 'id,order_type,table_id,created_at,payment_method';
             const scols = 'token,discount,pax,session_type,opened_at,closed_at,table_id,payment_method';
 
             try {
@@ -1241,18 +1271,37 @@
                 payMap[s.token] = (raw.includes('transfer') || raw.includes('โอน') || raw.includes('promptpay') || raw.includes('qr')) ? 'transfer' : 'cash';
             });
 
+            // วิธีชำระเงินของ "เทคโฮม" ถูกบันทึกไว้ที่ระดับออเดอร์ (orders.payment_method) ไม่ใช่ระดับเซสชัน
+            // เพราะเซสชันเทคโฮมเป็นเซสชันเดียวที่ถูกใช้ซ้ำสำหรับหลายออเดอร์ (get_or_create_takehome_session)
+            // จึงต้องแม็พตามออเดอร์ ไม่ใช่ตามเซสชัน มิฉะนั้นทุกออเดอร์จะถูกนับรวมไปช่องทางเดียวกันหมด
+            const orderPayMap = {};
+            (orders || []).forEach(o => {
+                if (!o.payment_method) return;
+                const raw = o.payment_method.toString().toLowerCase();
+                orderPayMap[o.id] = (raw.includes('transfer') || raw.includes('โอน') || raw.includes('promptpay') || raw.includes('qr')) ? 'transfer' : 'cash';
+            });
+
             const sessionGroups = {};
+            const orderGroups = {};
             servedItems.forEach(it => {
                 const t = it.session_token; if (!t) return;
                 if (!sessionGroups[t]) sessionGroups[t] = { gross: 0, discountable: 0 };
                 const price = parseFloat(it.total_price) || 0;
                 sessionGroups[t].gross += price;
                 if (it.kds_station !== 'น้ำ') sessionGroups[t].discountable += price;
+
+                const oid = it.order_id;
+                if (oid) {
+                    if (!orderGroups[oid]) orderGroups[oid] = { token: t, gross: 0, discountable: 0 };
+                    orderGroups[oid].gross += price;
+                    if (it.kds_station !== 'น้ำ') orderGroups[oid].discountable += price;
+                }
             });
 
             let gross = 0, discountAmt = 0;
             const typeNet = { dine_in: 0, takehome: 0, staff: 0 };
             const payType = { cashDine: 0, transferDine: 0, cashTakehome: 0, transferTakehome: 0 };
+            const sessionNetRatio = {}; // สัดส่วนราคาหลังหักส่วนลดต่อเซสชัน ใช้ปรับยอด "รายได้" รายชิ้น (ซุ้ม/รายชั่วโมง/รายโต๊ะ) ให้เป็นหลังหักส่วนลดด้วย
             Object.keys(sessionGroups).forEach(t => {
                 const g = sessionGroups[t];
                 const pct = discountMap[t] || 0;
@@ -1263,9 +1312,30 @@
                 if (typeNet[type] !== undefined) typeNet[type] += net; else typeNet.dine_in += net;
                 const pay = payMap[t] || 'cash';
                 if (type === 'dine_in') { if (pay === 'transfer') payType.transferDine += net; else payType.cashDine += net; }
-                else if (type === 'takehome') { if (pay === 'transfer') payType.transferTakehome += net; else payType.cashTakehome += net; }
+                sessionNetRatio[t] = g.discountable > 0 ? (g.discountable - disc) / g.discountable : 1;
             });
+
+            // เทคโฮม: แยกเงินสด/เงินโอนรายออเดอร์ตามที่บันทึกจริงจากหน้า customer.html
+            Object.keys(orderGroups).forEach(oid => {
+                const og = orderGroups[oid];
+                const type = typeMap[og.token] || 'dine_in';
+                if (type !== 'takehome') return;
+                const pct = discountMap[og.token] || 0;
+                const disc = Math.floor(og.discountable * (pct / 100));
+                const orderNet = og.gross - disc;
+                const pay = orderPayMap[oid] || 'cash';
+                if (pay === 'transfer') payType.transferTakehome += orderNet; else payType.cashTakehome += orderNet;
+            });
+
             const net = gross - discountAmt;
+
+            // ราคาต่อชิ้นหลังหักส่วนลด (ใช้กับ รายได้แยกซุ้ม/รายชั่วโมง/รายโต๊ะ ให้ตรงกับยอดสุทธิ)
+            function itemNetPrice(it) {
+                const price = parseFloat(it.total_price) || 0;
+                if (it.kds_station === 'น้ำ') return price; // เครื่องดื่มไม่ถูกหักส่วนลด
+                const ratio = sessionNetRatio[it.session_token];
+                return ratio !== undefined ? price * ratio : price;
+            }
 
             let totalPax = 0, totalDwellMs = 0, validDwell = 0;
             sessions.forEach(s => {
@@ -1284,7 +1354,7 @@
             let cookTotalMs = 0, cookCountN = 0;
 
             servedItems.forEach(it => {
-                const rev = parseFloat(it.total_price || 0);
+                const rev = itemNetPrice(it);
                 if (it.kds_station) {
                     stationRevenue[it.kds_station] = (stationRevenue[it.kds_station] || 0) + rev;
                     if (!stationBillsSet[it.kds_station]) stationBillsSet[it.kds_station] = new Set();
@@ -1309,7 +1379,7 @@
 
             servedItems.forEach(it => {
                 const hr = (new Date(it.created_at).getUTCHours() + 7) % 24;
-                hourlyRevenue[hr] += parseFloat(it.total_price || 0);
+                hourlyRevenue[hr] += itemNetPrice(it);
                 if (it.created_at && it.served_at) {
                     hourlyCookTotal[hr] += (new Date(it.served_at) - new Date(it.created_at));
                     hourlyCookCount[hr]++;
@@ -1330,7 +1400,7 @@
             // รายได้ / เวลานั่งแช่ต่อโต๊ะ
             const orderTableMap = {}; orders.forEach(o => orderTableMap[o.id] = o.table_id);
             const tableRevenue = {};
-            servedItems.forEach(it => { const tid = orderTableMap[it.order_id]; if (tid) tableRevenue[tid] = (tableRevenue[tid] || 0) + parseFloat(it.total_price || 0); });
+            servedItems.forEach(it => { const tid = orderTableMap[it.order_id]; if (tid) tableRevenue[tid] = (tableRevenue[tid] || 0) + itemNetPrice(it); });
             const tableDwellTotalMs = {}, tableDwellCountN = {};
             sessions.forEach(s => {
                 if (s.table_id && s.opened_at && s.closed_at) {
@@ -1722,7 +1792,8 @@
             const orders = (window.rawRange?.orders || []).filter(o => o.table_id === tableId && daySet.has(bkkDateStringFromISO(o.created_at)));
             const orderIds = new Set(orders.map(o => o.id));
             const items = (window.rawRange?.items || []).filter(i => i.status === 'served' && orderIds.has(i.order_id));
-            const revenue = items.reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
+            const ratioMap = buildSessionNetRatioMap(window.rawRange?.items, window.rawRange?.sessions);
+            const revenue = items.reduce((s, i) => s + itemNetRevenue(i, ratioMap), 0);
 
             document.getElementById('tableModalId').innerText = tableId;
             document.getElementById('tableModalBills').innerText = orders.length;
@@ -1766,7 +1837,8 @@
     const served = items.filter(i => i.status === 'served');
     
     // คำนวณรายได้รวม
-    const revenue = served.reduce((s, i) => s + parseFloat(i.total_price || 0), 0);
+    const ratioMap = buildSessionNetRatioMap(window.rawRange?.items, window.rawRange?.sessions);
+    const revenue = served.reduce((s, i) => s + itemNetRevenue(i, ratioMap), 0);
     
     // คำนวณจำนวนบิลของซุ้มนี้
     const billCount = new Set(served.map(i => i.order_id).filter(Boolean)).size;
@@ -1833,7 +1905,7 @@
     served.forEach(i => { 
         if (!itemAgg[i.item_name_th]) itemAgg[i.item_name_th] = { qty: 0, rev: 0 }; 
         itemAgg[i.item_name_th].qty += i.quantity; 
-        itemAgg[i.item_name_th].rev += parseFloat(i.total_price || 0); 
+        itemAgg[i.item_name_th].rev += itemNetRevenue(i, ratioMap); 
     });
     
     const rows = Object.entries(itemAgg).sort((a, b) => b[1].rev - a[1].rev).slice(0, 6);
@@ -1867,15 +1939,16 @@
         function renderModalHourChart() {
             if (!currentModalStation) return;
             const items = filterRawItemsForStation(currentModalStation).filter(i => i.status === 'served');
+            const ratioMap = buildSessionNetRatioMap(window.rawRange?.items, window.rawRange?.sessions);
             const menuTotals = {};
-            items.forEach(i => menuTotals[i.item_name_th] = (menuTotals[i.item_name_th] || 0) + parseFloat(i.total_price || 0));
+            items.forEach(i => menuTotals[i.item_name_th] = (menuTotals[i.item_name_th] || 0) + itemNetRevenue(i, ratioMap));
             const topMenus = Object.entries(menuTotals).sort((a, b) => b[1] - a[1]).slice(0, 5).map(m => m[0]);
 
             const hourBuckets = {}; for (let h = 0; h < 24; h++) hourBuckets[h] = {};
             items.forEach(i => {
                 const hr = (new Date(i.created_at).getUTCHours() + 7) % 24;
                 const key = topMenus.includes(i.item_name_th) ? i.item_name_th : 'อื่นๆ';
-                const val = modalChartMetric === 'revenue' ? parseFloat(i.total_price || 0) : i.quantity;
+                const val = modalChartMetric === 'revenue' ? itemNetRevenue(i, ratioMap) : i.quantity;
                 hourBuckets[hr][key] = (hourBuckets[hr][key] || 0) + val;
             });
             const activeHours = Object.keys(hourBuckets).map(Number).filter(h => Object.keys(hourBuckets[h]).length > 0).sort((a, b) => a - b);
